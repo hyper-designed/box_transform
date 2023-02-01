@@ -1,0 +1,25 @@
+name: flutter_rect_resizer
+description: A Flutter implementation of rect_resizer package.
+
+version: 0.0.1
+
+homepage: https://github.com/BirjuVachhani/rect_resizer
+
+environment:
+  sdk: '>=2.18.0 <3.0.0'
+  flutter: ">=3.3.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # TODO: Update this before publish
+  rect_resizer:
+    path: ../rect_resizer
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.1
+
+flutter:
+
