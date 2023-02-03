@@ -12,7 +12,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  # TODO: Update this before publish
+  # TODO: this has to be replaced by actual published version.
   rect_resizer:
     path: ../rect_resizer
 

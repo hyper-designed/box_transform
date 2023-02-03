@@ -1,29 +1,27 @@
-import 'enums.dart';
-import 'geometry.dart';
+import 'dart:ui' as ui;
 
-class ResizeResult {
+import 'package:rect_resizer/rect_resizer.dart' as resizer;
+
+class UIResizeResult {
   /// The new [Rect] of the node after the resize.
-  final Rect newRect;
+  final ui.Rect newRect;
 
   /// The old [Rect] of the node before the resize.
-  final Rect oldRect;
+  final ui.Rect oldRect;
 
   /// The [Flip] of the node after the resize.
-  final Flip flip;
+  final resizer.Flip flip;
 
   /// The [ResizeMode] of the node after the resize.
-  final ResizeMode resizeMode;
+  final resizer.ResizeMode resizeMode;
 
   /// The delta used to resize the node.
-  final Offset delta;
+  final ui.Offset delta;
 
-  /// The new [Size] of the node after the resize. Unlike [newRect], this
-  /// reflects flip state. For example, if the node is flipped horizontally,
-  /// the width of the [newSize] will be negative.
-  final Size newSize;
+  final ui.Size newSize;
 
-  /// Creates a [ResizeResult] object.
-  ResizeResult({
+  /// Creates a [UIResizeResult] object.
+  UIResizeResult({
     required this.newRect,
     required this.oldRect,
     required this.flip,
@@ -36,13 +34,13 @@ class ResizeResult {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
 
-    return other is ResizeResult &&
+    return other is UIResizeResult &&
         other.newRect == newRect &&
         other.oldRect == oldRect &&
         other.flip == flip &&
         other.resizeMode == resizeMode &&
         other.delta == delta &&
-        other.newSize == newSize;
+        other.delta == newSize;
   }
 
   @override
@@ -51,6 +49,6 @@ class ResizeResult {
 
   @override
   String toString() {
-    return 'ResizeResult(newRect: $newRect, oldRect: $oldRect, flip: $flip, resizeMode: $resizeMode, delta: $delta, newSize: $newSize)';
+    return 'FlutterResizeResult(newRect: $newRect, oldRect: $oldRect, flip: $flip, resizeMode: $resizeMode, delta: $delta, newSize: $newSize)';
   }
 }
