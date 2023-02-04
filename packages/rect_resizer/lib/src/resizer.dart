@@ -1,3 +1,5 @@
+import 'package:vector_math/vector_math.dart';
+
 import 'enums.dart';
 import 'geometry.dart';
 import 'result.dart';
@@ -5,9 +7,9 @@ import 'result.dart';
 /// main entry point.
 class RectResizer {
   ResizeResult resize({
-    required Rect initialRect,
-    required Offset initialLocalPosition,
-    required Offset localPosition,
+    required Box initialRect,
+    required Vector2 initialLocalPosition,
+    required Vector2 localPosition,
     required HandlePosition handle,
     required ResizeMode resizeMode,
     required Flip initialFlip,
@@ -15,11 +17,11 @@ class RectResizer {
     final Flip currentFlip =
         getFlipForRect(initialRect, localPosition, handle, resizeMode);
 
-    Offset delta = localPosition - initialLocalPosition;
+    Vector2 delta = localPosition - initialLocalPosition;
 
-    if (resizeMode.hasSymmetry) delta = delta.scale(2, 2);
+    if (resizeMode.hasSymmetry) delta = Vector2(delta.x * 2, delta.y * 2);
 
-    final Size newSize = _calculateNewSize(
+    final Dimension newSize = _calculateNewSize(
       initialRect,
       handle,
       delta,
@@ -28,13 +30,13 @@ class RectResizer {
     );
     double newWidth = newSize.width.abs();
     double newHeight = newSize.height.abs();
-    final Rect newRect;
+    final Box newRect;
 
     if (resizeMode.hasSymmetry) {
-      newRect = Rect.fromCenter(
+      newRect = Box.fromCenter(
           center: initialRect.center, width: newWidth, height: newHeight);
     } else {
-      Rect rect = Rect.fromLTWH(
+      Box rect = Box.fromLTWH(
         handle.isLeft ? initialRect.right - newWidth : initialRect.left,
         handle.isTop ? initialRect.bottom - newHeight : initialRect.top,
         newWidth,
@@ -55,20 +57,28 @@ class RectResizer {
 
   /// Flips the given [rect] with given [flip] with [handle] being the
   /// pivot point.
-  Rect flipRect(Rect rect, Flip flip, HandlePosition handle) {
+  Box flipRect(Box rect, Flip flip, HandlePosition handle) {
     switch (handle) {
       case HandlePosition.topLeft:
-        return rect.translate(flip.isHorizontal ? rect.width : 0,
-            flip.isVertical ? rect.height : 0);
+        return rect.translate(
+          flip.isHorizontal ? rect.width : 0,
+          flip.isVertical ? rect.height : 0,
+        );
       case HandlePosition.topRight:
-        return rect.translate(flip.isHorizontal ? -rect.width : 0,
-            flip.isVertical ? rect.height : 0);
+        return rect.translate(
+          flip.isHorizontal ? -rect.width : 0,
+          flip.isVertical ? rect.height : 0,
+        );
       case HandlePosition.bottomLeft:
-        return rect.translate(flip.isHorizontal ? rect.width : 0,
-            flip.isVertical ? -rect.height : 0);
+        return rect.translate(
+          flip.isHorizontal ? rect.width : 0,
+          flip.isVertical ? -rect.height : 0,
+        );
       case HandlePosition.bottomRight:
-        return rect.translate(flip.isHorizontal ? -rect.width : 0,
-            flip.isVertical ? -rect.height : 0);
+        return rect.translate(
+          flip.isHorizontal ? -rect.width : 0,
+          flip.isVertical ? -rect.height : 0,
+        );
     }
   }
 
@@ -76,8 +86,8 @@ class RectResizer {
   /// [handle]. It uses [handle] and [localPosition] to determine the quadrant
   /// of the [rect] and then checks if the [rect] is flipped in that quadrant.
   Flip getFlipForRect(
-    Rect rect,
-    Offset localPosition,
+    Box rect,
+    Vector2 localPosition,
     HandlePosition handle,
     ResizeMode resizeMode,
   ) {
@@ -90,16 +100,16 @@ class RectResizer {
     final double handleXFactor = handle.isLeft ? -1 : 1;
     final double handleYFactor = handle.isTop ? -1 : 1;
 
-    final double posX = effectiveWidth + localPosition.dx * handleXFactor;
-    final double posY = effectiveHeight + localPosition.dy * handleYFactor;
+    final double posX = effectiveWidth + localPosition.x * handleXFactor;
+    final double posY = effectiveHeight + localPosition.y * handleYFactor;
 
     return Flip.fromValue(posX, posY);
   }
 
-  Size _calculateNewSize(
-    Rect initialRect,
+  Dimension _calculateNewSize(
+    Box initialRect,
     HandlePosition handle,
-    Offset delta,
+    Vector2 delta,
     Flip flip,
     ResizeMode resizeMode,
   ) {
@@ -108,17 +118,17 @@ class RectResizer {
     final double newHeight;
 
     initialRect = flipRect(initialRect, flip, handle);
-    Rect rect;
-    rect = Rect.fromLTRB(
-      initialRect.left + (handle.isLeft ? delta.dx : 0),
-      initialRect.top + (handle.isTop ? delta.dy : 0),
-      initialRect.right + (handle.isRight ? delta.dx : 0),
-      initialRect.bottom + (handle.isBottom ? delta.dy : 0),
+    Box rect;
+    rect = Box.fromLTRB(
+      initialRect.left + (handle.isLeft ? delta.x : 0),
+      initialRect.top + (handle.isTop ? delta.y : 0),
+      initialRect.right + (handle.isRight ? delta.x : 0),
+      initialRect.bottom + (handle.isBottom ? delta.y : 0),
     );
     if (resizeMode.hasSymmetry) {
       final widthDelta = (initialRect.width - rect.width) / 2;
       final heightDelta = (initialRect.height - rect.height) / 2;
-      rect = Rect.fromLTRB(
+      rect = Box.fromLTRB(
         initialRect.left + widthDelta,
         initialRect.top + heightDelta,
         initialRect.right - widthDelta,
@@ -141,7 +151,7 @@ class RectResizer {
       newHeight = rect.height;
     }
 
-    return Size(
+    return Dimension(
       newWidth.abs() * (flip.isHorizontal ? -1 : 1),
       newHeight.abs() * (flip.isVertical ? -1 : 1),
     );

@@ -15,6 +15,7 @@ dependencies:
   # TODO: this has to be replaced by actual published version.
   rect_resizer:
     path: ../rect_resizer
+  vector_math: ^2.1.4
 
 dev_dependencies:
   flutter_test:

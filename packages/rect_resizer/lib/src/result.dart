@@ -1,12 +1,14 @@
+import 'package:vector_math/vector_math.dart';
+
 import 'enums.dart';
 import 'geometry.dart';
 
 class ResizeResult {
-  /// The new [Rect] of the node after the resize.
-  final Rect newRect;
+  /// The new [Box] of the node after the resize.
+  final Box newRect;
 
-  /// The old [Rect] of the node before the resize.
-  final Rect oldRect;
+  /// The old [Box] of the node before the resize.
+  final Box oldRect;
 
   /// The [Flip] of the node after the resize.
   final Flip flip;
@@ -15,12 +17,12 @@ class ResizeResult {
   final ResizeMode resizeMode;
 
   /// The delta used to resize the node.
-  final Offset delta;
+  final Vector2 delta;
 
-  /// The new [Size] of the node after the resize. Unlike [newRect], this
+  /// The new [Dimension] of the node after the resize. Unlike [newRect], this
   /// reflects flip state. For example, if the node is flipped horizontally,
   /// the width of the [newSize] will be negative.
-  final Size newSize;
+  final Dimension newSize;
 
   /// Creates a [ResizeResult] object.
   ResizeResult({

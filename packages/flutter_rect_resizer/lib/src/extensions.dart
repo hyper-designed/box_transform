@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 
 import 'package:rect_resizer/rect_resizer.dart' as resizer;
+import 'package:vector_math/vector_math.dart';
 
 import 'ui_resize_result.dart';
 
@@ -11,33 +12,33 @@ extension ResizeResultExt on resizer.ResizeResult {
       oldRect: oldRect.toUiRect(),
       flip: flip,
       resizeMode: resizeMode,
-      delta: delta.toUiOffset(),
+      delta: delta.toUiVector2(),
       newSize: newSize.toUiSize(),
     );
   }
 }
 
-extension ResizerRectExt on resizer.Rect {
+extension ResizerRectExt on resizer.Box {
   ui.Rect toUiRect() => ui.Rect.fromLTWH(left, top, width, height);
 }
 
 extension UIRectExt on ui.Rect {
-  resizer.Rect toResizerRect() =>
-      resizer.Rect.fromLTRB(left, top, right, bottom);
+  resizer.Box toResizerRect() =>
+      resizer.Box.fromLTRB(left, top, right, bottom);
 }
 
-extension ResizerOffsetExt on resizer.Offset {
-  ui.Offset toUiOffset() => ui.Offset(dx, dy);
+extension ResizerVector2Ext on Vector2 {
+  ui.Offset toUiVector2() => ui.Offset(x, y);
 }
 
-extension UIOffsetExt on ui.Offset {
-  resizer.Offset toResizerOffset() => resizer.Offset(dx, dy);
+extension UIVector2Ext on ui.Offset {
+  Vector2 toResizerVector2() => Vector2(dx, dy);
 }
 
-extension ResizerSizeExt on resizer.Size {
+extension ResizerSizeExt on resizer.Dimension {
   ui.Size toUiSize() => ui.Size(width, height);
 }
 
 extension UISizeExt on ui.Size {
-  resizer.Size toResizerSize() => resizer.Size(width, height);
+  resizer.Dimension toResizerSize() => resizer.Dimension(width, height);
 }

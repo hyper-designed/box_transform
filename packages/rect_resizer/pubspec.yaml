@@ -6,8 +6,10 @@ version: 0.0.1
 repository: https://github.com/BirjuVachhani/rect_resizer
 
 environment:
-  sdk: '>=2.18.0 <3.0.0'
+  sdk: '>=2.19.0 <3.0.0'
 
 dev_dependencies:
   lints: ^2.0.0
   test: ^1.21.0
+dependencies:
+  vector_math: ^2.1.4

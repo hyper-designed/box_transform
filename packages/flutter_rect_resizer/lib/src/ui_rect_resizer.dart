@@ -19,8 +19,8 @@ class UIRectResizer {
       _resizer
           .resize(
             initialRect: initialRect.toResizerRect(),
-            initialLocalPosition: initialLocalPosition.toResizerOffset(),
-            localPosition: localPosition.toResizerOffset(),
+            initialLocalPosition: initialLocalPosition.toResizerVector2(),
+            localPosition: localPosition.toResizerVector2(),
             handle: handle,
             resizeMode: resizeMode,
             initialFlip: initialFlip,
