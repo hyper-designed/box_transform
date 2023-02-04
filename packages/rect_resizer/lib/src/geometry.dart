@@ -17,7 +17,7 @@ class Dimension {
   const Dimension(this.width, this.height);
 
   /// Creates an instance of [Dimension] that has the same values as another.
-  // Used by the rendering library's _DebugSize hack.
+  // Used by the rendering library's _DebugDimension hack.
   Dimension.copy(Dimension source)
       : width = source.width,
         height = source.height;
@@ -26,7 +26,7 @@ class Dimension {
   ///
   /// See also:
   ///
-  ///  * [Size.fromRadius], which is more convenient when the available size
+  ///  * [Dimension.fromRadius], which is more convenient when the available size
   ///    is the radius of a circle.
   const Dimension.square(double dimension)
       : width = dimension,
@@ -45,7 +45,7 @@ class Dimension {
   ///
   /// See also:
   ///
-  ///  * [Size.square], which creates a square with the given dimension.
+  ///  * [Dimension.square], which creates a square with the given dimension.
   const Dimension.fromRadius(double radius)
       : width = radius * 2.0,
         height = radius * 2.0;
@@ -138,7 +138,7 @@ class Dimension {
   double get longestSide => math.max(width.abs(), height.abs());
 
   // Convenience methods that do the equivalent of calling the similarly named
-  // methods on a Rect constructed from the given origin and this size.
+  // methods on a Box constructed from the given origin and this size.
 
   /// The Vector2 to the intersection of the top and left edges of the rectangle
   /// described by the given [Vector2] (which is interpreted as the top-left corner)
@@ -210,7 +210,7 @@ class Dimension {
   /// relative to the top left of the size) lies between the left and right and
   /// the top and bottom edges of a rectangle of this size.
   ///
-  /// Rectangles include their top and left edges but exclude their bottom and
+  /// Boxangles include their top and left edges but exclude their bottom and
   /// right edges.
   bool contains(Vector2 vec) {
     return vec.x >= 0.0 && vec.x < width && vec.y >= 0.0 && vec.y < height;
@@ -251,8 +251,8 @@ class Dimension {
     }
   }
 
-  /// Compares two Sizes for equality.
-  // We don't compare the runtimeType because of _DebugSize in the framework.
+  /// Compares two Dimensions for equality.
+  // We don't compare the runtimeType because of _DebugDimension in the framework.
   @override
   bool operator ==(Object other) {
     return other is Dimension && other.width == width && other.height == height;
@@ -263,17 +263,17 @@ class Dimension {
 
   @override
   String toString() =>
-      'Size(${width.toStringAsFixed(1)}, ${height.toStringAsFixed(1)})';
+      'Dimension(${width.toStringAsFixed(1)}, ${height.toStringAsFixed(1)})';
 }
 
 /// An immutable, 2D, axis-aligned, floating-point rectangle whose coordinates
 /// are relative to a given origin.
 ///
-/// A Rect can be created with one its constructors or from an [Vector2] and a
+/// A Box can be created with one its constructors or from an [Vector2] and a
 /// [Dimension] using the `&` operator:
 ///
 /// ```dart
-/// Rect myRect = const Vector2(1.0, 2.0) & const Size(3.0, 4.0);
+/// Box myBox = const Vector2(1.0, 2.0) & const Dimension(3.0, 4.0);
 /// ```
 class Box {
   /// Construct a rectangle from its left, top, right, and bottom edges.
@@ -362,7 +362,7 @@ class Box {
   /// A rectangle with left, top, right, and bottom edges all at zero.
   static const Box zero = Box.fromLTRB(0.0, 0.0, 0.0, 0.0);
 
-  static const double _giantScalar = 1.0E+9; // matches kGiantRect from layer.h
+  static const double _giantScalar = 1.0E+9; // matches kGiantBox from layer.h
 
   /// A rectangle that covers the entire coordinate space.
   ///
@@ -372,7 +372,7 @@ class Box {
       Box.fromLTRB(-_giantScalar, -_giantScalar, _giantScalar, _giantScalar);
 
   /// Whether any of the coordinates of this rectangle are equal to positive infinity.
-  // included for consistency with Vector2 and Size
+  // included for consistency with Vector2 and Dimension
   bool get isInfinite {
     return left >= double.infinity ||
         top >= double.infinity ||
@@ -419,7 +419,7 @@ class Box {
   /// Returns a new rectangle that is the intersection of the given
   /// rectangle and this rectangle. The two rectangles must overlap
   /// for this to be meaningful. If the two rectangles do not overlap,
-  /// then the resulting Rect will have a negative width or height.
+  /// then the resulting Box will have a negative width or height.
   Box intersect(Box other) {
     return Box.fromLTRB(math.max(left, other.left), math.max(top, other.top),
         math.min(right, other.right), math.min(bottom, other.bottom));
@@ -508,7 +508,7 @@ class Box {
   /// relative to the origin) lies between the left and right and the top and
   /// bottom edges of this rectangle.
   ///
-  /// Rectangles include their top and left edges but exclude their bottom and
+  /// Boxangles include their top and left edges but exclude their bottom and
   /// right edges.
   bool contains(Vector2 vec) {
     return vec.x >= left && vec.x < right && vec.y >= top && vec.y < bottom;
@@ -571,5 +571,5 @@ class Box {
 
   @override
   String toString() =>
-      'Rect.fromLTRB(${left.toStringAsFixed(1)}, ${top.toStringAsFixed(1)}, ${right.toStringAsFixed(1)}, ${bottom.toStringAsFixed(1)})';
+      'Box.fromLTRB(${left.toStringAsFixed(1)}, ${top.toStringAsFixed(1)}, ${right.toStringAsFixed(1)}, ${bottom.toStringAsFixed(1)})';
 }
