@@ -9,15 +9,19 @@ double _lerpDouble(double a, double b, double t) {
   return a * (1.0 - t) + b * t;
 }
 
+/// A 2D size with [width] and [height].
 class Dimension {
+
+  /// The width of the [Dimension].
   final double width;
+
+  /// The height of the [Dimension].
   final double height;
 
   /// Creates a [Dimension] with the given [width] and [height].
   const Dimension(this.width, this.height);
 
   /// Creates an instance of [Dimension] that has the same values as another.
-  // Used by the rendering library's _DebugDimension hack.
   Dimension.copy(Dimension source)
       : width = source.width,
         height = source.height;
@@ -210,7 +214,7 @@ class Dimension {
   /// relative to the top left of the size) lies between the left and right and
   /// the top and bottom edges of a rectangle of this size.
   ///
-  /// Boxangles include their top and left edges but exclude their bottom and
+  /// Boxes include their top and left edges but exclude their bottom and
   /// right edges.
   bool contains(Vector2 vec) {
     return vec.x >= 0.0 && vec.x < width && vec.y >= 0.0 && vec.y < height;
@@ -252,7 +256,6 @@ class Dimension {
   }
 
   /// Compares two Dimensions for equality.
-  // We don't compare the runtimeType because of _DebugDimension in the framework.
   @override
   bool operator ==(Object other) {
     return other is Dimension && other.width == width && other.height == height;
@@ -277,9 +280,6 @@ class Dimension {
 /// ```
 class Box {
   /// Construct a rectangle from its left, top, right, and bottom edges.
-  ///
-  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/rect_from_ltrb.png#gh-light-mode-only)
-  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/rect_from_ltrb_dark.png#gh-dark-mode-only)
   const Box.fromLTRB(this.left, this.top, this.right, this.bottom);
 
   /// Construct a rectangle from its left and top edges, its width, and its
@@ -287,18 +287,12 @@ class Box {
   ///
   /// To construct a [Box] from an [Vector2] and a [Dimension], you can use the
   /// rectangle constructor operator `&`. See [Vector2.&].
-  ///
-  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/rect_from_ltwh.png#gh-light-mode-only)
-  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/rect_from_ltwh_dark.png#gh-dark-mode-only)
   const Box.fromLTWH(double left, double top, double width, double height)
       : this.fromLTRB(left, top, left + width, top + height);
 
   /// Construct a rectangle that bounds the given circle.
   ///
   /// The `center` argument is assumed to be an Vector2 from the origin.
-  ///
-  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/rect_from_circle.png#gh-light-mode-only)
-  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/rect_from_circle_dark.png#gh-dark-mode-only)
   Box.fromCircle({required Vector2 center, required double radius})
       : this.fromCenter(
           center: center,
@@ -309,9 +303,6 @@ class Box {
   /// Constructs a rectangle from its center point, width, and height.
   ///
   /// The `center` argument is assumed to be an Vector2 from the origin.
-  ///
-  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/rect_from_center.png#gh-light-mode-only)
-  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/rect_from_center_dark.png#gh-dark-mode-only)
   Box.fromCenter(
       {required Vector2 center, required double width, required double height})
       : this.fromLTRB(
@@ -323,9 +314,6 @@ class Box {
 
   /// Construct the smallest rectangle that encloses the given Vector2s, treating
   /// them as vectors from the origin.
-  ///
-  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/rect_from_points.png#gh-light-mode-only)
-  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/rect_from_points_dark.png#gh-dark-mode-only)
   Box.fromPoints(Vector2 a, Vector2 b)
       : this.fromLTRB(
           math.min(a.x, b.x),
@@ -362,6 +350,7 @@ class Box {
   /// A rectangle with left, top, right, and bottom edges all at zero.
   static const Box zero = Box.fromLTRB(0.0, 0.0, 0.0, 0.0);
 
+  /// Used to construct the largest possible [Box] instance.
   static const double _giantScalar = 1.0E+9; // matches kGiantBox from layer.h
 
   /// A rectangle that covers the entire coordinate space.
@@ -508,7 +497,7 @@ class Box {
   /// relative to the origin) lies between the left and right and the top and
   /// bottom edges of this rectangle.
   ///
-  /// Boxangles include their top and left edges but exclude their bottom and
+  /// Boxes include their top and left edges but exclude their bottom and
   /// right edges.
   bool contains(Vector2 vec) {
     return vec.x >= left && vec.x < right && vec.y >= top && vec.y < bottom;

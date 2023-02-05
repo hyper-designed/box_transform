@@ -5,6 +5,7 @@ import 'package:rect_resizer/rect_resizer.dart' as resizer;
 
 import 'ui_resize_result.dart';
 
+/// A Flutter translation of [resizer.RectResizer].
 class UIRectResizer {
   final resizer.RectResizer _resizer = resizer.RectResizer();
 

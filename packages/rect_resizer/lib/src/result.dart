@@ -3,6 +3,7 @@ import 'package:vector_math/vector_math.dart';
 import 'enums.dart';
 import 'geometry.dart';
 
+/// An object that represents the result of a resize operation.
 class ResizeResult {
   /// The new [Box] of the node after the resize.
   final Box newRect;
@@ -25,7 +26,7 @@ class ResizeResult {
   final Dimension newSize;
 
   /// Creates a [ResizeResult] object.
-  ResizeResult({
+  const ResizeResult({
     required this.newRect,
     required this.oldRect,
     required this.flip,

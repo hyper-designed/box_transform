@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 
 import 'package:rect_resizer/rect_resizer.dart' as resizer;
 
+/// A Flutter translation of a [resizer.ResizeResult].
 class UIResizeResult {
   /// The new [Rect] of the node after the resize.
   final ui.Rect newRect;

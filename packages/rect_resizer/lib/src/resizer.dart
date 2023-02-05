@@ -4,8 +4,17 @@ import 'enums.dart';
 import 'geometry.dart';
 import 'result.dart';
 
-/// main entry point.
+/// A class that resizes a [Box] in several different supported forms.
 class RectResizer {
+
+  /// Resizes the given [initialRect] with given [initialLocalPosition] of
+  /// the mouse cursor and wherever [localPosition] of the mouse cursor is
+  /// currently at.
+  ///
+  /// Specifying the [handle] and [resizeMode] will determine how the
+  /// [initialRect] will be resized.
+  ///
+  /// The [initialFlip] helps determine the initial state of the rectangle.
   ResizeResult resize({
     required Box initialRect,
     required Vector2 initialLocalPosition,
@@ -22,11 +31,11 @@ class RectResizer {
     if (resizeMode.hasSymmetry) delta = Vector2(delta.x * 2, delta.y * 2);
 
     final Dimension newSize = _calculateNewSize(
-      initialRect,
-      handle,
-      delta,
-      currentFlip,
-      resizeMode,
+      initialRect: initialRect,
+      handle: handle,
+      delta: delta,
+      flip: currentFlip,
+      resizeMode: resizeMode,
     );
     double newWidth = newSize.width.abs();
     double newHeight = newSize.height.abs();
@@ -106,13 +115,13 @@ class RectResizer {
     return Flip.fromValue(posX, posY);
   }
 
-  Dimension _calculateNewSize(
-    Box initialRect,
-    HandlePosition handle,
-    Vector2 delta,
-    Flip flip,
-    ResizeMode resizeMode,
-  ) {
+  Dimension _calculateNewSize({
+    required Box initialRect,
+    required HandlePosition handle,
+    required Vector2 delta,
+    required Flip flip,
+    required ResizeMode resizeMode,
+  }) {
     final aspectRatio = initialRect.width / initialRect.height;
     final double newWidth;
     final double newHeight;

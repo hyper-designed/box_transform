@@ -53,24 +53,24 @@ const double kStrokeWidth = 1.5;
 const Color kGridColor = Color(0x7FC3E8F3);
 
 class _MyHomePageState extends State<MyHomePage> {
-  Rect rect = Rect.zero;
-  bool hasFocus = true;
+  final FocusScopeNode focusNode = FocusScopeNode();
+  final UIRectResizer resizer = UIRectResizer();
 
-  Flip flip = Flip.none;
-
+  /// Keep track of the keys that are currently pressed to change
+  /// the resize mode.
   List<String> pressedKeys = [];
 
   bool get isAltPressed => pressedKeys.contains('ALT');
 
   bool get isShiftPressed => pressedKeys.contains('SHIFT');
 
+  Rect rect = Rect.zero;
+  bool hasFocus = true;
+  Flip flip = Flip.none;
+
   Offset initialLocalPosition = Offset.zero;
   Rect initialRect = Rect.zero;
   Flip initialFlip = Flip.none;
-
-  FocusScopeNode focusNode = FocusScopeNode();
-
-  final UIRectResizer resizer = UIRectResizer();
 
   @override
   void didChangeDependencies() {
@@ -78,10 +78,16 @@ class _MyHomePageState extends State<MyHomePage> {
     if (rect == Rect.zero) reset();
   }
 
+  @override
+  void dispose() {
+    focusNode.dispose();
+    super.dispose();
+  }
+
   void reset() {
-    final size = MediaQuery.of(context).size;
-    final width = size.width - 300;
-    final height = size.height;
+    final Size size = MediaQuery.of(context).size;
+    final double width = size.width - 300;
+    final double height = size.height;
     rect = Rect.fromLTWH(
       (width - kInitialWidth) / 2,
       (height - kInitialHeight) / 2,
@@ -90,6 +96,10 @@ class _MyHomePageState extends State<MyHomePage> {
     );
     flip = Flip.none;
     if (mounted) setState(() {});
+  }
+
+  void onFocusChanged(bool hasFocus) {
+    setState(() => this.hasFocus = hasFocus);
   }
 
   @override
@@ -102,7 +112,7 @@ class _MyHomePageState extends State<MyHomePage> {
       body: FocusScope(
         node: focusNode,
         autofocus: true,
-        onFocusChange: (hasFocus) => setState(() => this.hasFocus = hasFocus),
+        onFocusChange: onFocusChanged,
         onKey: onKeyEvent,
         child: Row(
           children: [
@@ -362,12 +372,6 @@ class _MyHomePageState extends State<MyHomePage> {
     return handled && focusNode.hasPrimaryFocus
         ? KeyEventResult.handled
         : KeyEventResult.ignored;
-  }
-
-  @override
-  void dispose() {
-    focusNode.dispose();
-    super.dispose();
   }
 }
 

@@ -25,6 +25,8 @@ enum HandlePosition {
   bool get isBottom => this == bottomLeft || this == bottomRight;
 }
 
+/// Represents the flip state of a rectangle, or, in other words, if the
+/// box is flipped horizontally, vertically, or diagonally.
 enum Flip {
   /// No flipping, the rect stays as it is, not allowing any flipping.
   none,
