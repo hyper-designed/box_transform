@@ -11,7 +11,6 @@ double _lerpDouble(double a, double b, double t) {
 
 /// A 2D size with [width] and [height].
 class Dimension {
-
   /// The width of the [Dimension].
   final double width;
 

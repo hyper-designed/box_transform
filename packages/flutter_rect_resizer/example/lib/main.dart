@@ -56,6 +56,8 @@ class _MyHomePageState extends State<MyHomePage> {
   final FocusScopeNode focusNode = FocusScopeNode();
   final UIRectResizer resizer = UIRectResizer();
 
+  // TODO: Remove unnecessary states since we are using Resizable widget.
+
   /// Keep track of the keys that are currently pressed to change
   /// the resize mode.
   List<String> pressedKeys = [];
@@ -127,150 +129,154 @@ class _MyHomePageState extends State<MyHomePage> {
                           : kGridColor,
                     ),
                   ),
-                  Positioned.fromRect(
-                    rect: rect,
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onPanUpdate: onDragUpdate,
-                      child: Transform.scale(
-                        scaleX: flip.isHorizontal ? -1 : 1,
-                        scaleY: flip.isVertical ? -1 : 1,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            image: const DecorationImage(
-                              image: AssetImage('assets/images/landscape2.jpg'),
-                              fit: BoxFit.fill,
-                            ),
-                            border: Border.all(
-                              color: handleColor,
-                              width: 2,
-                            ),
-                            // boxShadow: [
-                            //   BoxShadow(
-                            //     color: Colors.black.withOpacity(0.1),
-                            //     blurRadius: 8,
-                            //     spreadRadius: 5,
-                            //   ),
-                            // ],
+                  ResizableBox(
+                    box: rect,
+                    onChanged: (box, flip) {
+                      setState(() {
+                        rect = box;
+                        this.flip = flip;
+                      });
+                    },
+                    contentBuilder: (context, rect, flip) => Transform.scale(
+                      scaleX: flip.isHorizontal ? -1 : 1,
+                      scaleY: flip.isVertical ? -1 : 1,
+                      child: Container(
+                        width: rect.width,
+                        height: rect.height,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          image: const DecorationImage(
+                            image: AssetImage('assets/images/landscape2.jpg'),
+                            fit: BoxFit.fill,
                           ),
+                          border: Border.all(
+                            color: handleColor,
+                            width: 2,
+                          ),
+                          // boxShadow: [
+                          //   BoxShadow(
+                          //     color: Colors.black.withOpacity(0.1),
+                          //     blurRadius: 8,
+                          //     spreadRadius: 5,
+                          //   ),
+                          // ],
                         ),
                       ),
                     ),
                   ),
                   // Top left
-                  Positioned(
-                    left: rect.left - kHandleSize / 2 + kStrokeWidth,
-                    top: rect.top - kHandleSize / 2 + kStrokeWidth,
-                    child: GestureDetector(
-                      onPanStart: onPanStart,
-                      onPanUpdate: (details) =>
-                          onPanUpdate(details, HandlePosition.topLeft),
-                      onPanEnd: onPanEnd,
-                      child: MouseRegion(
-                        cursor: SystemMouseCursors.resizeUpLeft,
-                        child: Container(
-                          width: kHandleSize,
-                          height: kHandleSize,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).scaffoldBackgroundColor,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: handleColor,
-                              width: kStrokeWidth,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Top right
-                  Positioned(
-                    left: rect.right - kHandleSize / 2 - kStrokeWidth,
-                    top: rect.top - kHandleSize / 2 + kStrokeWidth,
-                    child: GestureDetector(
-                      onPanStart: onPanStart,
-                      onPanUpdate: (details) =>
-                          onPanUpdate(details, HandlePosition.topRight),
-                      onPanEnd: onPanEnd,
-                      child: MouseRegion(
-                        cursor: SystemMouseCursors.resizeUpRight,
-                        child: Container(
-                          width: kHandleSize,
-                          height: kHandleSize,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).scaffoldBackgroundColor,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: handleColor,
-                              width: kStrokeWidth,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Bottom left
-                  Positioned(
-                    left: rect.left - kHandleSize / 2 + kStrokeWidth,
-                    top: rect.bottom - kHandleSize / 2 - kStrokeWidth,
-                    child: GestureDetector(
-                      onPanStart: onPanStart,
-                      onPanUpdate: (details) =>
-                          onPanUpdate(details, HandlePosition.bottomLeft),
-                      onPanEnd: onPanEnd,
-                      child: MouseRegion(
-                        cursor: SystemMouseCursors.resizeDownLeft,
-                        child: Container(
-                          width: kHandleSize,
-                          height: kHandleSize,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).scaffoldBackgroundColor,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: handleColor,
-                              width: kStrokeWidth,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Bottom right
-                  Positioned(
-                    left: rect.right - kHandleSize / 2 - kStrokeWidth,
-                    top: rect.bottom - kHandleSize / 2 - kStrokeWidth,
-                    child: GestureDetector(
-                      onPanStart: onPanStart,
-                      onPanUpdate: (details) =>
-                          onPanUpdate(details, HandlePosition.bottomRight),
-                      onPanEnd: onPanEnd,
-                      child: MouseRegion(
-                        cursor: SystemMouseCursors.resizeDownRight,
-                        child: Container(
-                          width: kHandleSize,
-                          height: kHandleSize,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).scaffoldBackgroundColor,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: handleColor,
-                              width: kStrokeWidth,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Keyboard indicator
-                  Positioned(
-                    bottom: 12,
-                    left: 12,
-                    child: KeyboardListenerIndicator(
-                      pressedKeys: pressedKeys,
-                      onClear: () => setState(() => pressedKeys.clear()),
-                    ),
-                  ),
+                  // Positioned(
+                  //   left: rect.left - kHandleSize / 2 + kStrokeWidth,
+                  //   top: rect.top - kHandleSize / 2 + kStrokeWidth,
+                  //   child: GestureDetector(
+                  //     onPanStart: onPanStart,
+                  //     onPanUpdate: (details) =>
+                  //         onPanUpdate(details, HandlePosition.topLeft),
+                  //     onPanEnd: onPanEnd,
+                  //     child: MouseRegion(
+                  //       cursor: SystemMouseCursors.resizeUpLeft,
+                  //       child: Container(
+                  //         width: kHandleSize,
+                  //         height: kHandleSize,
+                  //         decoration: BoxDecoration(
+                  //           color: Theme.of(context).scaffoldBackgroundColor,
+                  //           shape: BoxShape.circle,
+                  //           border: Border.all(
+                  //             color: handleColor,
+                  //             width: kStrokeWidth,
+                  //           ),
+                  //         ),
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
+                  // // Top right
+                  // Positioned(
+                  //   left: rect.right - kHandleSize / 2 - kStrokeWidth,
+                  //   top: rect.top - kHandleSize / 2 + kStrokeWidth,
+                  //   child: GestureDetector(
+                  //     onPanStart: onPanStart,
+                  //     onPanUpdate: (details) =>
+                  //         onPanUpdate(details, HandlePosition.topRight),
+                  //     onPanEnd: onPanEnd,
+                  //     child: MouseRegion(
+                  //       cursor: SystemMouseCursors.resizeUpRight,
+                  //       child: Container(
+                  //         width: kHandleSize,
+                  //         height: kHandleSize,
+                  //         decoration: BoxDecoration(
+                  //           color: Theme.of(context).scaffoldBackgroundColor,
+                  //           shape: BoxShape.circle,
+                  //           border: Border.all(
+                  //             color: handleColor,
+                  //             width: kStrokeWidth,
+                  //           ),
+                  //         ),
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
+                  // // Bottom left
+                  // Positioned(
+                  //   left: rect.left - kHandleSize / 2 + kStrokeWidth,
+                  //   top: rect.bottom - kHandleSize / 2 - kStrokeWidth,
+                  //   child: GestureDetector(
+                  //     onPanStart: onPanStart,
+                  //     onPanUpdate: (details) =>
+                  //         onPanUpdate(details, HandlePosition.bottomLeft),
+                  //     onPanEnd: onPanEnd,
+                  //     child: MouseRegion(
+                  //       cursor: SystemMouseCursors.resizeDownLeft,
+                  //       child: Container(
+                  //         width: kHandleSize,
+                  //         height: kHandleSize,
+                  //         decoration: BoxDecoration(
+                  //           color: Theme.of(context).scaffoldBackgroundColor,
+                  //           shape: BoxShape.circle,
+                  //           border: Border.all(
+                  //             color: handleColor,
+                  //             width: kStrokeWidth,
+                  //           ),
+                  //         ),
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
+                  // // Bottom right
+                  // Positioned(
+                  //   left: rect.right - kHandleSize / 2 - kStrokeWidth,
+                  //   top: rect.bottom - kHandleSize / 2 - kStrokeWidth,
+                  //   child: GestureDetector(
+                  //     onPanStart: onPanStart,
+                  //     onPanUpdate: (details) =>
+                  //         onPanUpdate(details, HandlePosition.bottomRight),
+                  //     onPanEnd: onPanEnd,
+                  //     child: MouseRegion(
+                  //       cursor: SystemMouseCursors.resizeDownRight,
+                  //       child: Container(
+                  //         width: kHandleSize,
+                  //         height: kHandleSize,
+                  //         decoration: BoxDecoration(
+                  //           color: Theme.of(context).scaffoldBackgroundColor,
+                  //           shape: BoxShape.circle,
+                  //           border: Border.all(
+                  //             color: handleColor,
+                  //             width: kStrokeWidth,
+                  //           ),
+                  //         ),
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
+                  // // Keyboard indicator
+                  // Positioned(
+                  //   bottom: 12,
+                  //   left: 12,
+                  //   child: KeyboardListenerIndicator(
+                  //     pressedKeys: pressedKeys,
+                  //     onClear: () => setState(() => pressedKeys.clear()),
+                  //   ),
+                  // ),
                 ],
               ),
             ),
