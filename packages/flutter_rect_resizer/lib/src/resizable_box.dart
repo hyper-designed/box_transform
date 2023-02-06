@@ -13,28 +13,95 @@ typedef BoxContentBuilder = Widget Function(
   Flip flip,
 );
 
+/// A widget that allows you to resize and drag a box around a widget.
 class ResizableBox extends StatefulWidget {
+  /// If you need more control over the [ResizableBox] you can pass a
+  /// custom [ResizableBoxController] instance through the [controller]
+  /// parameter.
+  ///
+  /// If you do not specify one, a default [ResizableBoxController] instance
+  /// will be created internally, along with its lifecycle.
   final ResizableBoxController? controller;
 
+  /// A builder function that is used to build the content of the
+  /// [ResizableBox]. This is the physical widget you wish to show resizable
+  /// handles on. It's most commonly something like an image widget, but it
+  /// could be anything you want to have resizable & draggable box handles on.
   final BoxContentBuilder contentBuilder;
+
+  /// A builder function that is used to build the handles of the
+  /// [ResizableBox]. If you don't specify it, the default handles will be
+  /// used.
+  ///
+  /// Note that this will build for all four corners of the rectangle.
   final HandleBuilder? handleBuilder;
-  final double handleGestureResponseSize;
-  final double handleRenderedSize;
+
+  /// The radius of the gesture response area of the handles. If you don't
+  /// specify it, the default value will be used.
+  ///
+  /// This is similar to Flutter's [MaterialTapTargetSize] property, in which
+  /// the actual handle size is smaller than the gesture response area. This is
+  /// done to improve accessibility and usability of the handles; users will not
+  /// need cursor precision over the handle's pixels to be able to perform
+  /// operations with them, they need only to be able to reach the handle's
+  /// gesture response area to make it forgiving.
+  ///
+  /// The default value is 24 pixels in diameter.
+  final double handleGestureResponseDiameter;
+
+  /// The size of the handles that will be rendered on the screen. If you don't
+  /// specify it, the default value will be used.
+  ///
+  /// The default value is 12 pixels in diameter.
+  final double handleRenderedDiameter;
+
+  /// The initial box that will be used to position set the initial size of
+  /// the [ResizableBox] widget.
+  ///
+  /// This initial box will be mutated by the [ResizableBoxController] through
+  /// different dragging, panning, and resizing operations.
+  ///
+  /// [Rect] is immutable, so a new [Rect] instance will be created every time
+  /// the [ResizableBoxController] mutates the box. You can acquire your
+  /// updated box through the [onChanged] callback or through an externally
+  /// provided [ResizableBoxController] instance.
   final Rect box;
+
+  /// The initial flip that will be used to set the initial flip of the
+  /// [ResizableBox] widget. Normally, flipping is done by the user through
+  /// the handles, but you can set the initial flip through this parameter in
+  /// case the initial state of the box is in a flipped state.
+  ///
+  /// This utility cannot predicate if a box is flipped or not, so you will
+  /// need to provide the correct initial flip state.
+  ///
+  /// Note that the flip is optional, if you're resizing an image, for example,
+  /// you might want to allow flipping of the image when the user drags the
+  /// handles to opposite corners of the box. This flip behavior is entirely
+  /// optional and will allow handling such cases.
+  ///
+  /// You can leave it at the default [Flip.none] if flipping is not desired.
+  /// Note that this will not prevent the drag handles from crossing to
+  /// opposite corners of the box, it will only give oyu a lack of information
+  /// on the state of the box if flipping were to occur.
   final Flip flip;
-  final Function(Rect rect, Flip flip) onChanged;
+
+  /// A callback that is called every time the [ResizableBox] is updated.
+  /// This is called every time the [ResizableBoxController] mutates the box
+  /// or the flip.
+  final Function(Rect rect, Flip flip)? onChanged;
 
   const ResizableBox({
     super.key,
     required this.contentBuilder,
+    required this.box,
+    this.onChanged,
     this.controller,
     this.handleBuilder,
-    this.handleGestureResponseSize = 24,
-    this.handleRenderedSize = 12,
-    required this.box,
-    required this.onChanged,
+    this.handleGestureResponseDiameter = 24,
+    this.handleRenderedDiameter = 12,
     this.flip = Flip.none,
-  }) : assert(handleGestureResponseSize >= handleRenderedSize);
+  }) : assert(handleGestureResponseDiameter >= handleRenderedDiameter);
 
   @override
   State<ResizableBox> createState() => _ResizableBoxState();
@@ -74,7 +141,7 @@ class _ResizableBoxState extends State<ResizableBox> {
   void onControllerUpdate() {
     if (widget.box != controller.box || widget.flip != controller.flip) {
       if (mounted) setState(() {});
-      widget.onChanged(controller.box, controller.flip);
+      widget.onChanged?.call(controller.box, controller.flip);
     }
   }
 
@@ -83,7 +150,7 @@ class _ResizableBoxState extends State<ResizableBox> {
     final Flip flip = controller.flip;
     final Rect box = controller.box;
     return Positioned.fromRect(
-      rect: box.inflate(widget.handleGestureResponseSize / 2),
+      rect: box.inflate(widget.handleGestureResponseDiameter / 2),
       child: Stack(
         clipBehavior: Clip.none,
         fit: StackFit.expand,
@@ -95,37 +162,37 @@ class _ResizableBoxState extends State<ResizableBox> {
               behavior: HitTestBehavior.opaque,
               onPanUpdate: (event) {
                 final box = controller.onDragUpdate(event, notify: false);
-                widget.onChanged(box, flip);
+                widget.onChanged?.call(box, flip);
               },
               child: widget.contentBuilder(context, box, flip),
             ),
           ),
           HandleWidget(
-            handle: HandlePosition.topLeft,
+            position: HandlePosition.topLeft,
             controller: controller,
-            size: widget.handleRenderedSize,
-            responseSize: widget.handleGestureResponseSize,
+            renderedDiameter: widget.handleRenderedDiameter,
+            gestureResponseDiameter: widget.handleGestureResponseDiameter,
             onResize: widget.onChanged,
           ),
           HandleWidget(
-            handle: HandlePosition.topRight,
+            position: HandlePosition.topRight,
             controller: controller,
-            size: widget.handleRenderedSize,
-            responseSize: widget.handleGestureResponseSize,
+            renderedDiameter: widget.handleRenderedDiameter,
+            gestureResponseDiameter: widget.handleGestureResponseDiameter,
             onResize: widget.onChanged,
           ),
           HandleWidget(
-            handle: HandlePosition.bottomRight,
+            position: HandlePosition.bottomRight,
             controller: controller,
-            size: widget.handleRenderedSize,
-            responseSize: widget.handleGestureResponseSize,
+            renderedDiameter: widget.handleRenderedDiameter,
+            gestureResponseDiameter: widget.handleGestureResponseDiameter,
             onResize: widget.onChanged,
           ),
           HandleWidget(
-            handle: HandlePosition.bottomLeft,
+            position: HandlePosition.bottomLeft,
             controller: controller,
-            size: widget.handleRenderedSize,
-            responseSize: widget.handleGestureResponseSize,
+            renderedDiameter: widget.handleRenderedDiameter,
+            gestureResponseDiameter: widget.handleGestureResponseDiameter,
             onResize: widget.onChanged,
           ),
         ],
@@ -141,70 +208,81 @@ class _ResizableBoxState extends State<ResizableBox> {
   }
 }
 
+Widget _defaultHandleBuilder(BuildContext context, HandlePosition handle) {
+  return Container(
+    decoration: BoxDecoration(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      shape: BoxShape.circle,
+      border: Border.all(
+        color: Theme.of(context).colorScheme.primary,
+        width: 1.5,
+      ),
+    ),
+  );
+}
+
 class HandleWidget extends StatelessWidget {
-  final HandlePosition handle;
+  /// The position of the handle.
+  final HandlePosition position;
+
+  /// The controller that is used to mutate the box.
   final ResizableBoxController controller;
-  final HandleBuilder? handleBuilder;
-  final double size;
-  final double responseSize;
-  final Function(Rect rect, Flip flip) onResize;
+
+  /// The builder that is used to build the handle widget.
+  final HandleBuilder builder;
+
+  /// The diameter of the handle that is rendered.
+  final double renderedDiameter;
+
+  /// The diameter of the handle that is used for gesture detection.
+  final double gestureResponseDiameter;
+
+  /// A callback that is called every time the [ResizableBox] is updated.
+  /// This is called every time the [ResizableBoxController] mutates the box
+  /// or the flip.
+  final Function(Rect rect, Flip flip)? onResize;
 
   const HandleWidget({
     super.key,
-    required this.handle,
+    required this.position,
     required this.controller,
-    this.handleBuilder,
-    required this.size,
-    required this.responseSize,
-    required this.onResize,
+    required this.renderedDiameter,
+    required this.gestureResponseDiameter,
+    this.onResize,
+    this.builder = _defaultHandleBuilder,
   });
 
   @override
   Widget build(BuildContext context) {
     final Offset handleOffset =
-        getLocalOffsetForHandle(handle, controller.box.size)
-            .translate(-responseSize / 2, -responseSize / 2);
-
-    final builder = (handleBuilder ?? defaultHandleBuilder);
+        getLocalOffsetForHandle(position, controller.box.size).translate(
+            -gestureResponseDiameter / 2, -gestureResponseDiameter / 2);
 
     return Positioned(
       left: handleOffset.dx,
       top: handleOffset.dy,
-      width: responseSize,
-      height: responseSize,
+      width: gestureResponseDiameter,
+      height: gestureResponseDiameter,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onPanStart: controller.onResizeStart,
         onPanUpdate: (details) {
           final result = controller.onResizeUpdate(
             details,
-            handle,
+            position,
             notify: false,
           );
-          onResize(result.newRect, controller.flip);
+          onResize?.call(result.newRect, controller.flip);
         },
         onPanEnd: controller.onResizeEnd,
         child: MouseRegion(
-          cursor: getCursorForHandle(handle),
+          cursor: getCursorForHandle(position),
           child: Center(
             child: SizedBox.square(
-              dimension: size,
-              child: builder(context, handle),
+              dimension: renderedDiameter,
+              child: builder(context, position),
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget defaultHandleBuilder(BuildContext context, HandlePosition handle) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: Theme.of(context).colorScheme.primary,
-          width: 1.5,
         ),
       ),
     );
@@ -220,20 +298,6 @@ class HandleWidget extends StatelessWidget {
         return Offset(0, size.height);
       case HandlePosition.bottomRight:
         return Offset(size.width, size.height);
-    }
-  }
-
-  // TODO: this is unused and might not be relevant, remove?
-  Offset getGlobalOffsetForHandle(HandlePosition handle, Rect box) {
-    switch (handle) {
-      case HandlePosition.topLeft:
-        return Offset(box.left, box.top);
-      case HandlePosition.topRight:
-        return Offset(box.right, box.top);
-      case HandlePosition.bottomLeft:
-        return Offset(box.left, box.bottom);
-      case HandlePosition.bottomRight:
-        return Offset(box.right, box.bottom);
     }
   }
 
