@@ -13,6 +13,19 @@ typedef BoxContentBuilder = Widget Function(
   Flip flip,
 );
 
+Widget _defaultHandleBuilder(BuildContext context, HandlePosition handle) {
+  return Container(
+    decoration: BoxDecoration(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      shape: BoxShape.circle,
+      border: Border.all(
+        color: Theme.of(context).colorScheme.primary,
+        width: 1.5,
+      ),
+    ),
+  );
+}
+
 /// A widget that allows you to resize and drag a box around a widget.
 class ResizableBox extends StatefulWidget {
   /// If you need more control over the [ResizableBox] you can pass a
@@ -34,7 +47,7 @@ class ResizableBox extends StatefulWidget {
   /// used.
   ///
   /// Note that this will build for all four corners of the rectangle.
-  final HandleBuilder? handleBuilder;
+  final HandleBuilder handleBuilder;
 
   /// The radius of the gesture response area of the handles. If you don't
   /// specify it, the default value will be used.
@@ -97,7 +110,7 @@ class ResizableBox extends StatefulWidget {
     required this.box,
     this.onChanged,
     this.controller,
-    this.handleBuilder,
+    this.handleBuilder = _defaultHandleBuilder,
     this.handleGestureResponseDiameter = 24,
     this.handleRenderedDiameter = 12,
     this.flip = Flip.none,
@@ -173,6 +186,7 @@ class _ResizableBoxState extends State<ResizableBox> {
             renderedDiameter: widget.handleRenderedDiameter,
             gestureResponseDiameter: widget.handleGestureResponseDiameter,
             onResize: widget.onChanged,
+            builder: widget.handleBuilder,
           ),
           HandleWidget(
             position: HandlePosition.topRight,
@@ -180,6 +194,7 @@ class _ResizableBoxState extends State<ResizableBox> {
             renderedDiameter: widget.handleRenderedDiameter,
             gestureResponseDiameter: widget.handleGestureResponseDiameter,
             onResize: widget.onChanged,
+            builder: widget.handleBuilder,
           ),
           HandleWidget(
             position: HandlePosition.bottomRight,
@@ -187,6 +202,7 @@ class _ResizableBoxState extends State<ResizableBox> {
             renderedDiameter: widget.handleRenderedDiameter,
             gestureResponseDiameter: widget.handleGestureResponseDiameter,
             onResize: widget.onChanged,
+            builder: widget.handleBuilder,
           ),
           HandleWidget(
             position: HandlePosition.bottomLeft,
@@ -194,6 +210,7 @@ class _ResizableBoxState extends State<ResizableBox> {
             renderedDiameter: widget.handleRenderedDiameter,
             gestureResponseDiameter: widget.handleGestureResponseDiameter,
             onResize: widget.onChanged,
+            builder: widget.handleBuilder,
           ),
         ],
       ),
@@ -206,19 +223,6 @@ class _ResizableBoxState extends State<ResizableBox> {
     if (widget.controller == null) controller.dispose();
     super.dispose();
   }
-}
-
-Widget _defaultHandleBuilder(BuildContext context, HandlePosition handle) {
-  return Container(
-    decoration: BoxDecoration(
-      color: Theme.of(context).scaffoldBackgroundColor,
-      shape: BoxShape.circle,
-      border: Border.all(
-        color: Theme.of(context).colorScheme.primary,
-        width: 1.5,
-      ),
-    ),
-  );
 }
 
 class HandleWidget extends StatelessWidget {
@@ -248,8 +252,8 @@ class HandleWidget extends StatelessWidget {
     required this.controller,
     required this.renderedDiameter,
     required this.gestureResponseDiameter,
+    required this.builder,
     this.onResize,
-    this.builder = _defaultHandleBuilder,
   });
 
   @override
