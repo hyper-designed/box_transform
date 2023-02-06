@@ -2,6 +2,42 @@ import 'dart:ui' as ui;
 
 import 'package:rect_resizer/rect_resizer.dart' as resizer;
 
+/// A Flutter translation of a [resizer.MoveResult].
+class UIMoveResult {
+  /// The new [Rect] of the node after the move.
+  final ui.Rect newRect;
+
+  /// The old [Rect] of the node before the move.
+  final ui.Rect oldRect;
+
+  /// The delta used to move the node.
+  final ui.Offset delta;
+
+  /// Creates a [UIMoveResult] object.
+  UIMoveResult({
+    required this.newRect,
+    required this.oldRect,
+    required this.delta,
+  });
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is UIMoveResult &&
+        other.newRect == newRect &&
+        other.oldRect == oldRect &&
+        other.delta == delta;
+  }
+
+  @override
+  int get hashCode => newRect.hashCode ^ oldRect.hashCode ^ delta.hashCode;
+
+  @override
+  String toString() =>
+      'UIMoveResult(newRect: $newRect, oldRect: $oldRect, delta: $delta)';
+}
+
 /// A Flutter translation of a [resizer.ResizeResult].
 class UIResizeResult {
   /// The new [Rect] of the node after the resize.

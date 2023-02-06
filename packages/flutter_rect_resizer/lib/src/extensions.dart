@@ -20,6 +20,18 @@ extension ResizeResultExt on resizer.ResizeResult {
   }
 }
 
+extension MoveResultExt on resizer.MoveResult {
+  /// Converts a `MoveResult` from `rect_resizer` to a `UIMoveResult`
+  UIMoveResult toFlutterMoveResult() {
+    return UIMoveResult(
+      /// Creates a new `UIMoveResult` instance with the converted data
+      newRect: newRect.toUiRect(),
+      oldRect: oldRect.toUiRect(),
+      delta: delta.toUiVector2(),
+    );
+  }
+}
+
 extension ResizerRectExt on resizer.Box {
   /// Converts a `Box` from `rect_resizer` to a `ui.Rect`
   ui.Rect toUiRect() => ui.Rect.fromLTWH(left, top, width, height);
@@ -27,8 +39,7 @@ extension ResizerRectExt on resizer.Box {
 
 extension UIRectExt on ui.Rect {
   /// Converts a `ui.Rect` to a `Box` from `rect_resizer`
-  resizer.Box toResizerRect() =>
-      resizer.Box.fromLTRB(left, top, right, bottom);
+  resizer.Box toResizerBox() => resizer.Box.fromLTRB(left, top, right, bottom);
 }
 
 extension ResizerVector2Ext on Vector2 {

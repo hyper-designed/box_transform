@@ -2,6 +2,40 @@ import 'dart:math' as math;
 
 import 'package:vector_math/vector_math.dart';
 
+class Constraints {
+  final double minWidth;
+  final double maxWidth;
+  final double minHeight;
+  final double maxHeight;
+
+  const Constraints({
+    this.minWidth = 0.0,
+    this.maxWidth = double.infinity,
+    this.minHeight = 0.0,
+    this.maxHeight = double.infinity,
+  });
+
+  num _clamp(num value, num min, num max) {
+    return math.max(min, math.min(max, value));
+  }
+
+  Dimension constrainDimension(Dimension dimension) {
+    return Dimension(
+      _clamp(dimension.width, minWidth, maxWidth).toDouble(),
+      _clamp(dimension.height, minHeight, maxHeight).toDouble(),
+    );
+  }
+
+  Box constrainBox(Box box) {
+    return Box.fromLTWH(
+      box.left,
+      box.top,
+      _clamp(box.width, minWidth, maxWidth).toDouble(),
+      _clamp(box.height, minHeight, maxHeight).toDouble(),
+    );
+  }
+}
+
 /// Linearly interpolate between two doubles.
 ///
 /// Same as [lerpDouble] but specialized for non-null `double` type.
@@ -217,6 +251,10 @@ class Dimension {
   /// right edges.
   bool contains(Vector2 vec) {
     return vec.x >= 0.0 && vec.x < width && vec.y >= 0.0 && vec.y < height;
+  }
+
+  Dimension constrainBy(Constraints constraints) {
+    return constraints.constrainDimension(this);
   }
 
   /// A [Dimension] with the [width] and [height] swapped.
@@ -500,6 +538,40 @@ class Box {
   /// right edges.
   bool contains(Vector2 vec) {
     return vec.x >= left && vec.x < right && vec.y >= top && vec.y < bottom;
+  }
+
+  Box constrainBy(Constraints constraints) {
+    return constraints.constrainBox(this);
+  }
+
+  Box clampThisInsideParent(Box parent) {
+    return Box.fromLTRB(
+      math.max(parent.left, left),
+      math.max(parent.top, top),
+      math.min(parent.right, right),
+      math.min(parent.bottom, bottom),
+    );
+  }
+
+  Box clampBoxInsideThis(Box child, {bool modifySize = true}) {
+    final double x = math.max(left, child.left);
+    final double y = math.max(top, child.top);
+    final double clampedLeft = math.min(x, right - child.width);
+    final double clampedTop = math.min(y, bottom - child.height);
+
+    return Box.fromLTWH(
+      math.max(left, clampedLeft),
+      math.max(top, clampedTop),
+      modifySize ? math.min(width, child.width) : child.width,
+      modifySize ? math.min(height, child.height) : child.height,
+    );
+  }
+
+  Vector2 clampVectorInsideThis(Vector2 vec) {
+    return Vector2(
+      math.max(left, math.min(right, vec.x)),
+      math.max(top, math.min(bottom, vec.y)),
+    );
   }
 
   /// Linearly interpolate between two rectangles.

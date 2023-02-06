@@ -6,6 +6,32 @@ import 'result.dart';
 
 /// A class that resizes a [Box] in several different supported forms.
 class RectResizer {
+  /// Calculates the new position of the [initialRect] based on the
+  /// [initialLocalPosition] of the mouse cursor and wherever [localPosition]
+  /// of the mouse cursor is currently at.
+  ///
+  /// The [clampingBox] is the box that the [initialRect] will be
+  /// constrained to.
+  MoveResult move({
+    required Box initialRect,
+    required Vector2 initialLocalPosition,
+    required Vector2 localPosition,
+    Box clampingBox = Box.largest,
+  }) {
+    final Vector2 delta = localPosition - initialLocalPosition;
+
+    final Box unclampedRect = initialRect.translate(delta.x, delta.y);
+    final Box clampedRect = clampingBox.clampBoxInsideThis(unclampedRect);
+    final Vector2 clampedDelta = clampedRect.topLeft - initialRect.topLeft;
+
+    final Box newRect = initialRect.translate(clampedDelta.x, clampedDelta.y);
+
+    return MoveResult(
+      newRect: newRect,
+      oldRect: initialRect,
+      delta: delta,
+    );
+  }
 
   /// Resizes the given [initialRect] with given [initialLocalPosition] of
   /// the mouse cursor and wherever [localPosition] of the mouse cursor is
@@ -22,6 +48,7 @@ class RectResizer {
     required HandlePosition handle,
     required ResizeMode resizeMode,
     required Flip initialFlip,
+    Box clampingBox = Box.largest,
   }) {
     final Flip currentFlip =
         getFlipForRect(initialRect, localPosition, handle, resizeMode);
@@ -37,10 +64,10 @@ class RectResizer {
       flip: currentFlip,
       resizeMode: resizeMode,
     );
-    double newWidth = newSize.width.abs();
-    double newHeight = newSize.height.abs();
-    final Box newRect;
+    final double newWidth = newSize.width.abs();
+    final double newHeight = newSize.height.abs();
 
+    Box newRect;
     if (resizeMode.hasSymmetry) {
       newRect = Box.fromCenter(
           center: initialRect.center, width: newWidth, height: newHeight);
@@ -53,6 +80,8 @@ class RectResizer {
       );
       newRect = flipRect(rect, currentFlip, handle);
     }
+
+    newRect = clampingBox.clampBoxInsideThis(newRect);
 
     return ResizeResult(
       newRect: newRect,

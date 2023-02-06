@@ -3,6 +3,42 @@ import 'package:vector_math/vector_math.dart';
 import 'enums.dart';
 import 'geometry.dart';
 
+/// An object that represents the result of a move operation.
+class MoveResult {
+  /// The new [Box] of the node after the resize.
+  final Box newRect;
+
+  /// The old [Box] of the node before the resize.
+  final Box oldRect;
+
+  /// The delta used to move the node.
+  final Vector2 delta;
+
+  /// Creates a [MoveResult] object.
+  const MoveResult({
+    required this.newRect,
+    required this.oldRect,
+    required this.delta,
+  });
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is MoveResult &&
+        other.newRect == newRect &&
+        other.oldRect == oldRect &&
+        other.delta == delta;
+  }
+
+  @override
+  int get hashCode => newRect.hashCode ^ oldRect.hashCode ^ delta.hashCode;
+
+  @override
+  String toString() =>
+      'MoveResult(newRect: $newRect, oldRect: $oldRect, delta: $delta)';
+}
+
 /// An object that represents the result of a resize operation.
 class ResizeResult {
   /// The new [Box] of the node after the resize.

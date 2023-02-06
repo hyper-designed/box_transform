@@ -1,7 +1,6 @@
-import 'dart:developer';
-
 import 'package:adaptive_theme/adaptive_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_rect_resizer/flutter_rect_resizer.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -53,36 +52,24 @@ const double kStrokeWidth = 1.5;
 const Color kGridColor = Color(0x7FC3E8F3);
 
 class _MyHomePageState extends State<MyHomePage> {
-  final FocusScopeNode focusNode = FocusScopeNode();
-  final UIRectResizer resizer = UIRectResizer();
+  final ResizableBoxController controller = ResizableBoxController();
 
-  // TODO: Remove unnecessary states since we are using Resizable widget.
-
-  /// Keep track of the keys that are currently pressed to change
-  /// the resize mode.
-  List<String> pressedKeys = [];
-
-  bool get isAltPressed => pressedKeys.contains('ALT');
-
-  bool get isShiftPressed => pressedKeys.contains('SHIFT');
-
-  Rect rect = Rect.zero;
-  bool hasFocus = true;
+  Rect box = Rect.zero;
   Flip flip = Flip.none;
-
-  Offset initialLocalPosition = Offset.zero;
-  Rect initialRect = Rect.zero;
-  Flip initialFlip = Flip.none;
+  Rect clampingBox = const Rect.fromLTWH(100, 100, 500, 500);
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (rect == Rect.zero) reset();
+  void initState() {
+    super.initState();
+
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      reset();
+    });
   }
 
   @override
   void dispose() {
-    focusNode.dispose();
+    controller.dispose();
     super.dispose();
   }
 
@@ -90,294 +77,92 @@ class _MyHomePageState extends State<MyHomePage> {
     final Size size = MediaQuery.of(context).size;
     final double width = size.width - 300;
     final double height = size.height;
-    rect = Rect.fromLTWH(
+    box = Rect.fromLTWH(
       (width - kInitialWidth) / 2,
       (height - kInitialHeight) / 2,
       kInitialWidth,
       kInitialHeight,
     );
     flip = Flip.none;
+    controller.setRect(box);
+    controller.setFlip(flip);
     if (mounted) setState(() {});
-  }
-
-  void onFocusChanged(bool hasFocus) {
-    setState(() => this.hasFocus = hasFocus);
   }
 
   @override
   Widget build(BuildContext context) {
-    final Color handleColor = hasFocus
-        ? Theme.of(context).colorScheme.primary
-        : Theme.of(context).disabledColor;
+    final Color handleColor = Theme.of(context).colorScheme.primary;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: FocusScope(
-        node: focusNode,
-        autofocus: true,
-        onFocusChange: onFocusChanged,
-        onKey: onKeyEvent,
-        child: Row(
-          children: [
-            Expanded(
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Positioned.fill(
-                    child: GridPaper(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? kGridColor.withOpacity(0.1)
-                          : kGridColor,
-                    ),
+      body: Row(
+        children: [
+          Expanded(
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Positioned.fill(
+                  child: GridPaper(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? kGridColor.withOpacity(0.1)
+                        : kGridColor,
                   ),
-                  ResizableBox(
-                    box: rect,
-                    onChanged: (box, flip) {
-                      setState(() {
-                        rect = box;
-                        this.flip = flip;
-                      });
-                    },
-                    contentBuilder: (context, rect, flip) => Transform.scale(
-                      scaleX: flip.isHorizontal ? -1 : 1,
-                      scaleY: flip.isVertical ? -1 : 1,
-                      child: Container(
-                        width: rect.width,
-                        height: rect.height,
+                ),
+                Positioned.fromRect(
+                    rect: clampingBox,
+                    child: Container(
+                        width: clampingBox.width,
+                        height: clampingBox.height,
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          image: const DecorationImage(
-                            image: AssetImage('assets/images/landscape2.jpg'),
-                            fit: BoxFit.fill,
-                          ),
-                          border: Border.all(
-                            color: handleColor,
-                            width: 2,
-                          ),
-                          // boxShadow: [
-                          //   BoxShadow(
-                          //     color: Colors.black.withOpacity(0.1),
-                          //     blurRadius: 8,
-                          //     spreadRadius: 5,
-                          //   ),
-                          // ],
+                          border: Border.all(color: Colors.red, width: 1),
+                        ))),
+                ResizableBox(
+                  box: box,
+                  controller: controller,
+                  clampingBox: clampingBox,
+                  onChanged: (rect, flip) {
+                    setState(() {
+                      box = rect;
+                      this.flip = flip;
+                    });
+                  },
+                  contentBuilder: (context, rect, flip) => Transform.scale(
+                    scaleX: flip.isHorizontal ? -1 : 1,
+                    scaleY: flip.isVertical ? -1 : 1,
+                    child: Container(
+                      width: rect.width,
+                      height: rect.height,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        image: const DecorationImage(
+                          image: AssetImage('assets/images/landscape2.jpg'),
+                          fit: BoxFit.fill,
                         ),
+                        border: Border.all(
+                          color: handleColor,
+                          width: 2,
+                        ),
+                        // boxShadow: [
+                        //   BoxShadow(
+                        //     color: Colors.black.withOpacity(0.1),
+                        //     blurRadius: 8,
+                        //     spreadRadius: 5,
+                        //   ),
+                        // ],
                       ),
                     ),
                   ),
-                  // Top left
-                  // Positioned(
-                  //   left: rect.left - kHandleSize / 2 + kStrokeWidth,
-                  //   top: rect.top - kHandleSize / 2 + kStrokeWidth,
-                  //   child: GestureDetector(
-                  //     onPanStart: onPanStart,
-                  //     onPanUpdate: (details) =>
-                  //         onPanUpdate(details, HandlePosition.topLeft),
-                  //     onPanEnd: onPanEnd,
-                  //     child: MouseRegion(
-                  //       cursor: SystemMouseCursors.resizeUpLeft,
-                  //       child: Container(
-                  //         width: kHandleSize,
-                  //         height: kHandleSize,
-                  //         decoration: BoxDecoration(
-                  //           color: Theme.of(context).scaffoldBackgroundColor,
-                  //           shape: BoxShape.circle,
-                  //           border: Border.all(
-                  //             color: handleColor,
-                  //             width: kStrokeWidth,
-                  //           ),
-                  //         ),
-                  //       ),
-                  //     ),
-                  //   ),
-                  // ),
-                  // // Top right
-                  // Positioned(
-                  //   left: rect.right - kHandleSize / 2 - kStrokeWidth,
-                  //   top: rect.top - kHandleSize / 2 + kStrokeWidth,
-                  //   child: GestureDetector(
-                  //     onPanStart: onPanStart,
-                  //     onPanUpdate: (details) =>
-                  //         onPanUpdate(details, HandlePosition.topRight),
-                  //     onPanEnd: onPanEnd,
-                  //     child: MouseRegion(
-                  //       cursor: SystemMouseCursors.resizeUpRight,
-                  //       child: Container(
-                  //         width: kHandleSize,
-                  //         height: kHandleSize,
-                  //         decoration: BoxDecoration(
-                  //           color: Theme.of(context).scaffoldBackgroundColor,
-                  //           shape: BoxShape.circle,
-                  //           border: Border.all(
-                  //             color: handleColor,
-                  //             width: kStrokeWidth,
-                  //           ),
-                  //         ),
-                  //       ),
-                  //     ),
-                  //   ),
-                  // ),
-                  // // Bottom left
-                  // Positioned(
-                  //   left: rect.left - kHandleSize / 2 + kStrokeWidth,
-                  //   top: rect.bottom - kHandleSize / 2 - kStrokeWidth,
-                  //   child: GestureDetector(
-                  //     onPanStart: onPanStart,
-                  //     onPanUpdate: (details) =>
-                  //         onPanUpdate(details, HandlePosition.bottomLeft),
-                  //     onPanEnd: onPanEnd,
-                  //     child: MouseRegion(
-                  //       cursor: SystemMouseCursors.resizeDownLeft,
-                  //       child: Container(
-                  //         width: kHandleSize,
-                  //         height: kHandleSize,
-                  //         decoration: BoxDecoration(
-                  //           color: Theme.of(context).scaffoldBackgroundColor,
-                  //           shape: BoxShape.circle,
-                  //           border: Border.all(
-                  //             color: handleColor,
-                  //             width: kStrokeWidth,
-                  //           ),
-                  //         ),
-                  //       ),
-                  //     ),
-                  //   ),
-                  // ),
-                  // // Bottom right
-                  // Positioned(
-                  //   left: rect.right - kHandleSize / 2 - kStrokeWidth,
-                  //   top: rect.bottom - kHandleSize / 2 - kStrokeWidth,
-                  //   child: GestureDetector(
-                  //     onPanStart: onPanStart,
-                  //     onPanUpdate: (details) =>
-                  //         onPanUpdate(details, HandlePosition.bottomRight),
-                  //     onPanEnd: onPanEnd,
-                  //     child: MouseRegion(
-                  //       cursor: SystemMouseCursors.resizeDownRight,
-                  //       child: Container(
-                  //         width: kHandleSize,
-                  //         height: kHandleSize,
-                  //         decoration: BoxDecoration(
-                  //           color: Theme.of(context).scaffoldBackgroundColor,
-                  //           shape: BoxShape.circle,
-                  //           border: Border.all(
-                  //             color: handleColor,
-                  //             width: kStrokeWidth,
-                  //           ),
-                  //         ),
-                  //       ),
-                  //     ),
-                  //   ),
-                  // ),
-                  // // Keyboard indicator
-                  // Positioned(
-                  //   bottom: 12,
-                  //   left: 12,
-                  //   child: KeyboardListenerIndicator(
-                  //     pressedKeys: pressedKeys,
-                  //     onClear: () => setState(() => pressedKeys.clear()),
-                  //   ),
-                  // ),
-                ],
-              ),
+                ),
+              ],
             ),
-            ControlPanel(
-              key: ValueKey(rect),
-              rect: rect,
-              onReset: reset,
-            ),
-          ],
-        ),
+          ),
+          ControlPanel(
+            key: ValueKey(box),
+            rect: box,
+            onReset: reset,
+          ),
+        ],
       ),
     );
-  }
-
-  void onDragUpdate(details) {
-    // TODO: implement dragging feature in the package.
-    setState(() => rect = rect.shift(details.delta));
-  }
-
-  void onPanStart(DragStartDetails details) {
-    initialLocalPosition = details.localPosition;
-    initialRect = rect;
-    initialFlip = flip;
-  }
-
-  void onPanUpdate(DragUpdateDetails details, HandlePosition handle) {
-    final UIResizeResult result = resizer.resize(
-      initialRect: initialRect,
-      initialLocalPosition: initialLocalPosition,
-      localPosition: details.localPosition,
-      handle: handle,
-      resizeMode: getResizeMode(),
-      initialFlip: initialFlip,
-    );
-
-    rect = result.newRect;
-    flip = result.flip;
-    setState(() {});
-
-    log('new size: ${result.newRect.size} new flip: ${result.flip}');
-    // log('new Rect: $rect');
-  }
-
-  void onPanEnd(DragEndDetails details) {
-    initialLocalPosition = Offset.zero;
-    initialRect = Rect.zero;
-    initialFlip = Flip.none;
-    setState(() {});
-  }
-
-  ResizeMode getResizeMode() {
-    if (isAltPressed && isShiftPressed) {
-      return ResizeMode.symmetricScale;
-    } else if (isAltPressed) {
-      return ResizeMode.symmetric;
-    } else if (isShiftPressed) {
-      return ResizeMode.scale;
-    } else {
-      return ResizeMode.freeform;
-    }
-  }
-
-  KeyEventResult onKeyEvent(FocusNode node, RawKeyEvent event) {
-    bool changed = false;
-    bool handled = false;
-
-    // SHIFT
-    if (!pressedKeys.contains('SHIFT') &&
-        event.isShiftPressed &&
-        focusNode.hasPrimaryFocus) {
-      pressedKeys.insert(0, 'SHIFT');
-      changed = true;
-      handled = true;
-    } else if (!event.isShiftPressed && pressedKeys.contains('SHIFT')) {
-      pressedKeys.remove('SHIFT');
-      changed = true;
-      handled = true;
-    } else if (event.isShiftPressed && pressedKeys.contains('SHIFT')) {
-      handled = true;
-    }
-
-    // ALT
-    if (!pressedKeys.contains('ALT') &&
-        event.isAltPressed &&
-        focusNode.hasPrimaryFocus) {
-      pressedKeys.add('ALT');
-      changed = true;
-      handled = true;
-    } else if (!event.isAltPressed && pressedKeys.contains('ALT')) {
-      pressedKeys.remove('ALT');
-      changed = true;
-      handled = true;
-    } else if (event.isAltPressed && pressedKeys.contains('ALT')) {
-      handled = true;
-    }
-
-    if (changed) setState(() {});
-
-    return handled && focusNode.hasPrimaryFocus
-        ? KeyEventResult.handled
-        : KeyEventResult.ignored;
   }
 }
 

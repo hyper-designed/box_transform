@@ -99,11 +99,16 @@ class ResizableBox extends StatefulWidget {
   /// on the state of the box if flipping were to occur.
   final Flip flip;
 
+  /// A box that will contain the [box] inside of itself, forcing [box] to
+  /// be clamped inside of this [clampingBox].
+  final Rect clampingBox;
+
   /// A callback that is called every time the [ResizableBox] is updated.
   /// This is called every time the [ResizableBoxController] mutates the box
   /// or the flip.
   final Function(Rect rect, Flip flip)? onChanged;
 
+  /// Creates a [ResizableBox] widget.
   const ResizableBox({
     super.key,
     required this.contentBuilder,
@@ -114,7 +119,12 @@ class ResizableBox extends StatefulWidget {
     this.handleGestureResponseDiameter = 24,
     this.handleRenderedDiameter = 12,
     this.flip = Flip.none,
-  }) : assert(handleGestureResponseDiameter >= handleRenderedDiameter);
+    this.clampingBox = Rect.largest,
+  }) : assert(
+          handleGestureResponseDiameter >= handleRenderedDiameter,
+          'The handle gesture response diameter must be '
+          'greater than or equal to the handle rendered diameter.',
+        );
 
   @override
   State<ResizableBox> createState() => _ResizableBoxState();
@@ -169,48 +179,61 @@ class _ResizableBoxState extends State<ResizableBox> {
         fit: StackFit.expand,
         children: [
           Positioned(
+            left: widget.handleGestureResponseDiameter / 2,
+            top: widget.handleGestureResponseDiameter / 2,
             width: box.width,
             height: box.height,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
+              onPanStart: (event) =>
+                  controller.onDragStart(event.localPosition),
               onPanUpdate: (event) {
-                final box = controller.onDragUpdate(event.delta, notify: false);
-                widget.onChanged?.call(box, flip);
+                final UIMoveResult result = controller.onDragUpdate(
+                  event.localPosition,
+                  clampingBox: widget.clampingBox,
+                  notify: false,
+                );
+                widget.onChanged?.call(result.newRect, flip);
               },
+              onPanEnd: (event) => controller.onDragEnd(),
               child: widget.contentBuilder(context, box, flip),
             ),
           ),
           HandleWidget(
-            position: HandlePosition.topLeft,
+            handlePosition: HandlePosition.topLeft,
             controller: controller,
             renderedDiameter: widget.handleRenderedDiameter,
             gestureResponseDiameter: widget.handleGestureResponseDiameter,
             onResize: widget.onChanged,
             builder: widget.handleBuilder,
+            clampingBox: widget.clampingBox,
           ),
           HandleWidget(
-            position: HandlePosition.topRight,
+            handlePosition: HandlePosition.topRight,
             controller: controller,
             renderedDiameter: widget.handleRenderedDiameter,
             gestureResponseDiameter: widget.handleGestureResponseDiameter,
             onResize: widget.onChanged,
             builder: widget.handleBuilder,
+            clampingBox: widget.clampingBox,
           ),
           HandleWidget(
-            position: HandlePosition.bottomRight,
+            handlePosition: HandlePosition.bottomRight,
             controller: controller,
             renderedDiameter: widget.handleRenderedDiameter,
             gestureResponseDiameter: widget.handleGestureResponseDiameter,
             onResize: widget.onChanged,
             builder: widget.handleBuilder,
+            clampingBox: widget.clampingBox,
           ),
           HandleWidget(
-            position: HandlePosition.bottomLeft,
+            handlePosition: HandlePosition.bottomLeft,
             controller: controller,
             renderedDiameter: widget.handleRenderedDiameter,
             gestureResponseDiameter: widget.handleGestureResponseDiameter,
             onResize: widget.onChanged,
             builder: widget.handleBuilder,
+            clampingBox: widget.clampingBox,
           ),
         ],
       ),
@@ -227,7 +250,7 @@ class _ResizableBoxState extends State<ResizableBox> {
 
 class HandleWidget extends StatelessWidget {
   /// The position of the handle.
-  final HandlePosition position;
+  final HandlePosition handlePosition;
 
   /// The controller that is used to mutate the box.
   final ResizableBoxController controller;
@@ -241,6 +264,9 @@ class HandleWidget extends StatelessWidget {
   /// The diameter of the handle that is used for gesture detection.
   final double gestureResponseDiameter;
 
+  /// The clamping box that is used to clamp the box.
+  final Rect clampingBox;
+
   /// A callback that is called every time the [ResizableBox] is updated.
   /// This is called every time the [ResizableBoxController] mutates the box
   /// or the flip.
@@ -248,19 +274,19 @@ class HandleWidget extends StatelessWidget {
 
   const HandleWidget({
     super.key,
-    required this.position,
+    required this.handlePosition,
     required this.controller,
     required this.renderedDiameter,
     required this.gestureResponseDiameter,
     required this.builder,
     this.onResize,
+    this.clampingBox = Rect.largest,
   });
 
   @override
   Widget build(BuildContext context) {
     final Offset handleOffset =
-        getLocalOffsetForHandle(position, controller.box.size).translate(
-            -gestureResponseDiameter / 2, -gestureResponseDiameter / 2);
+        getLocalOffsetForHandle(handlePosition, controller.box.size);
 
     return Positioned(
       left: handleOffset.dx,
@@ -272,20 +298,21 @@ class HandleWidget extends StatelessWidget {
         onPanStart: (details) =>
             controller.onResizeStart(details.localPosition),
         onPanUpdate: (details) {
-          final result = controller.onResizeUpdate(
+          final UIResizeResult result = controller.onResizeUpdate(
             details.localPosition,
-            position,
+            handlePosition,
+            clampingBox: clampingBox,
             notify: false,
           );
           onResize?.call(result.newRect, controller.flip);
         },
         onPanEnd: (_) => controller.onResizeEnd(),
         child: MouseRegion(
-          cursor: getCursorForHandle(position),
+          cursor: getCursorForHandle(handlePosition),
           child: Center(
             child: SizedBox.square(
               dimension: renderedDiameter,
-              child: builder(context, position),
+              child: builder(context, handlePosition),
             ),
           ),
         ),

@@ -60,6 +60,8 @@ class ResizableBoxController extends ChangeNotifier {
   /// The initial [Offset] of the [ResizableBox] when the resizing starts.
   Offset initialLocalPosition = Offset.zero;
 
+  Offset offsetFromTopLeft = Offset.zero;
+
   /// The initial [Rect] of the [ResizableBox] when the resizing starts.
   Rect initialRect = Rect.zero;
 
@@ -96,22 +98,51 @@ class ResizableBoxController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Called when dragging of the [ResizableBox] starts.
+  ///
+  /// [localPosition] is the position of the pointer relative to the
+  ///               [ResizableBox] when the dragging starts.
+  void onDragStart(Offset localPosition) {
+    initialLocalPosition = localPosition;
+    initialRect = box;
+    offsetFromTopLeft = box.topLeft - localPosition;
+  }
+
   /// Called when the [ResizableBox] is dragged.
   ///
-  /// [delta] is the offset from the last position to the current position.
-  ///         This is often the passed delta from the [DragUpdateDetails]
-  ///         event from [GestureDetector]. It represents how much the pointer
-  ///         has moved since the last pointer event.
+  /// [localPosition] is the position of the pointer relative to the
+  ///                [ResizableBox].
   ///
   /// [notify] is a boolean value that determines whether to notify the
   ///          listeners or not. It is set to `true` by default.
   ///          If you want to update the [ResizableBox] without notifying the
   ///          listeners, you can set it to `false`.
-  Rect onDragUpdate(Offset delta, {bool notify = true}) {
-    // TODO: implement dragging feature in the package.
-    box = box.shift(delta);
+  UIMoveResult onDragUpdate(
+    Offset localPosition, {
+    bool notify = true,
+    Rect clampingBox = Rect.largest,
+  }) {
+    final UIMoveResult result = resizer.move(
+      initialRect: initialRect,
+      initialLocalPosition: initialLocalPosition,
+      localPosition: localPosition,
+      clampingBox: clampingBox,
+    );
+
+    box = result.newRect;
+
     if (notify) notifyListeners();
-    return box;
+
+    return result;
+  }
+
+  /// Called when the dragging of the [ResizableBox] ends.
+  void onDragEnd() {
+    initialLocalPosition = Offset.zero;
+    initialRect = Rect.zero;
+    offsetFromTopLeft = Offset.zero;
+
+    notifyListeners();
   }
 
   /// Called when the resizing starts on [ResizableBox].
@@ -141,6 +172,7 @@ class ResizableBoxController extends ChangeNotifier {
     Offset localPosition,
     HandlePosition handle, {
     bool notify = true,
+    Rect clampingBox = Rect.largest,
   }) {
     // Calculate the new rect based on the initial rect, initial local position,
     final UIResizeResult result = resizer.resize(
@@ -150,6 +182,7 @@ class ResizableBoxController extends ChangeNotifier {
       handle: handle,
       resizeMode: resolveResizeModeCallback!(),
       initialFlip: initialFlip,
+      clampingBox: clampingBox,
     );
 
     box = result.newRect;
