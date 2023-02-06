@@ -97,23 +97,48 @@ class ResizableBoxController extends ChangeNotifier {
   }
 
   /// Called when the [ResizableBox] is dragged.
-  Rect onDragUpdate(details, {bool notify = true}) {
+  ///
+  /// [delta] is the offset from the last position to the current position.
+  ///         This is often the passed delta from the [DragUpdateDetails]
+  ///         event from [GestureDetector]. It represents how much the pointer
+  ///         has moved since the last pointer event.
+  ///
+  /// [notify] is a boolean value that determines whether to notify the
+  ///          listeners or not. It is set to `true` by default.
+  ///          If you want to update the [ResizableBox] without notifying the
+  ///          listeners, you can set it to `false`.
+  Rect onDragUpdate(Offset delta, {bool notify = true}) {
     // TODO: implement dragging feature in the package.
-    box = box.shift(details.delta);
+    box = box.shift(delta);
     if (notify) notifyListeners();
     return box;
   }
 
   /// Called when the resizing starts on [ResizableBox].
-  void onResizeStart(DragStartDetails details) {
-    initialLocalPosition = details.localPosition;
+  ///
+  /// [localPosition] is the position of the pointer relative to the
+  ///               [ResizableBox] when the resizing starts.
+  void onResizeStart(Offset localPosition) {
+    initialLocalPosition = localPosition;
     initialRect = box;
     initialFlip = flip;
   }
 
   /// Called when the [ResizableBox] is being resized.
+  ///
+  /// [localPosition] is the position of the pointer relative to the
+  ///                 [ResizableBox] when the resizing starts.
+  ///                 It is used to calculate the new [Rect] of the
+  ///                 [ResizableBox].
+  ///
+  /// [handle] is the handle that is being dragged.
+  ///
+  /// [notify] is a boolean value that determines whether to notify the
+  ///          listeners or not. It is set to `true` by default.
+  ///          If you want to update the [ResizableBox] without notifying the
+  ///          listeners, you can set it to `false`.
   UIResizeResult onResizeUpdate(
-    DragUpdateDetails details,
+    Offset localPosition,
     HandlePosition handle, {
     bool notify = true,
   }) {
@@ -121,7 +146,7 @@ class ResizableBoxController extends ChangeNotifier {
     final UIResizeResult result = resizer.resize(
       initialRect: initialRect,
       initialLocalPosition: initialLocalPosition,
-      localPosition: details.localPosition,
+      localPosition: localPosition,
       handle: handle,
       resizeMode: resolveResizeModeCallback!(),
       initialFlip: initialFlip,
@@ -135,7 +160,7 @@ class ResizableBoxController extends ChangeNotifier {
   }
 
   /// Called when the resizing ends on [ResizableBox].
-  void onResizeEnd(DragEndDetails details) {
+  void onResizeEnd() {
     initialLocalPosition = Offset.zero;
     initialRect = Rect.zero;
     initialFlip = Flip.none;

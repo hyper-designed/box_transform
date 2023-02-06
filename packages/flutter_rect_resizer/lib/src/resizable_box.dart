@@ -174,7 +174,7 @@ class _ResizableBoxState extends State<ResizableBox> {
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onPanUpdate: (event) {
-                final box = controller.onDragUpdate(event, notify: false);
+                final box = controller.onDragUpdate(event.delta, notify: false);
                 widget.onChanged?.call(box, flip);
               },
               child: widget.contentBuilder(context, box, flip),
@@ -269,16 +269,17 @@ class HandleWidget extends StatelessWidget {
       height: gestureResponseDiameter,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onPanStart: controller.onResizeStart,
+        onPanStart: (details) =>
+            controller.onResizeStart(details.localPosition),
         onPanUpdate: (details) {
           final result = controller.onResizeUpdate(
-            details,
+            details.localPosition,
             position,
             notify: false,
           );
           onResize?.call(result.newRect, controller.flip);
         },
-        onPanEnd: controller.onResizeEnd,
+        onPanEnd: (_) => controller.onResizeEnd(),
         child: MouseRegion(
           cursor: getCursorForHandle(position),
           child: Center(
