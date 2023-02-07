@@ -45,6 +45,7 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+const double kSidePanelWidth = 300;
 const double kInitialWidth = 400;
 const double kInitialHeight = 300;
 const double kHandleSize = 12;
@@ -52,41 +53,30 @@ const double kStrokeWidth = 1.5;
 const Color kGridColor = Color(0x7FC3E8F3);
 
 class _MyHomePageState extends State<MyHomePage> {
-  final ResizableBoxController controller = ResizableBoxController();
-
   Rect box = Rect.zero;
   Flip flip = Flip.none;
-  Rect clampingBox = const Rect.fromLTWH(100, 100, 500, 500);
+  late Rect clampingBox;
 
   @override
   void initState() {
     super.initState();
 
+    // This is required to center the box based on screen size when the app
+    // starts.
     SchedulerBinding.instance.addPostFrameCallback((_) {
       reset();
     });
   }
 
   @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
-  }
-
-  void reset() {
-    final Size size = MediaQuery.of(context).size;
-    final double width = size.width - 300;
-    final double height = size.height;
-    box = Rect.fromLTWH(
-      (width - kInitialWidth) / 2,
-      (height - kInitialHeight) / 2,
-      kInitialWidth,
-      kInitialHeight,
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    clampingBox = Rect.fromLTWH(
+      0,
+      0,
+      MediaQuery.of(context).size.width - kSidePanelWidth,
+      MediaQuery.of(context).size.height,
     );
-    flip = Flip.none;
-    controller.setRect(box);
-    controller.setFlip(flip);
-    if (mounted) setState(() {});
   }
 
   @override
@@ -108,23 +98,20 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
                 Positioned.fromRect(
-                    rect: clampingBox,
-                    child: Container(
-                        width: clampingBox.width,
-                        height: clampingBox.height,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.red, width: 1),
-                        ))),
+                  rect: clampingBox,
+                  child: Container(
+                    width: clampingBox.width,
+                    height: clampingBox.height,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.red, width: 1),
+                    ),
+                  ),
+                ),
                 ResizableBox(
                   box: box,
-                  controller: controller,
+                  flip: flip,
                   clampingBox: clampingBox,
-                  onChanged: (rect, flip) {
-                    setState(() {
-                      box = rect;
-                      this.flip = flip;
-                    });
-                  },
+                  onChanged: onRectChanged,
                   contentBuilder: (context, rect, flip) => Transform.scale(
                     scaleX: flip.isHorizontal ? -1 : 1,
                     scaleY: flip.isVertical ? -1 : 1,
@@ -164,6 +151,33 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
+
+  void reset() {
+    final Size size = MediaQuery.of(context).size;
+    final double width = size.width - 300;
+    final double height = size.height;
+    box = Rect.fromLTWH(
+      (width - kInitialWidth) / 2,
+      (height - kInitialHeight) / 2,
+      kInitialWidth,
+      kInitialHeight,
+    );
+    flip = Flip.none;
+    clampingBox = Rect.fromLTWH(
+      0,
+      0,
+      MediaQuery.of(context).size.width - kSidePanelWidth,
+      MediaQuery.of(context).size.height,
+    );
+    if (mounted) setState(() {});
+  }
+
+  void onRectChanged(Rect rect, Flip flip) {
+    setState(() {
+      box = rect;
+      this.flip = flip;
+    });
+  }
 }
 
 class ControlPanel extends StatelessWidget {
@@ -178,7 +192,7 @@ class ControlPanel extends StatelessWidget {
       margin: const EdgeInsets.only(left: 0),
       shape: const RoundedRectangleBorder(),
       child: SizedBox(
-        width: 300,
+        width: kSidePanelWidth,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisAlignment: MainAxisAlignment.start,

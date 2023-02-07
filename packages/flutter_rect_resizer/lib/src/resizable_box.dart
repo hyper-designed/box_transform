@@ -106,52 +106,82 @@ class ResizableBox extends StatefulWidget {
   /// A callback that is called every time the [ResizableBox] is updated.
   /// This is called every time the [ResizableBoxController] mutates the box
   /// or the flip.
-  final Function(Rect rect, Flip flip)? onChanged;
+  final Function(Rect rect, Flip flip) onChanged;
 
   /// Creates a [ResizableBox] widget.
   const ResizableBox({
     super.key,
     required this.contentBuilder,
-    required this.box,
-    this.onChanged,
+    required this.onChanged,
     this.controller,
     this.handleBuilder = _defaultHandleBuilder,
     this.handleGestureResponseDiameter = 24,
     this.handleRenderedDiameter = 12,
-    this.flip = Flip.none,
-    this.clampingBox = Rect.largest,
-  }) : assert(
+    // raw
+    Rect? box,
+    Flip? flip,
+    Rect? clampingBox,
+  })  : assert(
           handleGestureResponseDiameter >= handleRenderedDiameter,
           'The handle gesture response diameter must be '
           'greater than or equal to the handle rendered diameter.',
-        );
+        ),
+        assert(
+            controller == null ||
+                (box == null && flip == null && clampingBox == null),
+            'You can either provide a controller or a box, flip, and clamping box, but not both.'),
+        box = box ?? Rect.zero,
+        flip = flip ?? Flip.none,
+        clampingBox = clampingBox ?? Rect.largest;
 
   @override
   State<ResizableBox> createState() => _ResizableBoxState();
 }
 
 class _ResizableBoxState extends State<ResizableBox> {
-  late ResizableBoxController controller =
-      widget.controller ?? ResizableBoxController()
-        ..box = widget.box
-        ..flip = widget.flip;
+  late ResizableBoxController controller;
 
   @override
   void initState() {
     super.initState();
-    controller.addListener(onControllerUpdate);
+
+    if (widget.controller != null) {
+      controller = widget.controller!;
+      // We only want to listen to the controller if it is provided externally.
+      controller.addListener(onControllerUpdate);
+    } else {
+      // If it is provided internally, we should not listen to it.
+      // TODO[@saad]: does this make sense? If not, move the controller out of the if statement.
+      controller = ResizableBoxController()
+        ..box = widget.box
+        ..flip = widget.flip;
+      // TODO[@saad]: add clamping box.
+    }
   }
 
   @override
   void didUpdateWidget(covariant ResizableBox oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.controller != widget.controller) {
-      oldWidget.controller?.removeListener(onControllerUpdate);
-      controller = widget.controller ?? ResizableBoxController()
+    if (widget.controller != null && oldWidget.controller == null ||
+        widget.controller != oldWidget.controller) {
+      // New explicit controller provided or explicit controller changed.
+      controller.removeListener(onControllerUpdate);
+      controller = widget.controller!;
+      controller.addListener(onControllerUpdate);
+    } else if (oldWidget.controller != null && widget.controller == null) {
+      // Explicit controller removed.
+      controller.removeListener(onControllerUpdate);
+      controller = ResizableBoxController()
         ..box = widget.box
         ..flip = widget.flip;
-      controller.addListener(onControllerUpdate);
+      // TODO[@saad]: add clamping box.
+      // TODO[@saad]: should we add a listener here?
     }
+
+    // Return if the controller is external.
+    if (widget.controller != null) return;
+
+    // Below code should only be executed if the controller is internal.
 
     if (oldWidget.box != widget.box) {
       controller.box = widget.box;
@@ -159,12 +189,13 @@ class _ResizableBoxState extends State<ResizableBox> {
     if (oldWidget.flip != widget.flip) {
       controller.flip = widget.flip;
     }
+    // TODO[@saad]: account for clamping box and update box if required.
   }
 
+  /// Called when the controller is updated.
   void onControllerUpdate() {
     if (widget.box != controller.box || widget.flip != controller.flip) {
       if (mounted) setState(() {});
-      widget.onChanged?.call(controller.box, controller.flip);
     }
   }
 
@@ -193,7 +224,7 @@ class _ResizableBoxState extends State<ResizableBox> {
                   clampingBox: widget.clampingBox,
                   notify: false,
                 );
-                widget.onChanged?.call(result.newRect, flip);
+                widget.onChanged(result.newRect, flip);
               },
               onPanEnd: (event) => controller.onDragEnd(),
               child: widget.contentBuilder(context, box, flip),
@@ -201,43 +232,62 @@ class _ResizableBoxState extends State<ResizableBox> {
           ),
           HandleWidget(
             handlePosition: HandlePosition.topLeft,
-            controller: controller,
             renderedDiameter: widget.handleRenderedDiameter,
             gestureResponseDiameter: widget.handleGestureResponseDiameter,
-            onResize: widget.onChanged,
             builder: widget.handleBuilder,
-            clampingBox: widget.clampingBox,
+            onPanStart: onHandlePanStart,
+            onPanUpdate: onHandlePanUpdate,
+            onPanEnd: onHandlePanEnd,
           ),
           HandleWidget(
             handlePosition: HandlePosition.topRight,
-            controller: controller,
             renderedDiameter: widget.handleRenderedDiameter,
             gestureResponseDiameter: widget.handleGestureResponseDiameter,
-            onResize: widget.onChanged,
             builder: widget.handleBuilder,
-            clampingBox: widget.clampingBox,
+            onPanStart: onHandlePanStart,
+            onPanUpdate: onHandlePanUpdate,
+            onPanEnd: onHandlePanEnd,
           ),
           HandleWidget(
             handlePosition: HandlePosition.bottomRight,
-            controller: controller,
             renderedDiameter: widget.handleRenderedDiameter,
             gestureResponseDiameter: widget.handleGestureResponseDiameter,
-            onResize: widget.onChanged,
             builder: widget.handleBuilder,
-            clampingBox: widget.clampingBox,
+            onPanStart: onHandlePanStart,
+            onPanUpdate: onHandlePanUpdate,
+            onPanEnd: onHandlePanEnd,
           ),
           HandleWidget(
             handlePosition: HandlePosition.bottomLeft,
-            controller: controller,
             renderedDiameter: widget.handleRenderedDiameter,
             gestureResponseDiameter: widget.handleGestureResponseDiameter,
-            onResize: widget.onChanged,
             builder: widget.handleBuilder,
-            clampingBox: widget.clampingBox,
+            onPanStart: onHandlePanStart,
+            onPanUpdate: onHandlePanUpdate,
+            onPanEnd: onHandlePanEnd,
           ),
         ],
       ),
     );
+  }
+
+  void onHandlePanStart(DragStartDetails details) {
+    controller.onResizeStart(details.localPosition);
+  }
+
+  void onHandlePanEnd(DragEndDetails details) {
+    controller.onResizeEnd();
+  }
+
+  void onHandlePanUpdate(
+      DragUpdateDetails details, HandlePosition handlePosition) {
+    final UIResizeResult result = controller.onResizeUpdate(
+      details.localPosition,
+      handlePosition,
+      clampingBox: widget.clampingBox,
+      notify: false,
+    );
+    widget.onChanged(result.newRect, controller.flip);
   }
 
   @override
@@ -252,9 +302,6 @@ class HandleWidget extends StatelessWidget {
   /// The position of the handle.
   final HandlePosition handlePosition;
 
-  /// The controller that is used to mutate the box.
-  final ResizableBoxController controller;
-
   /// The builder that is used to build the handle widget.
   final HandleBuilder builder;
 
@@ -264,49 +311,38 @@ class HandleWidget extends StatelessWidget {
   /// The diameter of the handle that is used for gesture detection.
   final double gestureResponseDiameter;
 
-  /// The clamping box that is used to clamp the box.
-  final Rect clampingBox;
+  final GestureDragStartCallback onPanStart;
 
-  /// A callback that is called every time the [ResizableBox] is updated.
-  /// This is called every time the [ResizableBoxController] mutates the box
-  /// or the flip.
-  final Function(Rect rect, Flip flip)? onResize;
+  final void Function(DragUpdateDetails details, HandlePosition handle)
+      onPanUpdate;
+
+  final GestureDragEndCallback onPanEnd;
 
   const HandleWidget({
     super.key,
     required this.handlePosition,
-    required this.controller,
     required this.renderedDiameter,
     required this.gestureResponseDiameter,
     required this.builder,
-    this.onResize,
-    this.clampingBox = Rect.largest,
+    required this.onPanStart,
+    required this.onPanUpdate,
+    required this.onPanEnd,
   });
 
   @override
   Widget build(BuildContext context) {
-    final Offset handleOffset =
-        getLocalOffsetForHandle(handlePosition, controller.box.size);
-
     return Positioned(
-      left: handleOffset.dx,
-      top: handleOffset.dy,
+      left: handlePosition.isLeft ? 0 : null,
+      right: handlePosition.isRight ? 0 : null,
+      top: handlePosition.isTop ? 0 : null,
+      bottom: handlePosition.isBottom ? 0 : null,
       width: gestureResponseDiameter,
       height: gestureResponseDiameter,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onPanStart: (details) =>
-            controller.onResizeStart(details.localPosition),
-        onPanUpdate: (details) {
-          final UIResizeResult result = controller.onResizeUpdate(
-            details.localPosition,
-            handlePosition,
-            clampingBox: clampingBox,
-            notify: false,
-          );
-          onResize?.call(result.newRect, controller.flip);
-        },
-        onPanEnd: (_) => controller.onResizeEnd(),
+        onPanStart: onPanStart,
+        onPanUpdate: (details) => onPanUpdate(details, handlePosition),
+        onPanEnd: onPanEnd,
         child: MouseRegion(
           cursor: getCursorForHandle(handlePosition),
           child: Center(
@@ -318,19 +354,6 @@ class HandleWidget extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  Offset getLocalOffsetForHandle(HandlePosition handle, Size size) {
-    switch (handle) {
-      case HandlePosition.topLeft:
-        return Offset.zero;
-      case HandlePosition.topRight:
-        return Offset(size.width, 0);
-      case HandlePosition.bottomLeft:
-        return Offset(0, size.height);
-      case HandlePosition.bottomRight:
-        return Offset(size.width, size.height);
-    }
   }
 
   MouseCursor getCursorForHandle(HandlePosition handle) {
