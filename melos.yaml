@@ -1,0 +1,23 @@
+name: rect_resizer
+
+packages:
+  - packages/*
+  - packages/**
+
+command:
+  bootstrap:
+    # It seems so that running "pub get" in parallel has some issues (like
+    # https://github.com/dart-lang/pub/issues/3404). Disabling this feature
+    # makes the CI much more stable.
+    runPubGetInParallel: false
+    usePubspecOverrides: true
+
+scripts:
+  deps:
+    run: melos exec dart pub get
+    description: Run `pub get` for all packages.
+  analyze:
+    exec: dart analyze .
+  format:
+    run: melos exec dart format . --fix
+    description: Run `dart format` for all packages.
