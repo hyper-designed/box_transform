@@ -57,10 +57,10 @@ class RectResizer {
     Box clampingBox = Box.largest,
     Constraints constraints = const Constraints.unconstrained(),
   }) {
-    final Flip currentFlip =
-        getFlipForRect(initialRect, localPosition, handle, resizeMode);
-
     Vector2 delta = localPosition - initialLocalPosition;
+
+    final Flip currentFlip =
+        getFlipForRect(initialRect, delta, handle, resizeMode);
 
     if (resizeMode.hasSymmetry) delta = Vector2(delta.x * 2, delta.y * 2);
 
@@ -104,7 +104,8 @@ class RectResizer {
         minWidthReached = true;
       }
       if (newRect.width >= initialRect.width &&
-          (newRect.width == constraints.maxWidth || newRect.width == clampingBox.width)) {
+          (newRect.width == constraints.maxWidth ||
+              newRect.width == clampingBox.width)) {
         maxWidthReached = true;
       }
     }
@@ -114,7 +115,8 @@ class RectResizer {
         minHeightReached = true;
       }
       if (newRect.height >= initialRect.height &&
-          newRect.height == constraints.maxHeight || newRect.height == clampingBox.height) {
+              newRect.height == constraints.maxHeight ||
+          newRect.height == clampingBox.height) {
         maxHeightReached = true;
       }
     }
