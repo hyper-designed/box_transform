@@ -2,6 +2,7 @@ import 'package:adaptive_theme/adaptive_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_rect_resizer/flutter_rect_resizer.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 void main() {
@@ -30,19 +31,79 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: theme,
         darkTheme: darkTheme,
-        home: const MyHomePage(title: 'Flutter Demo Home Page'),
+        home: ChangeNotifierProvider(
+          create: (_) => PlaygroundModel(),
+          child: const Playground(),
+        ),
       ),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+class PlaygroundModel with ChangeNotifier {
+  Rect box = Rect.zero;
+  Flip flip = Flip.none;
+  late Rect clampingBox;
 
-  final String title;
+  bool flipEnabled = true;
+
+  void reset(context) {
+    final Size size = MediaQuery.of(context).size;
+    final double width = size.width - 300;
+    final double height = size.height;
+    box = Rect.fromLTWH(
+      (width - kInitialWidth) / 2,
+      (height - kInitialHeight) / 2,
+      kInitialWidth,
+      kInitialHeight,
+    );
+    flip = Flip.none;
+    clampingBox = Rect.fromLTWH(
+      0,
+      0,
+      MediaQuery.of(context).size.width - kSidePanelWidth,
+      MediaQuery.of(context).size.height,
+    );
+    notifyListeners();
+  }
+
+  void onRectChanged(Rect rect, Flip flip) {
+    box = rect;
+    this.flip = flip;
+    notifyListeners();
+  }
+
+  void onFlipChanged(Flip flip) {
+    this.flip = flip;
+    notifyListeners();
+  }
+
+  void onFlipEnabledChanged(bool enabled) {
+    flipEnabled = enabled;
+    notifyListeners();
+  }
+
+  void setClampingBox(Rect rect, {bool notify = true}) {
+    clampingBox = rect;
+    if (notify) notifyListeners();
+  }
+
+  void flipHorizontal() {
+    flip = Flip.fromValue(flip.horizontalValue * -1, flip.verticalValue);
+    notifyListeners();
+  }
+
+  void flipVertically() {
+    flip = Flip.fromValue(flip.horizontalValue, flip.verticalValue * -1);
+    notifyListeners();
+  }
+}
+
+class Playground extends StatefulWidget {
+  const Playground({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<Playground> createState() => _PlaygroundState();
 }
 
 const double kSidePanelWidth = 300;
@@ -52,10 +113,8 @@ const double kHandleSize = 12;
 const double kStrokeWidth = 1.5;
 const Color kGridColor = Color(0x7FC3E8F3);
 
-class _MyHomePageState extends State<MyHomePage> {
-  Rect box = Rect.zero;
-  Flip flip = Flip.none;
-  late Rect clampingBox;
+class _PlaygroundState extends State<Playground> {
+  late final PlaygroundModel model = context.read<PlaygroundModel>();
 
   @override
   void initState() {
@@ -64,23 +123,27 @@ class _MyHomePageState extends State<MyHomePage> {
     // This is required to center the box based on screen size when the app
     // starts.
     SchedulerBinding.instance.addPostFrameCallback((_) {
-      reset();
+      model.reset(context);
     });
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    clampingBox = Rect.fromLTWH(
-      0,
-      0,
-      MediaQuery.of(context).size.width - kSidePanelWidth,
-      MediaQuery.of(context).size.height,
+    model.setClampingBox(
+      notify: false,
+      Rect.fromLTWH(
+        0,
+        0,
+        MediaQuery.of(context).size.width - kSidePanelWidth,
+        MediaQuery.of(context).size.height,
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    late final PlaygroundModel model = context.watch<PlaygroundModel>();
     final Color handleColor = Theme.of(context).colorScheme.primary;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -98,23 +161,23 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
                 Positioned.fromRect(
-                  rect: clampingBox,
+                  rect: model.clampingBox,
                   child: Container(
-                    width: clampingBox.width,
-                    height: clampingBox.height,
+                    width: model.clampingBox.width,
+                    height: model.clampingBox.height,
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.red, width: 1),
                     ),
                   ),
                 ),
                 ResizableBox(
-                  box: box,
-                  flip: flip,
-                  clampingBox: clampingBox,
-                  onChanged: onRectChanged,
+                  box: model.box,
+                  flip: model.flip,
+                  clampingBox: model.clampingBox,
+                  onChanged: model.onRectChanged,
                   contentBuilder: (context, rect, flip) => Transform.scale(
-                    scaleX: flip.isHorizontal ? -1 : 1,
-                    scaleY: flip.isVertical ? -1 : 1,
+                    scaleX: model.flipEnabled && flip.isHorizontal ? -1 : 1,
+                    scaleY: model.flipEnabled && flip.isVertical ? -1 : 1,
                     child: Container(
                       width: rect.width,
                       height: rect.height,
@@ -142,52 +205,20 @@ class _MyHomePageState extends State<MyHomePage> {
               ],
             ),
           ),
-          ControlPanel(
-            key: ValueKey(box),
-            rect: box,
-            onReset: reset,
-          ),
+          const ControlPanel(),
         ],
       ),
     );
   }
-
-  void reset() {
-    final Size size = MediaQuery.of(context).size;
-    final double width = size.width - 300;
-    final double height = size.height;
-    box = Rect.fromLTWH(
-      (width - kInitialWidth) / 2,
-      (height - kInitialHeight) / 2,
-      kInitialWidth,
-      kInitialHeight,
-    );
-    flip = Flip.none;
-    clampingBox = Rect.fromLTWH(
-      0,
-      0,
-      MediaQuery.of(context).size.width - kSidePanelWidth,
-      MediaQuery.of(context).size.height,
-    );
-    if (mounted) setState(() {});
-  }
-
-  void onRectChanged(Rect rect, Flip flip) {
-    setState(() {
-      box = rect;
-      this.flip = flip;
-    });
-  }
 }
 
 class ControlPanel extends StatelessWidget {
-  final Rect rect;
-  final VoidCallback onReset;
-
-  const ControlPanel({super.key, required this.onReset, required this.rect});
+  const ControlPanel({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final PlaygroundModel model = context.watch<PlaygroundModel>();
+    final Rect rect = model.box;
     return Card(
       margin: const EdgeInsets.only(left: 0),
       shape: const RoundedRectangleBorder(),
@@ -203,7 +234,7 @@ class ControlPanel extends StatelessWidget {
                 children: [
                   Expanded(
                     child: FilledButton.tonalIcon(
-                      onPressed: onReset,
+                      onPressed: () => model.reset(context),
                       icon: const Icon(Icons.refresh),
                       label: const Text('Reset'),
                     ),
@@ -305,7 +336,96 @@ class ControlPanel extends StatelessWidget {
                   ),
                 ],
               ),
-            )
+            ),
+            const Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(8, 6, 0, 6),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .secondary
+                          .withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'FLIP',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleSmall!
+                                .copyWith(
+                                  color:
+                                      Theme.of(context).colorScheme.secondary,
+                                ),
+                          ),
+                        ),
+                        SizedBox(
+                          height: 20,
+                          child: Transform.scale(
+                            scale: 0.7,
+                            child: Switch(
+                              value: model.flipEnabled,
+                              onChanged: (value) =>
+                                  model.onFlipEnabledChanged(value),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      IconButton(
+                        splashRadius: 10,
+                        tooltip: 'Flip Horizontally',
+                        constraints: const BoxConstraints(),
+                        padding: const EdgeInsets.all(6),
+                        onPressed: model.flipEnabled
+                            ? () => model.flipHorizontal()
+                            : null,
+                        icon: ImageIcon(
+                          const AssetImage('assets/images/ic_flip.png'),
+                          size: 24,
+                          color: model.flip.isHorizontal && model.flipEnabled
+                              ? Theme.of(context).colorScheme.primary
+                              : null,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        splashRadius: 10,
+                        tooltip: 'Flip Vertically',
+                        constraints: const BoxConstraints(),
+                        padding: const EdgeInsets.all(6),
+                        onPressed: model.flipEnabled
+                            ? () => model.flipVertically()
+                            : null,
+                        icon: RotatedBox(
+                          quarterTurns: 1,
+                          child: ImageIcon(
+                            const AssetImage('assets/images/ic_flip.png'),
+                            size: 24,
+                            color: model.flip.isVertical && model.flipEnabled
+                                ? Theme.of(context).colorScheme.primary
+                                : null,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
           ],
         ),
       ),
