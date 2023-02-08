@@ -1,6 +1,7 @@
 import 'package:adaptive_theme/adaptive_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_rect_resizer/flutter_rect_resizer.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -19,11 +20,27 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         brightness: Brightness.light,
         colorSchemeSeed: Colors.blue,
+        inputDecorationTheme: InputDecorationTheme(
+          isDense: true,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+          ),
+        ),
       ),
       dark: ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
         colorSchemeSeed: Colors.blue,
+        inputDecorationTheme: InputDecorationTheme(
+          isDense: true,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+          ),
+        ),
       ),
       initial: AdaptiveThemeMode.system,
       builder: (theme, darkTheme) => MaterialApp(
@@ -46,6 +63,7 @@ class PlaygroundModel with ChangeNotifier {
   late Rect clampingBox;
 
   bool flipEnabled = true;
+  bool clampingEnabled = false;
 
   void reset(context) {
     final Size size = MediaQuery.of(context).size;
@@ -88,13 +106,33 @@ class PlaygroundModel with ChangeNotifier {
     if (notify) notifyListeners();
   }
 
-  void flipHorizontal() {
+  void flipHorizontally() {
     flip = Flip.fromValue(flip.horizontalValue * -1, flip.verticalValue);
     notifyListeners();
   }
 
   void flipVertically() {
     flip = Flip.fromValue(flip.horizontalValue, flip.verticalValue * -1);
+    notifyListeners();
+  }
+
+  void onClampingEnabledChanged(bool enabled) {
+    clampingEnabled = enabled;
+    notifyListeners();
+  }
+
+  void onClampingBoxChanged({
+    double? left,
+    double? top,
+    double? right,
+    double? bottom,
+  }) {
+    clampingBox = Rect.fromLTRB(
+      left ?? clampingBox.left,
+      top ?? clampingBox.top,
+      right ?? clampingBox.right,
+      bottom ?? clampingBox.bottom,
+    );
     notifyListeners();
   }
 }
@@ -113,7 +151,7 @@ const double kHandleSize = 12;
 const double kStrokeWidth = 1.5;
 const Color kGridColor = Color(0x7FC3E8F3);
 
-class _PlaygroundState extends State<Playground> {
+class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
   late final PlaygroundModel model = context.read<PlaygroundModel>();
 
   @override
@@ -125,19 +163,43 @@ class _PlaygroundState extends State<Playground> {
     SchedulerBinding.instance.addPostFrameCallback((_) {
       model.reset(context);
     });
+
+    WidgetsBinding.instance.addObserver(this);
   }
+
+  /// Represents the playground area.
+  Rect? playgroundArea;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    model.setClampingBox(
-      notify: false,
-      Rect.fromLTWH(
-        0,
-        0,
-        MediaQuery.of(context).size.width - kSidePanelWidth,
-        MediaQuery.of(context).size.height,
-      ),
+
+    // This is done to automatically resize clamping rect to the new screen size
+    // when the app is resized but only when the clampingRect is already
+    // set to the full screen. This is done to avoid the clamping rect to be
+    // resized when the user has already resized it.
+    playgroundArea ??= Rect.fromLTWH(
+      0,
+      0,
+      MediaQuery.of(context).size.width - kSidePanelWidth,
+      MediaQuery.of(context).size.height,
+    );
+    if (model.clampingBox == playgroundArea) {
+      model.setClampingBox(
+        notify: false,
+        Rect.fromLTWH(
+          0,
+          0,
+          MediaQuery.of(context).size.width - kSidePanelWidth,
+          MediaQuery.of(context).size.height,
+        ),
+      );
+    }
+    playgroundArea = Rect.fromLTWH(
+      0,
+      0,
+      MediaQuery.of(context).size.width - kSidePanelWidth,
+      MediaQuery.of(context).size.height,
     );
   }
 
@@ -145,6 +207,7 @@ class _PlaygroundState extends State<Playground> {
   Widget build(BuildContext context) {
     late final PlaygroundModel model = context.watch<PlaygroundModel>();
     final Color handleColor = Theme.of(context).colorScheme.primary;
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Row(
@@ -160,20 +223,48 @@ class _PlaygroundState extends State<Playground> {
                         : kGridColor,
                   ),
                 ),
-                Positioned.fromRect(
-                  rect: model.clampingBox,
-                  child: Container(
-                    width: model.clampingBox.width,
-                    height: model.clampingBox.height,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.red, width: 1),
+                if (model.clampingEnabled && playgroundArea != null)
+                  ResizableBox(
+                    box: model.clampingBox,
+                    flip: Flip.none,
+                    clampingBox: playgroundArea!,
+                    onChanged: (rect, flip) {
+                      model.setClampingBox(rect);
+                    },
+                    handleGestureResponseDiameter: 32,
+                    handleBuilder: (context, handle) =>
+                        const ColoredBox(color: Colors.red),
+                    contentBuilder: (context, _, flip) => Container(
+                      width: model.clampingBox.width,
+                      height: model.clampingBox.height,
+                      alignment: Alignment.bottomRight,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.red, width: 1.5),
+                      ),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.1),
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(6),
+                          ),
+                        ),
+                        child: const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Text(
+                            'Clamping Box',
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
                 ResizableBox(
                   box: model.box,
                   flip: model.flip,
-                  clampingBox: model.clampingBox,
+                  clampingBox: model.clampingEnabled ? model.clampingBox : null,
                   onChanged: model.onRectChanged,
                   contentBuilder: (context, rect, flip) => Transform.scale(
                     scaleX: model.flipEnabled && flip.isHorizontal ? -1 : 1,
@@ -210,6 +301,12 @@ class _PlaygroundState extends State<Playground> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
 }
 
 class ControlPanel extends StatelessWidget {
@@ -218,7 +315,6 @@ class ControlPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PlaygroundModel model = context.watch<PlaygroundModel>();
-    final Rect rect = model.box;
     return Card(
       margin: const EdgeInsets.only(left: 0),
       shape: const RoundedRectangleBorder(),
@@ -267,97 +363,299 @@ class ControlPanel extends StatelessWidget {
               ),
             ),
             const Divider(height: 1),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
+            const PositionControls(),
+            const Divider(height: 1),
+            const FlipControls(),
+            const Divider(height: 1),
+            const ClampingControls(),
+            const Divider(height: 1),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class PositionControls extends StatelessWidget {
+  const PositionControls({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final PlaygroundModel model = context.watch<PlaygroundModel>();
+    final Rect rect = model.box;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SectionHeader('POSITION'),
+        Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: const [
+                  Expanded(child: Label('X')),
+                  SizedBox(width: 16),
+                  Expanded(child: Label('Y')),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
                 children: [
-                  const SectionHeader('POSITION'),
-                  const SizedBox(height: 16),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          children: const [
-                            Expanded(child: Label('X')),
-                            Expanded(child: Label('Y')),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: ValueText(rect.left.toStringAsFixed(0)),
-                            ),
-                            Expanded(
-                              child: ValueText(rect.top.toStringAsFixed(0)),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: const [
-                            Expanded(child: Label('WIDTH')),
-                            Expanded(child: Label('HEIGHT')),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: ValueText(rect.width.toStringAsFixed(0)),
-                            ),
-                            Expanded(
-                              child: ValueText(rect.height.toStringAsFixed(0)),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: const [
-                            Expanded(child: Label('ASPECT RATIO')),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: ValueText(
-                                (rect.width / rect.height).toStringAsFixed(2),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                  Expanded(
+                    child: ValueText(rect.left.toStringAsFixed(0)),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ValueText(rect.top.toStringAsFixed(0)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: const [
+                  Expanded(child: Label('WIDTH')),
+                  SizedBox(width: 16),
+                  Expanded(child: Label('HEIGHT')),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: ValueText(rect.width.toStringAsFixed(0)),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ValueText(rect.height.toStringAsFixed(0)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: const [
+                  Expanded(child: Label('ASPECT RATIO')),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: ValueText(
+                      (rect.width / rect.height).toStringAsFixed(2),
                     ),
                   ),
                 ],
               ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class FlipControls extends StatelessWidget {
+  const FlipControls({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final PlaygroundModel model = context.watch<PlaygroundModel>();
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeInOut,
+      alignment: Alignment.topCenter,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+            height: 44,
+            padding: const EdgeInsets.fromLTRB(16, 0, 6, 0),
+            alignment: Alignment.centerLeft,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'FLIP',
+                    style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
+                  ),
+                ),
+                SizedBox(
+                  height: 20,
+                  child: Transform.scale(
+                    scale: 0.7,
+                    child: Switch(
+                      value: model.flipEnabled,
+                      onChanged: (value) => model.onFlipEnabledChanged(value),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const Divider(height: 1),
+          ),
+          if (model.flipEnabled)
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              child: Row(
+                children: [
+                  ToggleButtons(
+                    onPressed: (index) {
+                      if (index == 0) {
+                        model.flipHorizontally();
+                      } else {
+                        model.flipVertically();
+                      }
+                    },
+                    isSelected: [
+                      model.flip.isHorizontal,
+                      model.flip.isVertical,
+                    ],
+                    selectedColor: Theme.of(context).colorScheme.primary,
+                    constraints: const BoxConstraints.tightFor(height: 32),
+                    children: [
+                      Tooltip(
+                        message: 'Flip Horizontally',
+                        waitDuration: const Duration(milliseconds: 500),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Row(
+                            children: const [
+                              ImageIcon(
+                                AssetImage('assets/images/ic_flip.png'),
+                                size: 20,
+                              ),
+                              SizedBox(width: 8),
+                              Text('Horizontal'),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Tooltip(
+                        message: 'Flip Vertically',
+                        waitDuration: const Duration(milliseconds: 500),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Row(
+                            children: const [
+                              RotatedBox(
+                                quarterTurns: 1,
+                                child: ImageIcon(
+                                  AssetImage('assets/images/ic_flip.png'),
+                                  size: 20,
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Text('Vertical'),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class ClampingControls extends StatefulWidget {
+  const ClampingControls({super.key});
+
+  @override
+  State<ClampingControls> createState() => _ClampingControlsState();
+}
+
+class _ClampingControlsState extends State<ClampingControls> {
+  late final PlaygroundModel model = context.read<PlaygroundModel>();
+
+  late final TextEditingController leftController;
+  late final TextEditingController topController;
+  late final TextEditingController bottomController;
+  late final TextEditingController rightController;
+
+  double get left => double.tryParse(leftController.text) ?? 0;
+
+  double get top => double.tryParse(topController.text) ?? 0;
+
+  double get bottom => double.tryParse(bottomController.text) ?? 0;
+
+  double get right => double.tryParse(rightController.text) ?? 0;
+
+  @override
+  void initState() {
+    super.initState();
+    leftController =
+        TextEditingController(text: model.clampingBox.left.toStringAsFixed(0));
+    topController =
+        TextEditingController(text: model.clampingBox.top.toStringAsFixed(0));
+    bottomController = TextEditingController(
+        text: model.clampingBox.bottom.toStringAsFixed(0));
+    rightController =
+        TextEditingController(text: model.clampingBox.right.toStringAsFixed(0));
+
+    model.addListener(onModelChanged);
+  }
+
+  void onModelChanged() {
+    if (model.clampingBox.left != left) {
+      leftController.text = model.clampingBox.left.toStringAsFixed(0);
+    }
+    if (model.clampingBox.top != top) {
+      topController.text = model.clampingBox.top.toStringAsFixed(0);
+    }
+    if (model.clampingBox.bottom != bottom) {
+      bottomController.text = model.clampingBox.bottom.toStringAsFixed(0);
+    }
+    if (model.clampingBox.right != right) {
+      rightController.text = model.clampingBox.right.toStringAsFixed(0);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final PlaygroundModel model = context.watch<PlaygroundModel>();
+    return FocusScope(
+      child: Builder(
+        builder: (context) {
+          return GestureDetector(
+            onTap: () {
+              FocusScope.of(context).unfocus();
+              model.onClampingBoxChanged(
+                left: left,
+                top: top,
+                bottom: bottom,
+                right: right,
+              );
+            },
+            child: AnimatedSize(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              alignment: Alignment.topCenter,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    padding: const EdgeInsets.fromLTRB(8, 6, 0, 6),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .secondary
-                          .withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .secondary
+                        .withOpacity(0.1),
+                    height: 44,
+                    padding: const EdgeInsets.fromLTRB(16, 0, 6, 0),
+                    alignment: Alignment.centerLeft,
                     child: Row(
                       children: [
                         Expanded(
                           child: Text(
-                            'FLIP',
+                            'CLAMPING',
                             style: Theme.of(context)
                                 .textTheme
                                 .titleSmall!
@@ -372,64 +670,149 @@ class ControlPanel extends StatelessWidget {
                           child: Transform.scale(
                             scale: 0.7,
                             child: Switch(
-                              value: model.flipEnabled,
+                              value: model.clampingEnabled,
                               onChanged: (value) =>
-                                  model.onFlipEnabledChanged(value),
+                                  model.onClampingEnabledChanged(value),
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      IconButton(
-                        splashRadius: 10,
-                        tooltip: 'Flip Horizontally',
-                        constraints: const BoxConstraints(),
-                        padding: const EdgeInsets.all(6),
-                        onPressed: model.flipEnabled
-                            ? () => model.flipHorizontal()
-                            : null,
-                        icon: ImageIcon(
-                          const AssetImage('assets/images/ic_flip.png'),
-                          size: 24,
-                          color: model.flip.isHorizontal && model.flipEnabled
-                              ? Theme.of(context).colorScheme.primary
-                              : null,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        splashRadius: 10,
-                        tooltip: 'Flip Vertically',
-                        constraints: const BoxConstraints(),
-                        padding: const EdgeInsets.all(6),
-                        onPressed: model.flipEnabled
-                            ? () => model.flipVertically()
-                            : null,
-                        icon: RotatedBox(
-                          quarterTurns: 1,
-                          child: ImageIcon(
-                            const AssetImage('assets/images/ic_flip.png'),
-                            size: 24,
-                            color: model.flip.isVertical && model.flipEnabled
-                                ? Theme.of(context).colorScheme.primary
-                                : null,
+                  if (model.clampingEnabled)
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            children: const [
+                              Expanded(child: Label('LEFT')),
+                              SizedBox(width: 16),
+                              Expanded(child: Label('TOP')),
+                            ],
                           ),
-                        ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  enabled: model.clampingEnabled,
+                                  controller: leftController,
+                                  onSubmitted: (value) {
+                                    model.onClampingBoxChanged(left: left);
+                                  },
+                                  decoration: const InputDecoration(
+                                    suffixText: 'px',
+                                  ),
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.allow(
+                                      RegExp(r'[0-9]*'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: TextField(
+                                  enabled: model.clampingEnabled,
+                                  controller: topController,
+                                  onSubmitted: (value) {
+                                    model.onClampingBoxChanged(top: top);
+                                  },
+                                  decoration: const InputDecoration(
+                                    suffixText: 'px',
+                                  ),
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.allow(
+                                      RegExp(r'[0-9]*'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: const [
+                              Expanded(child: Label('RIGHT')),
+                              SizedBox(width: 16),
+                              Expanded(child: Label('BOTTOM')),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextFormField(
+                                  enabled: model.clampingEnabled,
+                                  controller: rightController,
+                                  onFieldSubmitted: (value) {
+                                    model.onClampingBoxChanged(right: right);
+                                  },
+                                  decoration: const InputDecoration(
+                                    suffixText: 'px',
+                                  ),
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.allow(
+                                      RegExp(r'[0-9]*'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: TextField(
+                                  enabled: model.clampingEnabled,
+                                  controller: bottomController,
+                                  onSubmitted: (value) {
+                                    model.onClampingBoxChanged(bottom: bottom);
+                                  },
+                                  decoration: const InputDecoration(
+                                    suffixText: 'px',
+                                  ),
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.allow(
+                                      RegExp(r'[0-9]*'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          FilledButton.tonalIcon(
+                            onPressed: () {
+                              model.setClampingBox(
+                                Rect.fromLTRB(
+                                  0,
+                                  0,
+                                  MediaQuery.of(context).size.width -
+                                      kSidePanelWidth,
+                                  MediaQuery.of(context).size.height,
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.fullscreen_rounded),
+                            label: const Text('Full screen'),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
                 ],
               ),
             ),
-            const Divider(height: 1),
-          ],
-        ),
+          );
+        },
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    model.removeListener(onModelChanged);
+    super.dispose();
   }
 }
 
@@ -498,10 +881,12 @@ class Label extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(label,
-        style: Theme.of(context).textTheme.labelMedium!.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-            ));
+    return Text(
+      label,
+      style: Theme.of(context).textTheme.labelMedium!.copyWith(
+            color: Theme.of(context).colorScheme.primary,
+          ),
+    );
   }
 }
 
@@ -527,7 +912,9 @@ class SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      height: 44,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      alignment: Alignment.centerLeft,
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
         borderRadius: BorderRadius.circular(4),
