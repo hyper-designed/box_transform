@@ -388,8 +388,8 @@ class PositionControls extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         const SectionHeader('POSITION'),
-        Container(
-          padding: const EdgeInsets.all(16),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -471,7 +471,7 @@ class FlipControls extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+            // color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
             height: 44,
             padding: const EdgeInsets.fromLTRB(16, 0, 6, 0),
             alignment: Alignment.centerLeft,
@@ -500,7 +500,7 @@ class FlipControls extends StatelessWidget {
           ),
           if (model.flipEnabled)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Row(
                 children: [
                   ToggleButtons(
@@ -644,10 +644,10 @@ class _ClampingControlsState extends State<ClampingControls> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .secondary
-                        .withOpacity(0.1),
+                    // color: Theme.of(context)
+                    //     .colorScheme
+                    //     .secondary
+                    //     .withOpacity(0.1),
                     height: 44,
                     padding: const EdgeInsets.fromLTRB(16, 0, 6, 0),
                     alignment: Alignment.centerLeft,
@@ -681,7 +681,7 @@ class _ClampingControlsState extends State<ClampingControls> {
                   ),
                   if (model.clampingEnabled)
                     Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         mainAxisSize: MainAxisSize.min,
@@ -916,9 +916,8 @@ class SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       alignment: Alignment.centerLeft,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(4),
-      ),
+          // color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+          ),
       child: Text(
         title,
         style: Theme.of(context).textTheme.titleSmall!.copyWith(
