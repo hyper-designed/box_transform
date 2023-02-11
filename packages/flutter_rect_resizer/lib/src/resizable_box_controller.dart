@@ -68,6 +68,14 @@ class ResizableBoxController extends ChangeNotifier {
   /// The initial [Flip] of the [ResizableBox] when the resizing starts.
   Flip initialFlip = Flip.none;
 
+  /// The box that limits the dragging and resizing of the [ResizableBox] inside
+  /// its bounds.
+  Rect clampingBox = Rect.largest;
+
+  /// The constraints that limits the resizing of the [ResizableBox] inside its
+  /// bounds.
+  BoxConstraints constraints = const BoxConstraints();
+
   /// Sets the current [box] of the [ResizableBox].
   void setRect(Rect box) {
     this.box = box;
@@ -98,6 +106,18 @@ class ResizableBoxController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Sets the current [clampingBox] of the [ResizableBox].
+  void setClampingBox(Rect clampingBox, {bool notify = true}) {
+    this.clampingBox = clampingBox;
+    if (notify) notifyListeners();
+  }
+
+  /// Sets the current [constraints] of the [ResizableBox].
+  void setConstraints(BoxConstraints constraints, {bool notify = true}) {
+    this.constraints = constraints;
+    if (notify) notifyListeners();
+  }
+
   /// Called when dragging of the [ResizableBox] starts.
   ///
   /// [localPosition] is the position of the pointer relative to the
@@ -120,7 +140,6 @@ class ResizableBoxController extends ChangeNotifier {
   UIMoveResult onDragUpdate(
     Offset localPosition, {
     bool notify = true,
-    Rect clampingBox = Rect.largest,
   }) {
     final UIMoveResult result = resizer.move(
       initialRect: initialRect,
@@ -172,17 +191,17 @@ class ResizableBoxController extends ChangeNotifier {
     Offset localPosition,
     HandlePosition handle, {
     bool notify = true,
-    Rect clampingBox = Rect.largest,
   }) {
     // Calculate the new rect based on the initial rect, initial local position,
     final UIResizeResult result = resizer.resize(
-      initialRect: initialRect,
-      initialLocalPosition: initialLocalPosition,
       localPosition: localPosition,
       handle: handle,
+      initialRect: initialRect,
+      initialLocalPosition: initialLocalPosition,
       resizeMode: resolveResizeModeCallback!(),
       initialFlip: initialFlip,
       clampingBox: clampingBox,
+      constraints: constraints,
     );
 
     box = result.newRect;
@@ -199,5 +218,24 @@ class ResizableBoxController extends ChangeNotifier {
     initialFlip = Flip.none;
 
     notifyListeners();
+  }
+
+  void recalculateBox({
+    bool notify = true,
+  }) {
+    final UIResizeResult result = resizer.resize(
+      localPosition: Offset.zero,
+      initialLocalPosition: Offset.zero,
+      handle: HandlePosition.topLeft,
+      initialRect: box,
+      resizeMode: resolveResizeModeCallback!(),
+      initialFlip: flip,
+      clampingBox: clampingBox,
+      constraints: constraints,
+    );
+
+    box = result.newRect;
+
+    if (notify) notifyListeners();
   }
 }

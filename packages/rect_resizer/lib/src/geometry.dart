@@ -2,12 +2,22 @@ import 'dart:math' as math;
 
 import 'package:vector_math/vector_math.dart';
 
+/// Holds a set of constraints to apply to any [Dimension] or [Box].
 class Constraints {
+
+  /// The minimum width that the clamped object cannot be less than.
   final double minWidth;
+
+  /// The maximum width that the clamped object cannot be greater than.
   final double maxWidth;
+
+  /// The minimum height that the clamped object cannot be less than.
   final double minHeight;
+
+  /// The maximum height that the clamped object cannot be greater than.
   final double maxHeight;
 
+  /// Creates a new [Constraints] object.
   const Constraints({
     this.minWidth = 0.0,
     this.maxWidth = double.infinity,
@@ -15,10 +25,13 @@ class Constraints {
     this.maxHeight = double.infinity,
   });
 
+  /// A helper function that clamps a given [value] by [min] and [max].
   num _clamp(num value, num min, num max) {
     return math.max(min, math.min(max, value));
   }
 
+  /// Constrains a given [dimension] by the [minWidth], [maxWidth], [minHeight],
+  /// and [maxHeight] values.
   Dimension constrainDimension(Dimension dimension) {
     return Dimension(
       _clamp(dimension.width, minWidth, maxWidth).toDouble(),
@@ -26,6 +39,8 @@ class Constraints {
     );
   }
 
+  /// Constrains a given [box] by the [minWidth], [maxWidth], [minHeight], and
+  /// [maxHeight] values.
   Box constrainBox(Box box) {
     return Box.fromLTWH(
       box.left,
@@ -34,6 +49,23 @@ class Constraints {
       _clamp(box.height, minHeight, maxHeight).toDouble(),
     );
   }
+
+  @override
+  String toString() {
+    return 'Constraints(minWidth: $minWidth, maxWidth: $maxWidth, minHeight: $minHeight, maxHeight: $maxHeight)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (other is! Constraints) return false;
+    return other.minWidth == minWidth &&
+      other.maxWidth == maxWidth &&
+      other.minHeight == minHeight &&
+      other.maxHeight == maxHeight;
+  }
+
+  @override
+  int get hashCode => Object.hash(minWidth, maxWidth, minHeight, maxHeight);
 }
 
 /// Linearly interpolate between two doubles.

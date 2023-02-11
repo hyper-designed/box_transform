@@ -60,7 +60,7 @@ class MyApp extends StatelessWidget {
 class PlaygroundModel with ChangeNotifier {
   Rect box = Rect.zero;
   Flip flip = Flip.none;
-  late Rect clampingBox;
+  Rect clampingBox = Rect.largest;
 
   bool flipEnabled = true;
   bool clampingEnabled = false;
@@ -173,34 +173,44 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    resetPlayground();
+  }
 
-    // This is done to automatically resize clamping rect to the new screen size
-    // when the app is resized but only when the clampingRect is already
-    // set to the full screen. This is done to avoid the clamping rect to be
-    // resized when the user has already resized it.
-    playgroundArea ??= Rect.fromLTWH(
-      0,
-      0,
-      MediaQuery.of(context).size.width - kSidePanelWidth,
-      MediaQuery.of(context).size.height,
-    );
-    if (model.clampingBox == playgroundArea) {
-      model.setClampingBox(
-        notify: false,
-        Rect.fromLTWH(
-          0,
-          0,
-          MediaQuery.of(context).size.width - kSidePanelWidth,
-          MediaQuery.of(context).size.height,
-        ),
-      );
-    }
+  @override
+  void didChangeMetrics() {
+    super.didChangeMetrics();
+    resetPlayground(notify: true);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  // This is done to automatically resize clamping rect to the new screen size
+  // when the app is resized but only when the clampingRect is already
+  // set to the full screen. This is done to avoid the clamping rect to be
+  // resized when the user has already resized it.
+  void resetPlayground({bool notify = false}) {
     playgroundArea = Rect.fromLTWH(
       0,
       0,
       MediaQuery.of(context).size.width - kSidePanelWidth,
       MediaQuery.of(context).size.height,
     );
+    if (model.clampingBox.width > playgroundArea!.width ||
+        model.clampingBox.height > playgroundArea!.height) {
+      model.setClampingBox(
+        notify: notify,
+        Rect.fromLTWH(
+          model.clampingBox.left.clamp(0.0, playgroundArea!.width),
+          model.clampingBox.top.clamp(0.0, playgroundArea!.height),
+          model.clampingBox.width.clamp(0.0, playgroundArea!.width),
+          model.clampingBox.height.clamp(0.0, playgroundArea!.height),
+        ),
+      );
+    }
   }
 
   @override
@@ -228,6 +238,7 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
                     box: model.clampingBox,
                     flip: Flip.none,
                     clampingBox: playgroundArea!,
+                    constraints: BoxConstraints(minWidth: model.box.width, minHeight: model.box.height),
                     onChanged: (rect, flip) {
                       model.setClampingBox(rect);
                     },
@@ -300,12 +311,6 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
         ],
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
   }
 }
 
@@ -915,9 +920,6 @@ class SectionHeader extends StatelessWidget {
       height: 44,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       alignment: Alignment.centerLeft,
-      decoration: BoxDecoration(
-          // color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
-          ),
       child: Text(
         title,
         style: Theme.of(context).textTheme.titleSmall!.copyWith(

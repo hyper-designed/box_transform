@@ -10,8 +10,8 @@ class RectResizer {
   /// [initialLocalPosition] of the mouse cursor and wherever [localPosition]
   /// of the mouse cursor is currently at.
   ///
-  /// The [clampingBox] is the box that the [initialRect] will be
-  /// constrained to.
+  /// The [clampingBox] is the box that the [initialRect] is not allowed
+  /// to go outside of when dragging or resizing.
   MoveResult move({
     required Box initialRect,
     required Vector2 initialLocalPosition,
@@ -41,6 +41,12 @@ class RectResizer {
   /// [initialRect] will be resized.
   ///
   /// The [initialFlip] helps determine the initial state of the rectangle.
+  ///
+  /// The [clampingBox] is the box that the [initialRect] is not allowed
+  /// to go outside of when dragging or resizing.
+  ///
+  /// The [constraints] is the constraints that the [initialRect] is not allowed
+  /// to shrink or grow beyond.
   ResizeResult resize({
     required Box initialRect,
     required Vector2 initialLocalPosition,
@@ -49,6 +55,7 @@ class RectResizer {
     required ResizeMode resizeMode,
     required Flip initialFlip,
     Box clampingBox = Box.largest,
+    Constraints constraints = const Constraints(),
   }) {
     final Flip currentFlip =
         getFlipForRect(initialRect, localPosition, handle, resizeMode);
@@ -82,6 +89,7 @@ class RectResizer {
     }
 
     newRect = clampingBox.clampBoxInsideThis(newRect);
+    newRect = constraints.constrainBox(newRect);
 
     return ResizeResult(
       newRect: newRect,

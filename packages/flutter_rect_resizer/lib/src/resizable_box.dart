@@ -13,6 +13,8 @@ typedef BoxContentBuilder = Widget Function(
   Flip flip,
 );
 
+typedef OnBoxChanged = void Function(Rect rect, Flip flip);
+
 Widget _defaultHandleBuilder(BuildContext context, HandlePosition handle) {
   return Container(
     decoration: BoxDecoration(
@@ -103,16 +105,20 @@ class ResizableBox extends StatefulWidget {
   /// be clamped inside of this [clampingBox].
   final Rect clampingBox;
 
+  /// A set of constraints that will be applied to the [box] when it is
+  /// resized by the [ResizableBoxController].
+  final BoxConstraints constraints;
+
   /// A callback that is called every time the [ResizableBox] is updated.
   /// This is called every time the [ResizableBoxController] mutates the box
   /// or the flip.
-  final Function(Rect rect, Flip flip) onChanged;
+  final OnBoxChanged? onChanged;
 
   /// Creates a [ResizableBox] widget.
   const ResizableBox({
     super.key,
     required this.contentBuilder,
-    required this.onChanged,
+    this.onChanged,
     this.controller,
     this.handleBuilder = _defaultHandleBuilder,
     this.handleGestureResponseDiameter = 24,
@@ -121,6 +127,7 @@ class ResizableBox extends StatefulWidget {
     Rect? box,
     Flip? flip,
     Rect? clampingBox,
+    BoxConstraints? constraints,
   })  : assert(
           handleGestureResponseDiameter >= handleRenderedDiameter,
           'The handle gesture response diameter must be '
@@ -132,7 +139,8 @@ class ResizableBox extends StatefulWidget {
             'You can either provide a controller or a box, flip, and clamping box, but not both.'),
         box = box ?? Rect.zero,
         flip = flip ?? Flip.none,
-        clampingBox = clampingBox ?? Rect.largest;
+        clampingBox = clampingBox ?? Rect.largest,
+        constraints = constraints ?? const BoxConstraints();
 
   @override
   State<ResizableBox> createState() => _ResizableBoxState();
@@ -151,11 +159,11 @@ class _ResizableBoxState extends State<ResizableBox> {
       controller.addListener(onControllerUpdate);
     } else {
       // If it is provided internally, we should not listen to it.
-      // TODO[@saad]: does this make sense? If not, move the controller out of the if statement.
       controller = ResizableBoxController()
         ..box = widget.box
-        ..flip = widget.flip;
-      // TODO[@saad]: add clamping box.
+        ..flip = widget.flip
+        ..clampingBox = widget.clampingBox
+        ..constraints = widget.constraints;
     }
   }
 
@@ -173,9 +181,9 @@ class _ResizableBoxState extends State<ResizableBox> {
       controller.removeListener(onControllerUpdate);
       controller = ResizableBoxController()
         ..box = widget.box
-        ..flip = widget.flip;
-      // TODO[@saad]: add clamping box.
-      // TODO[@saad]: should we add a listener here?
+        ..flip = widget.flip
+        ..clampingBox = widget.clampingBox
+        ..constraints = widget.constraints;
     }
 
     // Return if the controller is external.
@@ -189,7 +197,15 @@ class _ResizableBoxState extends State<ResizableBox> {
     if (oldWidget.flip != widget.flip) {
       controller.flip = widget.flip;
     }
-    // TODO[@saad]: account for clamping box and update box if required.
+    if (oldWidget.clampingBox != widget.clampingBox) {
+      controller.clampingBox = widget.clampingBox;
+      controller.recalculateBox(notify: false);
+    }
+
+    if (oldWidget.constraints != widget.constraints) {
+      controller.constraints = widget.constraints;
+      controller.recalculateBox(notify: false);
+    }
   }
 
   /// Called when the controller is updated.
@@ -221,10 +237,9 @@ class _ResizableBoxState extends State<ResizableBox> {
               onPanUpdate: (event) {
                 final UIMoveResult result = controller.onDragUpdate(
                   event.localPosition,
-                  clampingBox: widget.clampingBox,
                   notify: false,
                 );
-                widget.onChanged(result.newRect, flip);
+                widget.onChanged?.call(result.newRect, flip);
               },
               onPanEnd: (event) => controller.onDragEnd(),
               child: widget.contentBuilder(context, box, flip),
@@ -284,10 +299,9 @@ class _ResizableBoxState extends State<ResizableBox> {
     final UIResizeResult result = controller.onResizeUpdate(
       details.localPosition,
       handlePosition,
-      clampingBox: widget.clampingBox,
       notify: false,
     );
-    widget.onChanged(result.newRect, controller.flip);
+    widget.onChanged?.call(result.newRect, controller.flip);
   }
 
   @override

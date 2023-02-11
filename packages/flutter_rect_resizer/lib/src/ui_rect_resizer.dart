@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 
+import 'package:flutter/rendering.dart' as widgets;
 import 'package:rect_resizer/rect_resizer.dart' as resizer;
 
 import 'extensions.dart';
@@ -17,6 +18,7 @@ class UIRectResizer {
     required resizer.ResizeMode resizeMode,
     required resizer.Flip initialFlip,
     ui.Rect clampingBox = ui.Rect.largest,
+    widgets.BoxConstraints constraints = const widgets.BoxConstraints(),
   }) =>
       _resizer
           .resize(
@@ -27,6 +29,7 @@ class UIRectResizer {
             resizeMode: resizeMode,
             initialFlip: initialFlip,
             clampingBox: clampingBox.toResizerBox(),
+            constraints: constraints.toResizerConstraints(),
           )
           .toFlutterResizeResult();
 
