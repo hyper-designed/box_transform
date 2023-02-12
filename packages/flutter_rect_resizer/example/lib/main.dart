@@ -80,14 +80,14 @@ class PlaygroundModel with ChangeNotifier {
     clampingBox = Rect.fromLTWH(
       0,
       0,
-      MediaQuery.of(context).size.width - kSidePanelWidth,
-      MediaQuery.of(context).size.height,
+      size.width - kSidePanelWidth,
+      size.height,
     );
     notifyListeners();
   }
 
-  void onRectChanged(Rect rect, Flip flip) {
-    box = rect;
+  void onRectChanged(Rect box, Flip flip) {
+    this.box = box;
     this.flip = flip;
     notifyListeners();
   }
@@ -164,7 +164,6 @@ const double kStrokeWidth = 1.5;
 const Color kGridColor = Color(0x7FC3E8F3);
 
 class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
-
   @override
   void initState() {
     super.initState();
@@ -203,15 +202,16 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
   // resized when the user has already resized it.
   void resetPlayground({bool notify = false}) {
     final PlaygroundModel model = context.read<PlaygroundModel>();
+    final Size size = MediaQuery.of(context).size;
     model.playgroundArea = Rect.fromLTWH(
       0,
       0,
-      MediaQuery.of(context).size.width - kSidePanelWidth,
-      MediaQuery.of(context).size.height,
+      size.width - kSidePanelWidth,
+      size.height,
     );
 
-    final Rect? playgroundArea = model.playgroundArea;
-    if (model.clampingBox.width > playgroundArea!.width ||
+    final Rect playgroundArea = model.playgroundArea!;
+    if (model.clampingBox.width > playgroundArea.width ||
         model.clampingBox.height > playgroundArea.height) {
       model.setClampingBox(
         model.clampingBox,
@@ -223,7 +223,7 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    late final PlaygroundModel model = context.watch<PlaygroundModel>();
+    final PlaygroundModel model = context.watch<PlaygroundModel>();
     final Color handleColor = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
@@ -243,6 +243,7 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
                 ),
                 if (model.clampingEnabled && model.playgroundArea != null)
                   ResizableBox(
+                    key: const ValueKey('clamping-box'),
                     box: model.clampingBox,
                     flip: Flip.none,
                     clampingBox: model.playgroundArea!,
@@ -284,6 +285,7 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
                     ),
                   ),
                 ResizableBox(
+                  key: const ValueKey('image-box'),
                   box: model.box,
                   flip: model.flip,
                   clampingBox: model.clampingEnabled ? model.clampingBox : null,

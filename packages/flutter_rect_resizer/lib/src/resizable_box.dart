@@ -198,6 +198,8 @@ class _ResizableBoxState extends State<ResizableBox> {
       controller.flip = widget.flip;
     }
     if (oldWidget.clampingBox != widget.clampingBox) {
+      print('clamping box changed for key: ${widget.key}. It is now: '
+          '${widget.clampingBox}');
       controller.clampingBox = widget.clampingBox;
       controller.recalculateBox(notify: false);
     }
