@@ -61,11 +61,12 @@ class PlaygroundModel with ChangeNotifier {
   Rect box = Rect.zero;
   Flip flip = Flip.none;
   Rect clampingBox = Rect.largest;
+  Rect? playgroundArea;
 
   bool flipEnabled = true;
   bool clampingEnabled = false;
 
-  void reset(context) {
+  void reset(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
     final double width = size.width - 300;
     final double height = size.height;
@@ -101,8 +102,19 @@ class PlaygroundModel with ChangeNotifier {
     notifyListeners();
   }
 
-  void setClampingBox(Rect rect, {bool notify = true}) {
+  void setClampingBox(Rect rect,
+      {bool notify = true, bool insidePlayground = false}) {
     clampingBox = rect;
+
+    if (insidePlayground && playgroundArea != null) {
+      clampingBox = Rect.fromLTWH(
+        clampingBox.left.clamp(0.0, playgroundArea!.width),
+        clampingBox.top.clamp(0.0, playgroundArea!.height),
+        clampingBox.width.clamp(0.0, playgroundArea!.width),
+        clampingBox.height.clamp(0.0, playgroundArea!.height),
+      );
+    }
+
     if (notify) notifyListeners();
   }
 
@@ -152,7 +164,6 @@ const double kStrokeWidth = 1.5;
 const Color kGridColor = Color(0x7FC3E8F3);
 
 class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
-  late final PlaygroundModel model = context.read<PlaygroundModel>();
 
   @override
   void initState() {
@@ -161,14 +172,12 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
     // This is required to center the box based on screen size when the app
     // starts.
     SchedulerBinding.instance.addPostFrameCallback((_) {
+      final PlaygroundModel model = context.read<PlaygroundModel>();
       model.reset(context);
     });
 
     WidgetsBinding.instance.addObserver(this);
   }
-
-  /// Represents the playground area.
-  Rect? playgroundArea;
 
   @override
   void didChangeDependencies() {
@@ -193,22 +202,21 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
   // set to the full screen. This is done to avoid the clamping rect to be
   // resized when the user has already resized it.
   void resetPlayground({bool notify = false}) {
-    playgroundArea = Rect.fromLTWH(
+    final PlaygroundModel model = context.read<PlaygroundModel>();
+    model.playgroundArea = Rect.fromLTWH(
       0,
       0,
       MediaQuery.of(context).size.width - kSidePanelWidth,
       MediaQuery.of(context).size.height,
     );
+
+    final Rect? playgroundArea = model.playgroundArea;
     if (model.clampingBox.width > playgroundArea!.width ||
-        model.clampingBox.height > playgroundArea!.height) {
+        model.clampingBox.height > playgroundArea.height) {
       model.setClampingBox(
+        model.clampingBox,
         notify: notify,
-        Rect.fromLTWH(
-          model.clampingBox.left.clamp(0.0, playgroundArea!.width),
-          model.clampingBox.top.clamp(0.0, playgroundArea!.height),
-          model.clampingBox.width.clamp(0.0, playgroundArea!.width),
-          model.clampingBox.height.clamp(0.0, playgroundArea!.height),
-        ),
+        insidePlayground: true,
       );
     }
   }
@@ -233,13 +241,15 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
                         : kGridColor,
                   ),
                 ),
-                if (model.clampingEnabled && playgroundArea != null)
+                if (model.clampingEnabled && model.playgroundArea != null)
                   ResizableBox(
                     box: model.clampingBox,
                     flip: Flip.none,
-                    clampingBox: playgroundArea!,
+                    clampingBox: model.playgroundArea!,
                     constraints: BoxConstraints(
-                        minWidth: model.box.width, minHeight: model.box.height),
+                      minWidth: model.box.width,
+                      minHeight: model.box.height,
+                    ),
                     onChanged: (rect, flip) {
                       model.setClampingBox(rect);
                     },
@@ -789,13 +799,7 @@ class _ClampingControlsState extends State<ClampingControls> {
                           FilledButton.tonalIcon(
                             onPressed: () {
                               model.setClampingBox(
-                                Rect.fromLTRB(
-                                  0,
-                                  0,
-                                  MediaQuery.of(context).size.width -
-                                      kSidePanelWidth,
-                                  MediaQuery.of(context).size.height,
-                                ),
+                                model.playgroundArea!,
                               );
                             },
                             icon: const Icon(Icons.fullscreen_rounded),

@@ -585,7 +585,7 @@ class Box {
     );
   }
 
-  Box clampBoxInsideThis(Box child, {bool modifySize = true}) {
+  Box containOther(Box child, {bool modifySize = true}) {
     final double x = math.max(left, child.left);
     final double y = math.max(top, child.top);
     final double clampedLeft = math.min(x, right - child.width);

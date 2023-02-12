@@ -208,11 +208,36 @@ class _ResizableBoxState extends State<ResizableBox> {
     }
   }
 
+  @override
+  void dispose() {
+    controller.removeListener(onControllerUpdate);
+    if (widget.controller == null) controller.dispose();
+    super.dispose();
+  }
+
   /// Called when the controller is updated.
   void onControllerUpdate() {
     if (widget.box != controller.box || widget.flip != controller.flip) {
       if (mounted) setState(() {});
     }
+  }
+
+  void onHandlePanStart(DragStartDetails details) {
+    controller.onResizeStart(details.localPosition);
+  }
+
+  void onHandlePanEnd(DragEndDetails details) {
+    controller.onResizeEnd();
+  }
+
+  void onHandlePanUpdate(
+      DragUpdateDetails details, HandlePosition handlePosition) {
+    final UIResizeResult result = controller.onResizeUpdate(
+      details.localPosition,
+      handlePosition,
+      notify: false,
+    );
+    widget.onChanged?.call(result.newRect, controller.flip);
   }
 
   @override
@@ -284,31 +309,6 @@ class _ResizableBoxState extends State<ResizableBox> {
         ],
       ),
     );
-  }
-
-  void onHandlePanStart(DragStartDetails details) {
-    controller.onResizeStart(details.localPosition);
-  }
-
-  void onHandlePanEnd(DragEndDetails details) {
-    controller.onResizeEnd();
-  }
-
-  void onHandlePanUpdate(
-      DragUpdateDetails details, HandlePosition handlePosition) {
-    final UIResizeResult result = controller.onResizeUpdate(
-      details.localPosition,
-      handlePosition,
-      notify: false,
-    );
-    widget.onChanged?.call(result.newRect, controller.flip);
-  }
-
-  @override
-  void dispose() {
-    controller.removeListener(onControllerUpdate);
-    if (widget.controller == null) controller.dispose();
-    super.dispose();
   }
 }
 

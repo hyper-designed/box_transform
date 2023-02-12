@@ -21,7 +21,7 @@ class RectResizer {
     final Vector2 delta = localPosition - initialLocalPosition;
 
     final Box unclampedRect = initialRect.translate(delta.x, delta.y);
-    final Box clampedRect = clampingBox.clampBoxInsideThis(unclampedRect);
+    final Box clampedRect = clampingBox.containOther(unclampedRect);
     final Vector2 clampedDelta = clampedRect.topLeft - initialRect.topLeft;
 
     final Box newRect = initialRect.translate(clampedDelta.x, clampedDelta.y);
@@ -88,7 +88,7 @@ class RectResizer {
       newRect = flipRect(rect, currentFlip, handle);
     }
 
-    newRect = clampingBox.clampBoxInsideThis(newRect);
+    newRect = clampingBox.containOther(newRect);
     newRect = constraints.constrainBox(newRect);
 
     return ResizeResult(

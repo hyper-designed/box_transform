@@ -223,15 +223,11 @@ class ResizableBoxController extends ChangeNotifier {
   void recalculateBox({
     bool notify = true,
   }) {
-    final UIResizeResult result = resizer.resize(
-      localPosition: Offset.zero,
-      initialLocalPosition: Offset.zero,
-      handle: HandlePosition.topLeft,
+    final UIMoveResult result = resizer.move(
       initialRect: box,
-      resizeMode: resolveResizeModeCallback!(),
-      initialFlip: flip,
+      initialLocalPosition: initialLocalPosition,
+      localPosition: initialLocalPosition,
       clampingBox: clampingBox,
-      constraints: constraints,
     );
 
     box = result.newRect;
