@@ -238,7 +238,8 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
                     box: model.clampingBox,
                     flip: Flip.none,
                     clampingBox: playgroundArea!,
-                    constraints: BoxConstraints(minWidth: model.box.width, minHeight: model.box.height),
+                    constraints: BoxConstraints(
+                        minWidth: model.box.width, minHeight: model.box.height),
                     onChanged: (rect, flip) {
                       model.setClampingBox(rect);
                     },
@@ -325,9 +326,7 @@ class ControlPanel extends StatelessWidget {
       shape: const RoundedRectangleBorder(),
       child: SizedBox(
         width: kSidePanelWidth,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisAlignment: MainAxisAlignment.start,
+        child: ListView(
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
