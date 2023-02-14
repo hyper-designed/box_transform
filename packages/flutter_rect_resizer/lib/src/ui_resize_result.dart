@@ -55,6 +55,18 @@ class UIResizeResult {
   /// The new size of the node after the resize.
   final ui.Size newSize;
 
+  /// Whether the resizing box hit its maximum possible width.
+  final bool minWidthReached;
+
+  /// Whether the resizing box hit its minimum possible width.
+  final bool maxWidthReached;
+
+  /// Whether the resizing box hit its maximum possible height.
+  final bool minHeightReached;
+
+  /// Whether the resizing box hit its minimum possible height.
+  final bool maxHeightReached;
+
   /// Creates a [UIResizeResult] object.
   UIResizeResult({
     required this.newRect,
@@ -63,6 +75,10 @@ class UIResizeResult {
     required this.resizeMode,
     required this.delta,
     required this.newSize,
+    required this.minWidthReached,
+    required this.maxWidthReached,
+    required this.minHeightReached,
+    required this.maxHeightReached,
   });
 
   @override

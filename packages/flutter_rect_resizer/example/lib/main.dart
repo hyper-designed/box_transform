@@ -128,7 +128,7 @@ class PlaygroundModel with ChangeNotifier {
     notifyListeners();
   }
 
-  void onClampingEnabledChanged(bool enabled) {
+  void toggleClamping(bool enabled) {
     clampingEnabled = enabled;
     notifyListeners();
   }
@@ -241,48 +241,7 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
                   ),
                 ),
                 if (model.clampingEnabled && model.playgroundArea != null)
-                  ResizableBox(
-                    key: const ValueKey('clamping-box'),
-                    box: model.clampingBox,
-                    flip: Flip.none,
-                    clampingBox: model.playgroundArea!,
-                    constraints: BoxConstraints(
-                      minWidth: model.box.width,
-                      minHeight: model.box.height,
-                    ),
-                    onChanged: (rect, flip) {
-                      model.setClampingBox(rect);
-                    },
-                    handleGestureResponseDiameter: 32,
-                    handleBuilder: (context, handle) =>
-                        const ColoredBox(color: Colors.red),
-                    contentBuilder: (context, _, flip) => Container(
-                      width: model.clampingBox.width,
-                      height: model.clampingBox.height,
-                      alignment: Alignment.bottomRight,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.red, width: 1.5),
-                      ),
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.1),
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(6),
-                          ),
-                        ),
-                        child: const Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: Text(
-                            'Clamping Box',
-                            style: TextStyle(
-                              color: Colors.red,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                  const ClampingBox(),
                 ResizableBox(
                   key: const ValueKey('image-box'),
                   box: model.box,
@@ -305,13 +264,6 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
                           color: handleColor,
                           width: 2,
                         ),
-                        // boxShadow: [
-                        //   BoxShadow(
-                        //     color: Colors.black.withOpacity(0.1),
-                        //     blurRadius: 8,
-                        //     spreadRadius: 5,
-                        //   ),
-                        // ],
                       ),
                     ),
                   ),
@@ -321,6 +273,101 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
           ),
           const ControlPanel(),
         ],
+      ),
+    );
+  }
+}
+
+class ClampingBox extends StatefulWidget {
+  const ClampingBox({super.key});
+
+  @override
+  State<ClampingBox> createState() => _ClampingBoxState();
+}
+
+class _ClampingBoxState extends State<ClampingBox> {
+  bool minWidthReached = false;
+  bool minHeightReached = false;
+  bool maxWidthReached = false;
+  bool maxHeightReached = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final PlaygroundModel model = context.watch<PlaygroundModel>();
+    return ResizableBox(
+      key: const ValueKey('clamping-box'),
+      box: model.clampingBox,
+      flip: Flip.none,
+      clampingBox: model.playgroundArea!,
+      constraints: BoxConstraints(
+        minWidth: model.box.width,
+        minHeight: model.box.height,
+      ),
+      onChanged: (rect, flip) {
+        model.setClampingBox(rect);
+      },
+      onTerminalSizeReached: (
+        bool reachedMinWidth,
+        bool reachedMaxWidth,
+        bool reachedMinHeight,
+        bool reachedMaxHeight,
+      ) {
+        if (minWidthReached == reachedMinWidth &&
+            minHeightReached == reachedMinHeight &&
+            maxWidthReached == reachedMaxWidth &&
+            maxHeightReached == reachedMaxHeight) return;
+
+        setState(() {
+          minWidthReached = reachedMinWidth;
+          minHeightReached = reachedMinHeight;
+          maxWidthReached = reachedMaxWidth;
+          maxHeightReached = reachedMaxHeight;
+        });
+      },
+      handleGestureResponseDiameter: 32,
+      handleBuilder: (context, handle) => const ColoredBox(color: Colors.red),
+      contentBuilder: (context, _, flip) => Container(
+        width: model.clampingBox.width,
+        height: model.clampingBox.height,
+        alignment: Alignment.bottomRight,
+        decoration: BoxDecoration(
+          border: Border.symmetric(
+            horizontal: BorderSide(
+              color: minHeightReached
+                  ? Colors.orange
+                  : maxHeightReached
+                      ? Colors.red
+                      : Colors.blue,
+              width: 1.5,
+            ),
+            vertical: BorderSide(
+              color: minWidthReached
+                  ? Colors.orange
+                  : maxWidthReached
+                      ? Colors.red
+                      : Colors.blue,
+              width: 1.5,
+            ),
+          ),
+        ),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: Colors.red.withOpacity(0.1),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(6),
+            ),
+          ),
+          child: const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text(
+              'Clamping Box',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -686,8 +733,7 @@ class _ClampingControlsState extends State<ClampingControls> {
                             scale: 0.7,
                             child: Switch(
                               value: model.clampingEnabled,
-                              onChanged: (value) =>
-                                  model.onClampingEnabledChanged(value),
+                              onChanged: (value) => model.toggleClamping(value),
                             ),
                           ),
                         ),

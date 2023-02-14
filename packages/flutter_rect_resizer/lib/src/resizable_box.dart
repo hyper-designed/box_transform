@@ -2,19 +2,45 @@ import 'package:flutter/material.dart';
 
 import '../flutter_rect_resizer.dart';
 
+/// A callback that expects a [Widget] that represents any of the handles.
+/// The [handle] is the current position and size of the handle.
 typedef HandleBuilder = Widget Function(
   BuildContext context,
   HandlePosition handle,
 );
 
+/// A callback that expects a [Widget] that represents the content of the box.
+/// The [rect] is the current position and size of the box.
+/// The [flip] is the current flip state of the box.
 typedef BoxContentBuilder = Widget Function(
   BuildContext context,
   Rect rect,
   Flip flip,
 );
 
+/// A callback that is called when the box is moved or resized.
+/// The [rect] is the current position and size of the box.
+/// The [flip] is the current flip state of the box.
 typedef OnBoxChanged = void Function(Rect rect, Flip flip);
 
+/// A callback that is called when the box reaches a terminal edge when
+/// resizing.
+typedef TerminalEdgeEvent = void Function(bool reached);
+
+/// A callback that is called when the box reaches a minimum or maximum size
+/// when resizing a specific axis.
+typedef TerminalAxisEvent = void Function(bool reachedMin, bool reachedMax);
+
+/// A callback that is called when the box reaches a minimum or maximum size
+/// when resizing.
+typedef TerminalEvent = void Function(
+  bool reachedMinWidth,
+  bool reachedMaxWidth,
+  bool reachedMinHeight,
+  bool reachedMaxHeight,
+);
+
+/// A default implementation of the [HandleBuilder] callback.
 Widget _defaultHandleBuilder(BuildContext context, HandlePosition handle) {
   return Container(
     decoration: BoxDecoration(
@@ -114,6 +140,14 @@ class ResizableBox extends StatefulWidget {
   /// or the flip.
   final OnBoxChanged? onChanged;
 
+  final TerminalEdgeEvent? onMinWidthReached;
+  final TerminalEdgeEvent? onMaxWidthReached;
+  final TerminalEdgeEvent? onMinHeightReached;
+  final TerminalEdgeEvent? onMaxHeightReached;
+  final TerminalAxisEvent? onTerminalWidthReached;
+  final TerminalAxisEvent? onTerminalHeightReached;
+  final TerminalEvent? onTerminalSizeReached;
+
   /// Creates a [ResizableBox] widget.
   const ResizableBox({
     super.key,
@@ -128,6 +162,14 @@ class ResizableBox extends StatefulWidget {
     Flip? flip,
     Rect? clampingBox,
     BoxConstraints? constraints,
+    // terminal update events
+    this.onMinWidthReached,
+    this.onMaxWidthReached,
+    this.onMinHeightReached,
+    this.onMaxHeightReached,
+    this.onTerminalWidthReached,
+    this.onTerminalHeightReached,
+    this.onTerminalSizeReached,
   })  : assert(
           handleGestureResponseDiameter >= handleRenderedDiameter,
           'The handle gesture response diameter must be '
@@ -170,6 +212,7 @@ class _ResizableBoxState extends State<ResizableBox> {
   @override
   void didUpdateWidget(covariant ResizableBox oldWidget) {
     super.didUpdateWidget(oldWidget);
+
     if (widget.controller != null && oldWidget.controller == null ||
         widget.controller != oldWidget.controller) {
       // New explicit controller provided or explicit controller changed.
@@ -222,22 +265,50 @@ class _ResizableBoxState extends State<ResizableBox> {
     }
   }
 
-  void onHandlePanStart(DragStartDetails details) {
-    controller.onResizeStart(details.localPosition);
+  /// Called when the handle drag starts.
+  void onHandlePanStart(Offset localPosition) {
+    controller.onResizeStart(localPosition);
   }
 
-  void onHandlePanEnd(DragEndDetails details) {
-    controller.onResizeEnd();
-  }
-
-  void onHandlePanUpdate(
-      DragUpdateDetails details, HandlePosition handlePosition) {
+  /// Called when the handle drag updates.
+  void onHandlePanUpdate(Offset localPosition, HandlePosition handlePosition) {
     final UIResizeResult result = controller.onResizeUpdate(
-      details.localPosition,
+      localPosition,
       handlePosition,
       notify: false,
     );
+
     widget.onChanged?.call(result.newRect, controller.flip);
+    widget.onMinWidthReached?.call(result.minWidthReached);
+    widget.onMaxWidthReached?.call(result.maxWidthReached);
+    widget.onMinHeightReached?.call(result.minHeightReached);
+    widget.onMaxHeightReached?.call(result.maxHeightReached);
+    widget.onTerminalWidthReached?.call(
+      result.minWidthReached,
+      result.maxWidthReached,
+    );
+    widget.onTerminalHeightReached?.call(
+      result.minHeightReached,
+      result.maxHeightReached,
+    );
+    widget.onTerminalSizeReached?.call(
+      result.minWidthReached,
+      result.maxWidthReached,
+      result.minHeightReached,
+      result.maxHeightReached,
+    );
+  }
+
+  /// Called when the handle drag ends.
+  void onHandlePanEnd() {
+    controller.onResizeEnd();
+    widget.onMinWidthReached?.call(false);
+    widget.onMaxWidthReached?.call(false);
+    widget.onMinHeightReached?.call(false);
+    widget.onMaxHeightReached?.call(false);
+    widget.onTerminalWidthReached?.call(false, false);
+    widget.onTerminalHeightReached?.call(false, false);
+    widget.onTerminalSizeReached?.call(false, false, false, false);
   }
 
   @override
@@ -255,18 +326,19 @@ class _ResizableBoxState extends State<ResizableBox> {
             top: widget.handleGestureResponseDiameter / 2,
             width: box.width,
             height: box.height,
-            child: GestureDetector(
+            child: Listener(
               behavior: HitTestBehavior.opaque,
-              onPanStart: (event) =>
+              onPointerDown: (event) =>
                   controller.onDragStart(event.localPosition),
-              onPanUpdate: (event) {
+              onPointerMove: (event) {
                 final UIMoveResult result = controller.onDragUpdate(
                   event.localPosition,
                   notify: false,
                 );
                 widget.onChanged?.call(result.newRect, flip);
               },
-              onPanEnd: (event) => controller.onDragEnd(),
+              onPointerUp: (event) => controller.onDragEnd(),
+              onPointerCancel: (event) => controller.onDragEnd(),
               child: widget.contentBuilder(context, box, flip),
             ),
           ),
@@ -275,36 +347,36 @@ class _ResizableBoxState extends State<ResizableBox> {
             renderedDiameter: widget.handleRenderedDiameter,
             gestureResponseDiameter: widget.handleGestureResponseDiameter,
             builder: widget.handleBuilder,
-            onPanStart: onHandlePanStart,
-            onPanUpdate: onHandlePanUpdate,
-            onPanEnd: onHandlePanEnd,
+            onPointerDown: onHandlePanStart,
+            onPointerUpdate: onHandlePanUpdate,
+            onPointerUp: onHandlePanEnd,
           ),
           HandleWidget(
             handlePosition: HandlePosition.topRight,
             renderedDiameter: widget.handleRenderedDiameter,
             gestureResponseDiameter: widget.handleGestureResponseDiameter,
             builder: widget.handleBuilder,
-            onPanStart: onHandlePanStart,
-            onPanUpdate: onHandlePanUpdate,
-            onPanEnd: onHandlePanEnd,
+            onPointerDown: onHandlePanStart,
+            onPointerUpdate: onHandlePanUpdate,
+            onPointerUp: onHandlePanEnd,
           ),
           HandleWidget(
             handlePosition: HandlePosition.bottomRight,
             renderedDiameter: widget.handleRenderedDiameter,
             gestureResponseDiameter: widget.handleGestureResponseDiameter,
             builder: widget.handleBuilder,
-            onPanStart: onHandlePanStart,
-            onPanUpdate: onHandlePanUpdate,
-            onPanEnd: onHandlePanEnd,
+            onPointerDown: onHandlePanStart,
+            onPointerUpdate: onHandlePanUpdate,
+            onPointerUp: onHandlePanEnd,
           ),
           HandleWidget(
             handlePosition: HandlePosition.bottomLeft,
             renderedDiameter: widget.handleRenderedDiameter,
             gestureResponseDiameter: widget.handleGestureResponseDiameter,
             builder: widget.handleBuilder,
-            onPanStart: onHandlePanStart,
-            onPanUpdate: onHandlePanUpdate,
-            onPanEnd: onHandlePanEnd,
+            onPointerDown: onHandlePanStart,
+            onPointerUpdate: onHandlePanUpdate,
+            onPointerUp: onHandlePanEnd,
           ),
         ],
       ),
@@ -312,6 +384,14 @@ class _ResizableBoxState extends State<ResizableBox> {
   }
 }
 
+typedef PointerDownCallback = void Function(Offset localPosition);
+typedef PointerUpdateCallback = void Function(
+  Offset localPosition,
+  HandlePosition handlePosition,
+);
+typedef PointerUpCallback = VoidCallback;
+
+/// Creates a new handle widget, with its appropriate gesture splash zone.
 class HandleWidget extends StatelessWidget {
   /// The position of the handle.
   final HandlePosition handlePosition;
@@ -325,22 +405,25 @@ class HandleWidget extends StatelessWidget {
   /// The diameter of the handle that is used for gesture detection.
   final double gestureResponseDiameter;
 
-  final GestureDragStartCallback onPanStart;
+  /// Called when the handle dragging starts.
+  final PointerDownCallback onPointerDown;
 
-  final void Function(DragUpdateDetails details, HandlePosition handle)
-      onPanUpdate;
+  /// Called when the handle dragging is updated.
+  final PointerUpdateCallback onPointerUpdate;
 
-  final GestureDragEndCallback onPanEnd;
+  /// Called when the handle dragging ends.
+  final PointerUpCallback onPointerUp;
 
+  /// Creates a new handle widget.
   const HandleWidget({
     super.key,
     required this.handlePosition,
     required this.renderedDiameter,
     required this.gestureResponseDiameter,
     required this.builder,
-    required this.onPanStart,
-    required this.onPanUpdate,
-    required this.onPanEnd,
+    required this.onPointerDown,
+    required this.onPointerUpdate,
+    required this.onPointerUp,
   });
 
   @override
@@ -352,11 +435,20 @@ class HandleWidget extends StatelessWidget {
       bottom: handlePosition.influencesBottom ? 0 : null,
       width: gestureResponseDiameter,
       height: gestureResponseDiameter,
-      child: GestureDetector(
+      child: Listener(
         behavior: HitTestBehavior.opaque,
-        onPanStart: onPanStart,
-        onPanUpdate: (details) => onPanUpdate(details, handlePosition),
-        onPanEnd: onPanEnd,
+        onPointerDown: (event) {
+          onPointerDown(event.localPosition);
+        },
+        onPointerMove: (event) {
+          onPointerUpdate(event.localPosition, handlePosition);
+        },
+        onPointerUp: (event) {
+          onPointerUp();
+        },
+        onPointerCancel: (event) {
+          onPointerUp();
+        },
         child: MouseRegion(
           cursor: getCursorForHandle(handlePosition),
           child: Center(

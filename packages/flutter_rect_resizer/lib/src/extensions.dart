@@ -1,6 +1,6 @@
 import 'dart:ui' as ui;
-import 'package:flutter/rendering.dart' as widgets;
 
+import 'package:flutter/rendering.dart' as widgets;
 import 'package:rect_resizer/rect_resizer.dart' as resizer;
 import 'package:vector_math/vector_math.dart';
 
@@ -17,6 +17,10 @@ extension ResizeResultExt on resizer.ResizeResult {
       resizeMode: resizeMode,
       delta: delta.toUiVector2(),
       newSize: newSize.toUiSize(),
+      minWidthReached: minWidthReached,
+      minHeightReached: minHeightReached,
+      maxWidthReached: maxWidthReached,
+      maxHeightReached: maxHeightReached,
     );
   }
 }
@@ -65,8 +69,7 @@ extension UISizeExt on ui.Size {
 
 extension UIConstraitnsExt on widgets.BoxConstraints {
   /// Converts a `BoxConstraints` from `flutter/rendering` to a `Constraints` from `rect_resizer`
-  resizer.Constraints toResizerConstraints() =>
-      resizer.Constraints(
+  resizer.Constraints toResizerConstraints() => resizer.Constraints(
         minWidth: minWidth,
         maxWidth: maxWidth,
         minHeight: minHeight,
@@ -76,8 +79,7 @@ extension UIConstraitnsExt on widgets.BoxConstraints {
 
 extension ResizerConstraintsExt on resizer.Constraints {
   /// Converts a `Constraints` from `rect_resizer` to a `BoxConstraints` from `flutter/rendering`
-  widgets.BoxConstraints toUIBoxConstraints() =>
-      widgets.BoxConstraints(
+  widgets.BoxConstraints toUIBoxConstraints() => widgets.BoxConstraints(
         minWidth: minWidth,
         maxWidth: maxWidth,
         minHeight: minHeight,

@@ -93,6 +93,32 @@ class RectResizer {
 
     newRect = clampingBox.containOther(newRect);
 
+    // Detect terminal resizing, where the resizing reached a hard limit.
+    bool minWidthReached = false;
+    bool maxWidthReached = false;
+    bool minHeightReached = false;
+    bool maxHeightReached = false;
+    if (delta.x != 0) {
+      if (newRect.width <= initialRect.width &&
+          newRect.width == constraints.minWidth) {
+        minWidthReached = true;
+      }
+      if (newRect.width >= initialRect.width &&
+          newRect.width == constraints.maxWidth) {
+        maxWidthReached = true;
+      }
+    }
+    if (delta.y != 0) {
+      if (newRect.height <= initialRect.height &&
+          newRect.height == constraints.minHeight) {
+        minHeightReached = true;
+      }
+      if (newRect.height >= initialRect.height &&
+          newRect.height == constraints.maxHeight) {
+        maxHeightReached = true;
+      }
+    }
+
     return ResizeResult(
       newBox: newRect,
       oldBox: initialRect,
@@ -100,6 +126,10 @@ class RectResizer {
       resizeMode: resizeMode,
       delta: delta,
       newSize: newSize,
+      minWidthReached: minWidthReached,
+      maxWidthReached: maxWidthReached,
+      minHeightReached: minHeightReached,
+      maxHeightReached: maxHeightReached,
     );
   }
 

@@ -204,24 +204,6 @@ class ResizableBoxController extends ChangeNotifier {
       constraints: constraints,
     );
 
-    // Detect terminal resizing, where the resizing reached a hard limit.
-    bool anyTerminalSizing = false;
-    if (result.delta.dx != 0 &&
-        result.newSize.width <= initialRect.width &&
-        result.newSize.width == constraints.minWidth) {
-      onHorizontalTerminalSizing();
-      anyTerminalSizing = true;
-    }
-    if (result.delta.dy != 0 &&
-        result.newSize.height <= initialRect.height &&
-        result.newSize.height == constraints.minHeight) {
-      onVerticalTerminalSizing();
-      anyTerminalSizing = true;
-    }
-    if (anyTerminalSizing) {
-      onTerminalSizing();
-    }
-
     box = result.newRect;
     flip = result.flip;
 
@@ -254,17 +236,4 @@ class ResizableBoxController extends ChangeNotifier {
 
     if (notify) notifyListeners();
   }
-
-  /// An event that triggers when resizing reaches a terminal size.
-  void onHorizontalTerminalSizing() {}
-
-  void onHorizontalMinimumReached() {}
-
-  /// An event that triggers when resizing reaches a terminal size.
-  void onVerticalTerminalSizing() {}
-
-  void onTerminalSizing() {}
-
-  /// An event that triggers when moving reaches a terminal position.
-  void onTerminalMoving() {}
 }

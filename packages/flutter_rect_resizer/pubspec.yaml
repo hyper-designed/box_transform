@@ -12,7 +12,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  # TODO: This has to be replaced by actual published version.
   rect_resizer: ^0.1.0
   vector_math: ^2.1.4
 
