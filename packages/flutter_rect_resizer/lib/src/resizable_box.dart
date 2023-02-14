@@ -140,7 +140,7 @@ class ResizableBox extends StatefulWidget {
         box = box ?? Rect.zero,
         flip = flip ?? Flip.none,
         clampingBox = clampingBox ?? Rect.largest,
-        constraints = constraints ?? const BoxConstraints();
+        constraints = constraints ?? const BoxConstraints.expand();
 
   @override
   State<ResizableBox> createState() => _ResizableBoxState();

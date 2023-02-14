@@ -26,16 +26,30 @@ class Constraints {
     this.maxHeight = double.infinity,
   });
 
-  bool get goesToZero => minWidth <= 0 && minHeight <= 0;
+  /// Creates a new unconstrained [Constraints] object.
+  const Constraints.unconstrained()
+      : minWidth = double.infinity,
+        maxWidth = double.infinity,
+        minHeight = double.infinity,
+        maxHeight = double.infinity;
+
+  bool get goesToZero => minWidth == 0 && minHeight == 0;
+
+  bool get isUnconstrained =>
+      minWidth == double.infinity &&
+      minHeight == double.infinity &&
+      maxWidth == double.infinity &&
+      maxHeight == double.infinity;
 
   /// A helper function that clamps a given [value] by [min] and [max].
-  num _clamp(num value, num min, num max) {
+  static num _clamp(num value, num min, num max) {
     return math.max(min, math.min(max, value));
   }
 
   /// Constrains a given [dimension] by the [minWidth], [maxWidth], [minHeight],
   /// and [maxHeight] values.
   Dimension constrainDimension(Dimension dimension) {
+    if (isUnconstrained) return dimension;
     return Dimension(
       _clamp(dimension.width, minWidth, maxWidth).toDouble(),
       _clamp(dimension.height, minHeight, maxHeight).toDouble(),
@@ -45,6 +59,7 @@ class Constraints {
   /// Constrains a given [box] by the [minWidth], [maxWidth], [minHeight], and
   /// [maxHeight] values.
   Box constrainBox(Box box) {
+    if (isUnconstrained) return box;
     return Box.fromLTWH(
       box.left,
       box.top,
@@ -610,15 +625,20 @@ class Box {
     ResizeMode resizeMode = ResizeMode.freeform,
     double? aspectRatio,
   }) {
+    final double xSign = child.width.sign;
+    final double ySign = child.height.sign;
+    final double childWidth = child.width.abs();
+    final double childHeight = child.height.abs();
+
     final double x = math.max(left, child.left);
     final double y = math.max(top, child.top);
-    final double clampedLeft = math.min(x, right - child.width);
-    final double clampedTop = math.min(y, bottom - child.height);
+    final double clampedLeft = math.min(x, right - childWidth);
+    final double clampedTop = math.min(y, bottom - childHeight);
 
     double newLeft = math.max(left, clampedLeft);
     double newTop = math.max(top, clampedTop);
-    double newWidth = math.min(width, child.width);
-    double newHeight = math.min(height, child.height);
+    double newWidth = math.min(width, childWidth);
+    double newHeight = math.min(height, childHeight);
     if (resizeMode.isScalable && aspectRatio != null) {
       final double newAspectRatio = newWidth / newHeight;
 
@@ -632,8 +652,8 @@ class Box {
     return Box.fromLTWH(
       newLeft,
       newTop,
-      newWidth,
-      newHeight,
+      newWidth * xSign,
+      newHeight * ySign,
     );
   }
 

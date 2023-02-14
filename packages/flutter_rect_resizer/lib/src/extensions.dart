@@ -11,8 +11,8 @@ extension ResizeResultExt on resizer.ResizeResult {
   UIResizeResult toFlutterResizeResult() {
     return UIResizeResult(
       /// Creates a new `UIResizeResult` instance with the converted data
-      newRect: newRect.toUiRect(),
-      oldRect: oldRect.toUiRect(),
+      newRect: newBox.toUiRect(),
+      oldRect: oldBox.toUiRect(),
       flip: flip,
       resizeMode: resizeMode,
       delta: delta.toUiVector2(),

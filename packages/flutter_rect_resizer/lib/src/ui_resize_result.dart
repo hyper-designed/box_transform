@@ -21,14 +21,11 @@ class UIMoveResult {
   });
 
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-
-    return other is UIMoveResult &&
-        other.newRect == newRect &&
-        other.oldRect == oldRect &&
-        other.delta == delta;
-  }
+  bool operator ==(Object other) =>
+      other is UIMoveResult &&
+      other.newRect == newRect &&
+      other.oldRect == oldRect &&
+      other.delta == delta;
 
   @override
   int get hashCode => newRect.hashCode ^ oldRect.hashCode ^ delta.hashCode;
@@ -55,6 +52,7 @@ class UIResizeResult {
   /// The delta used to resize the node.
   final ui.Offset delta;
 
+  /// The new size of the node after the resize.
   final ui.Size newSize;
 
   /// Creates a [UIResizeResult] object.
@@ -68,17 +66,14 @@ class UIResizeResult {
   });
 
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-
-    return other is UIResizeResult &&
-        other.newRect == newRect &&
-        other.oldRect == oldRect &&
-        other.flip == flip &&
-        other.resizeMode == resizeMode &&
-        other.delta == delta &&
-        other.delta == newSize;
-  }
+  bool operator ==(Object other) =>
+      other is UIResizeResult &&
+      other.newRect == newRect &&
+      other.oldRect == oldRect &&
+      other.flip == flip &&
+      other.resizeMode == resizeMode &&
+      other.delta == delta &&
+      other.delta == newSize;
 
   @override
   int get hashCode =>

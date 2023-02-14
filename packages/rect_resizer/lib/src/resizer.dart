@@ -55,7 +55,7 @@ class RectResizer {
     required ResizeMode resizeMode,
     required Flip initialFlip,
     Box clampingBox = Box.largest,
-    Constraints constraints = const Constraints(),
+    Constraints constraints = const Constraints.unconstrained(),
   }) {
     final Flip currentFlip =
         getFlipForRect(initialRect, localPosition, handle, resizeMode);
@@ -88,18 +88,14 @@ class RectResizer {
         newHeight,
       );
 
-      if (constraints.goesToZero) {
-        newRect = flipRect(rect, currentFlip, handle);
-      } else {
-        newRect = rect;
-      }
+      newRect = flipRect(rect, currentFlip, handle);
     }
 
     newRect = clampingBox.containOther(newRect);
 
     return ResizeResult(
-      newRect: newRect,
-      oldRect: initialRect,
+      newBox: newRect,
+      oldBox: initialRect,
       flip: currentFlip * initialFlip,
       resizeMode: resizeMode,
       delta: delta,
@@ -165,7 +161,7 @@ class RectResizer {
     required Flip flip,
     required ResizeMode resizeMode,
     Box clampingBox = Box.largest,
-    Constraints constraints = const Constraints(),
+    Constraints constraints = const Constraints.unconstrained(),
   }) {
     final double aspectRatio = initialRect.width / initialRect.height;
 

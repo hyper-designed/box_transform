@@ -159,7 +159,6 @@ class Playground extends StatefulWidget {
 const double kSidePanelWidth = 300;
 const double kInitialWidth = 400;
 const double kInitialHeight = 300;
-const double kHandleSize = 12;
 const double kStrokeWidth = 1.5;
 const Color kGridColor = Color(0x7FC3E8F3);
 

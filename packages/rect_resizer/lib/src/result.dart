@@ -42,10 +42,10 @@ class MoveResult {
 /// An object that represents the result of a resize operation.
 class ResizeResult {
   /// The new [Box] of the node after the resize.
-  final Box newRect;
+  final Box newBox;
 
   /// The old [Box] of the node before the resize.
-  final Box oldRect;
+  final Box oldBox;
 
   /// The [Flip] of the node after the resize.
   final Flip flip;
@@ -56,15 +56,15 @@ class ResizeResult {
   /// The delta used to resize the node.
   final Vector2 delta;
 
-  /// The new [Dimension] of the node after the resize. Unlike [newRect], this
+  /// The new [Dimension] of the node after the resize. Unlike [newBox], this
   /// reflects flip state. For example, if the node is flipped horizontally,
   /// the width of the [newSize] will be negative.
   final Dimension newSize;
 
   /// Creates a [ResizeResult] object.
   const ResizeResult({
-    required this.newRect,
-    required this.oldRect,
+    required this.newBox,
+    required this.oldBox,
     required this.flip,
     required this.resizeMode,
     required this.delta,
@@ -72,24 +72,21 @@ class ResizeResult {
   });
 
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-
-    return other is ResizeResult &&
-        other.newRect == newRect &&
-        other.oldRect == oldRect &&
-        other.flip == flip &&
-        other.resizeMode == resizeMode &&
-        other.delta == delta &&
-        other.newSize == newSize;
-  }
+  bool operator ==(Object other) =>
+      other is ResizeResult &&
+      other.newBox == newBox &&
+      other.oldBox == oldBox &&
+      other.flip == flip &&
+      other.resizeMode == resizeMode &&
+      other.delta == delta &&
+      other.newSize == newSize;
 
   @override
   int get hashCode =>
-      Object.hash(newRect, oldRect, flip, resizeMode, delta, newSize);
+      Object.hash(newBox, oldBox, flip, resizeMode, delta, newSize);
 
   @override
   String toString() {
-    return 'ResizeResult(newRect: $newRect, oldRect: $oldRect, flip: $flip, resizeMode: $resizeMode, delta: $delta, newSize: $newSize)';
+    return 'ResizeResult(newRect: $newBox, oldRect: $oldBox, flip: $flip, resizeMode: $resizeMode, delta: $delta, newSize: $newSize)';
   }
 }
