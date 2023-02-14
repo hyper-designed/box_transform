@@ -2,9 +2,10 @@ import 'dart:math' as math;
 
 import 'package:vector_math/vector_math.dart';
 
+import '../rect_resizer.dart';
+
 /// Holds a set of constraints to apply to any [Dimension] or [Box].
 class Constraints {
-
   /// The minimum width that the clamped object cannot be less than.
   final double minWidth;
 
@@ -24,6 +25,8 @@ class Constraints {
     this.minHeight = 0.0,
     this.maxHeight = double.infinity,
   });
+
+  bool get goesToZero => minWidth <= 0 && minHeight <= 0;
 
   /// A helper function that clamps a given [value] by [min] and [max].
   num _clamp(num value, num min, num max) {
@@ -59,9 +62,9 @@ class Constraints {
   bool operator ==(Object other) {
     if (other is! Constraints) return false;
     return other.minWidth == minWidth &&
-      other.maxWidth == maxWidth &&
-      other.minHeight == minHeight &&
-      other.maxHeight == maxHeight;
+        other.maxWidth == maxWidth &&
+        other.minHeight == minHeight &&
+        other.maxHeight == maxHeight;
   }
 
   @override
@@ -572,10 +575,20 @@ class Box {
     return vec.x >= left && vec.x < right && vec.y >= top && vec.y < bottom;
   }
 
+  /// Constrains this box instance to the given [constraints].
+  ///
+  /// [constraints] the constraints to apply to this box.
+  ///
+  /// [returns] a new box instance.
   Box constrainBy(Constraints constraints) {
     return constraints.constrainBox(this);
   }
 
+  /// Constrains this box instance to the given [parent] box.
+  ///
+  /// [parent] the parent box to clamp this box inside.
+  ///
+  /// [returns] a new box instance.
   Box clampThisInsideParent(Box parent) {
     return Box.fromLTRB(
       math.max(parent.left, left),
@@ -585,17 +598,40 @@ class Box {
     );
   }
 
-  Box containOther(Box child, {bool modifySize = true}) {
+  /// Constrains the given [child] box instance within the bounds of this box.
+  ///
+  /// [child] the child box to clamp inside this box.
+  /// [resizeMode] defines how to contain the child, whether it should keep its
+  ///              aspect ratio or not, or if it should be resized to fit.
+  ///
+  /// [returns] a new box instance.
+  Box containOther(Box child, {ResizeMode resizeMode = ResizeMode.freeform}) {
+    final aspectRatio = child.width / child.height;
+
     final double x = math.max(left, child.left);
     final double y = math.max(top, child.top);
     final double clampedLeft = math.min(x, right - child.width);
     final double clampedTop = math.min(y, bottom - child.height);
 
+    double newWidth = math.min(width, child.width);
+    double newHeight = math.min(height, child.height);
+    if (resizeMode.isScalable) {
+      newWidth = math.min(shortestSide, child.width);
+      newHeight = math.min(shortestSide, child.height);
+      final double newAspectRatio = newWidth / newHeight;
+
+      if (newAspectRatio.abs() < aspectRatio.abs()) {
+        newWidth = newHeight * aspectRatio;
+      } else {
+        newHeight = newWidth / aspectRatio;
+      }
+    }
+
     return Box.fromLTWH(
       math.max(left, clampedLeft),
       math.max(top, clampedTop),
-      modifySize ? math.min(width, child.width) : child.width,
-      modifySize ? math.min(height, child.height) : child.height,
+      newWidth,
+      newHeight,
     );
   }
 

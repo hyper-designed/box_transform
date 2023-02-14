@@ -70,6 +70,8 @@ class RectResizer {
       delta: delta,
       flip: currentFlip,
       resizeMode: resizeMode,
+      clampingBox: clampingBox,
+      constraints: constraints,
     );
     final double newWidth = newSize.width.abs();
     final double newHeight = newSize.height.abs();
@@ -80,16 +82,20 @@ class RectResizer {
           center: initialRect.center, width: newWidth, height: newHeight);
     } else {
       Box rect = Box.fromLTWH(
-        handle.isLeft ? initialRect.right - newWidth : initialRect.left,
-        handle.isTop ? initialRect.bottom - newHeight : initialRect.top,
+        handle.influencesLeft ? initialRect.right - newWidth : initialRect.left,
+        handle.influencesTop ? initialRect.bottom - newHeight : initialRect.top,
         newWidth,
         newHeight,
       );
-      newRect = flipRect(rect, currentFlip, handle);
+
+      if (constraints.goesToZero) {
+        newRect = flipRect(rect, currentFlip, handle);
+      } else {
+        newRect = rect;
+      }
     }
 
     newRect = clampingBox.containOther(newRect);
-    newRect = constraints.constrainBox(newRect);
 
     return ResizeResult(
       newRect: newRect,
@@ -143,8 +149,8 @@ class RectResizer {
     final double effectiveWidth = rect.width * widthFactor;
     final double effectiveHeight = rect.height * heightFactor;
 
-    final double handleXFactor = handle.isLeft ? -1 : 1;
-    final double handleYFactor = handle.isTop ? -1 : 1;
+    final double handleXFactor = handle.influencesLeft ? -1 : 1;
+    final double handleYFactor = handle.influencesTop ? -1 : 1;
 
     final double posX = effectiveWidth + localPosition.x * handleXFactor;
     final double posY = effectiveHeight + localPosition.y * handleYFactor;
@@ -158,18 +164,18 @@ class RectResizer {
     required Vector2 delta,
     required Flip flip,
     required ResizeMode resizeMode,
+    Box clampingBox = Box.largest,
+    Constraints constraints = const Constraints(),
   }) {
     final aspectRatio = initialRect.width / initialRect.height;
-    final double newWidth;
-    final double newHeight;
 
     initialRect = flipRect(initialRect, flip, handle);
     Box rect;
     rect = Box.fromLTRB(
-      initialRect.left + (handle.isLeft ? delta.x : 0),
-      initialRect.top + (handle.isTop ? delta.y : 0),
-      initialRect.right + (handle.isRight ? delta.x : 0),
-      initialRect.bottom + (handle.isBottom ? delta.y : 0),
+      initialRect.left + (handle.influencesLeft ? delta.x : 0),
+      initialRect.top + (handle.influencesTop ? delta.y : 0),
+      initialRect.right + (handle.influencesRight ? delta.x : 0),
+      initialRect.bottom + (handle.influencesBottom ? delta.y : 0),
     );
     if (resizeMode.hasSymmetry) {
       final widthDelta = (initialRect.width - rect.width) / 2;
@@ -182,6 +188,11 @@ class RectResizer {
       );
     }
 
+    rect = clampingBox.containOther(rect, resizeMode: resizeMode);
+    rect = constraints.constrainBox(rect);
+
+    final double newWidth;
+    final double newHeight;
     final newAspectRatio = rect.width / rect.height;
 
     if (resizeMode.isScalable) {

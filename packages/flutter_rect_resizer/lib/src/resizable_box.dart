@@ -198,8 +198,6 @@ class _ResizableBoxState extends State<ResizableBox> {
       controller.flip = widget.flip;
     }
     if (oldWidget.clampingBox != widget.clampingBox) {
-      print('clamping box changed for key: ${widget.key}. It is now: '
-          '${widget.clampingBox}');
       controller.clampingBox = widget.clampingBox;
       controller.recalculateBox(notify: false);
     }
@@ -348,10 +346,10 @@ class HandleWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      left: handlePosition.isLeft ? 0 : null,
-      right: handlePosition.isRight ? 0 : null,
-      top: handlePosition.isTop ? 0 : null,
-      bottom: handlePosition.isBottom ? 0 : null,
+      left: handlePosition.influencesLeft ? 0 : null,
+      right: handlePosition.influencesRight ? 0 : null,
+      top: handlePosition.influencesTop ? 0 : null,
+      bottom: handlePosition.influencesBottom ? 0 : null,
       width: gestureResponseDiameter,
       height: gestureResponseDiameter,
       child: GestureDetector(

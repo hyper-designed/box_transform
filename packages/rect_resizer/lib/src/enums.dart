@@ -13,16 +13,16 @@ enum HandlePosition {
   bottomRight;
 
   /// Whether the handle is on the left side of the rect.
-  bool get isLeft => this == topLeft || this == bottomLeft;
+  bool get influencesLeft => this == topLeft || this == bottomLeft;
 
   /// Whether the handle is on the right side of the rect.
-  bool get isRight => this == topRight || this == bottomRight;
+  bool get influencesRight => this == topRight || this == bottomRight;
 
   /// Whether the handle is on the top side of the rect.
-  bool get isTop => this == topLeft || this == topRight;
+  bool get influencesTop => this == topLeft || this == topRight;
 
   /// Whether the handle is on the bottom side of the rect.
-  bool get isBottom => this == bottomLeft || this == bottomRight;
+  bool get influencesBottom => this == bottomLeft || this == bottomRight;
 }
 
 /// Represents the flip state of a rectangle, or, in other words, if the
