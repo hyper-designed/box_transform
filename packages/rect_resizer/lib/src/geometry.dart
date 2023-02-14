@@ -605,22 +605,24 @@ class Box {
   ///              aspect ratio or not, or if it should be resized to fit.
   ///
   /// [returns] a new box instance.
-  Box containOther(Box child, {ResizeMode resizeMode = ResizeMode.freeform}) {
-    final aspectRatio = child.width / child.height;
-
+  Box containOther(
+    Box child, {
+    ResizeMode resizeMode = ResizeMode.freeform,
+    double? aspectRatio,
+  }) {
     final double x = math.max(left, child.left);
     final double y = math.max(top, child.top);
     final double clampedLeft = math.min(x, right - child.width);
     final double clampedTop = math.min(y, bottom - child.height);
 
+    double newLeft = math.max(left, clampedLeft);
+    double newTop = math.max(top, clampedTop);
     double newWidth = math.min(width, child.width);
     double newHeight = math.min(height, child.height);
-    if (resizeMode.isScalable) {
-      newWidth = math.min(shortestSide, child.width);
-      newHeight = math.min(shortestSide, child.height);
+    if (resizeMode.isScalable && aspectRatio != null) {
       final double newAspectRatio = newWidth / newHeight;
 
-      if (newAspectRatio.abs() < aspectRatio.abs()) {
+      if (aspectRatio < newAspectRatio) {
         newWidth = newHeight * aspectRatio;
       } else {
         newHeight = newWidth / aspectRatio;
@@ -628,8 +630,8 @@ class Box {
     }
 
     return Box.fromLTWH(
-      math.max(left, clampedLeft),
-      math.max(top, clampedTop),
+      newLeft,
+      newTop,
       newWidth,
       newHeight,
     );

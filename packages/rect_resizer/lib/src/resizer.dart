@@ -167,7 +167,7 @@ class RectResizer {
     Box clampingBox = Box.largest,
     Constraints constraints = const Constraints(),
   }) {
-    final aspectRatio = initialRect.width / initialRect.height;
+    final double aspectRatio = initialRect.width / initialRect.height;
 
     initialRect = flipRect(initialRect, flip, handle);
     Box rect;
@@ -188,7 +188,11 @@ class RectResizer {
       );
     }
 
-    rect = clampingBox.containOther(rect, resizeMode: resizeMode);
+    rect = clampingBox.containOther(
+      rect,
+      resizeMode: resizeMode,
+      aspectRatio: aspectRatio,
+    );
     rect = constraints.constrainBox(rect);
 
     final double newWidth;
