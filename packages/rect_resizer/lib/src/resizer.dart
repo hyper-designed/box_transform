@@ -104,7 +104,7 @@ class RectResizer {
         minWidthReached = true;
       }
       if (newRect.width >= initialRect.width &&
-          newRect.width == constraints.maxWidth) {
+          (newRect.width == constraints.maxWidth || newRect.width == clampingBox.width)) {
         maxWidthReached = true;
       }
     }
@@ -114,7 +114,7 @@ class RectResizer {
         minHeightReached = true;
       }
       if (newRect.height >= initialRect.height &&
-          newRect.height == constraints.maxHeight) {
+          newRect.height == constraints.maxHeight || newRect.height == clampingBox.height) {
         maxHeightReached = true;
       }
     }

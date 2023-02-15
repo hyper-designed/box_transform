@@ -223,7 +223,6 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final PlaygroundModel model = context.watch<PlaygroundModel>();
-    final Color handleColor = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -242,37 +241,90 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
                 ),
                 if (model.clampingEnabled && model.playgroundArea != null)
                   const ClampingBox(),
-                ResizableBox(
-                  key: const ValueKey('image-box'),
-                  box: model.box,
-                  flip: model.flip,
-                  clampingBox: model.clampingEnabled ? model.clampingBox : null,
-                  onChanged: model.onRectChanged,
-                  contentBuilder: (context, rect, flip) => Transform.scale(
-                    scaleX: model.flipEnabled && flip.isHorizontal ? -1 : 1,
-                    scaleY: model.flipEnabled && flip.isVertical ? -1 : 1,
-                    child: Container(
-                      width: rect.width,
-                      height: rect.height,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        image: const DecorationImage(
-                          image: AssetImage('assets/images/landscape2.jpg'),
-                          fit: BoxFit.fill,
-                        ),
-                        border: Border.all(
-                          color: handleColor,
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                const ImageBox(),
               ],
             ),
           ),
           const ControlPanel(),
         ],
+      ),
+    );
+  }
+}
+
+class ImageBox extends StatefulWidget {
+  const ImageBox({super.key});
+
+  @override
+  State<ImageBox> createState() => _ImageBoxState();
+}
+
+class _ImageBoxState extends State<ImageBox> {
+  bool minWidthReached = false;
+  bool minHeightReached = false;
+  bool maxWidthReached = false;
+  bool maxHeightReached = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final PlaygroundModel model = context.watch<PlaygroundModel>();
+    final Color handleColor = Theme.of(context).colorScheme.primary;
+    return ResizableBox(
+      key: const ValueKey('image-box'),
+      box: model.box,
+      flip: model.flip,
+      clampingBox: model.clampingEnabled ? model.clampingBox : null,
+      onChanged: model.onRectChanged,
+      onTerminalSizeReached: (
+        bool reachedMinWidth,
+        bool reachedMaxWidth,
+        bool reachedMinHeight,
+        bool reachedMaxHeight,
+      ) {
+        if (minWidthReached == reachedMinWidth &&
+            minHeightReached == reachedMinHeight &&
+            maxWidthReached == reachedMaxWidth &&
+            maxHeightReached == reachedMaxHeight) return;
+
+        setState(() {
+          minWidthReached = reachedMinWidth;
+          minHeightReached = reachedMinHeight;
+          maxWidthReached = reachedMaxWidth;
+          maxHeightReached = reachedMaxHeight;
+        });
+      },
+      contentBuilder: (context, rect, flip) => Transform.scale(
+        scaleX: model.flipEnabled && flip.isHorizontal ? -1 : 1,
+        scaleY: model.flipEnabled && flip.isVertical ? -1 : 1,
+        child: Container(
+          width: rect.width,
+          height: rect.height,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            image: const DecorationImage(
+              image: AssetImage('assets/images/landscape2.jpg'),
+              fit: BoxFit.fill,
+            ),
+            border: Border.symmetric(
+              horizontal: BorderSide(
+                color: minHeightReached
+                    ? Colors.orange
+                    : maxHeightReached
+                        ? Colors.red
+                        : handleColor,
+                width: 2,
+              ),
+              vertical: BorderSide(
+                color: minWidthReached
+                    ? Colors.orange
+                    : maxWidthReached
+                        ? Colors.red
+                        : handleColor,
+                width: 2,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -294,6 +346,44 @@ class _ClampingBoxState extends State<ClampingBox> {
   @override
   Widget build(BuildContext context) {
     final PlaygroundModel model = context.watch<PlaygroundModel>();
+    const Color mainColor = Colors.green;
+    final Color horizontalEdgeColor, verticalEdgeColor;
+    final bool anyTerminalSize = minWidthReached ||
+        minHeightReached ||
+        maxWidthReached ||
+        maxHeightReached;
+    if (minHeightReached) {
+      horizontalEdgeColor = Colors.orange;
+    } else if (maxHeightReached) {
+      horizontalEdgeColor = Colors.red;
+    } else {
+      horizontalEdgeColor = mainColor;
+    }
+    if (minWidthReached) {
+      verticalEdgeColor = Colors.orange;
+    } else if (maxWidthReached) {
+      verticalEdgeColor = Colors.red;
+    } else {
+      verticalEdgeColor = mainColor;
+    }
+
+    final String label;
+    if (minWidthReached && minHeightReached) {
+      label = 'Min size reached';
+    } else if (maxWidthReached && maxHeightReached) {
+      label = 'Max size reached';
+    } else if (minWidthReached) {
+      label = 'Min width reached';
+    } else if (minHeightReached) {
+      label = 'Min height reached';
+    } else if (maxWidthReached) {
+      label = 'Max width reached';
+    } else if (maxHeightReached) {
+      label = 'Max height reached';
+    } else {
+      label = 'Clamping Box';
+    }
+
     return ResizableBox(
       key: const ValueKey('clamping-box'),
       box: model.clampingBox,
@@ -325,7 +415,7 @@ class _ClampingBoxState extends State<ClampingBox> {
         });
       },
       handleGestureResponseDiameter: 32,
-      handleBuilder: (context, handle) => const ColoredBox(color: Colors.red),
+      handleBuilder: (context, handle) => const ColoredBox(color: mainColor),
       contentBuilder: (context, _, flip) => Container(
         width: model.clampingBox.width,
         height: model.clampingBox.height,
@@ -333,36 +423,29 @@ class _ClampingBoxState extends State<ClampingBox> {
         decoration: BoxDecoration(
           border: Border.symmetric(
             horizontal: BorderSide(
-              color: minHeightReached
-                  ? Colors.orange
-                  : maxHeightReached
-                      ? Colors.red
-                      : Colors.blue,
+              color: horizontalEdgeColor,
               width: 1.5,
             ),
             vertical: BorderSide(
-              color: minWidthReached
-                  ? Colors.orange
-                  : maxWidthReached
-                      ? Colors.red
-                      : Colors.blue,
+              color: verticalEdgeColor,
               width: 1.5,
             ),
           ),
         ),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: Colors.red.withOpacity(0.1),
+            color:
+                (anyTerminalSize ? Colors.orange : mainColor).withOpacity(0.1),
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(6),
             ),
           ),
-          child: const Padding(
-            padding: EdgeInsets.all(8.0),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
             child: Text(
-              'Clamping Box',
+              label,
               style: TextStyle(
-                color: Colors.red,
+                color: anyTerminalSize ? Colors.orange : mainColor,
                 fontSize: 12,
               ),
             ),
