@@ -1,0 +1,18 @@
+{
+  "name": "Rect Resizer",
+  "description": "Easily create the best possible resizable and draggable boxes for your project.",
+  "logo": "/assets/logo.png",
+  "logoDark": "/assets/logo-dark.png",
+  "sidebar": [
+    ["Intro", "/"],
+    ["Rect Resizer", [
+      ["Intro", "/reference"],
+      ["FAQs", "/faqs"]
+    ]],
+    ["Flutter Rect Resizer", [
+      ["Intro", "/reference"],
+      ["FAQs", "/faqs"
+    ]]
+  ]
+
+}

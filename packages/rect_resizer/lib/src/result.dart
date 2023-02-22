@@ -6,18 +6,18 @@ import 'geometry.dart';
 /// An object that represents the result of a move operation.
 class MoveResult {
   /// The new [Box] of the node after the resize.
-  final Box newRect;
+  final Box newBox;
 
   /// The old [Box] of the node before the resize.
-  final Box oldRect;
+  final Box oldBox;
 
   /// The delta used to move the node.
   final Vector2 delta;
 
   /// Creates a [MoveResult] object.
   const MoveResult({
-    required this.newRect,
-    required this.oldRect,
+    required this.newBox,
+    required this.oldBox,
     required this.delta,
   });
 
@@ -26,17 +26,17 @@ class MoveResult {
     if (identical(this, other)) return true;
 
     return other is MoveResult &&
-        other.newRect == newRect &&
-        other.oldRect == oldRect &&
+        other.newBox == newBox &&
+        other.oldBox == oldBox &&
         other.delta == delta;
   }
 
   @override
-  int get hashCode => newRect.hashCode ^ oldRect.hashCode ^ delta.hashCode;
+  int get hashCode => newBox.hashCode ^ oldBox.hashCode ^ delta.hashCode;
 
   @override
   String toString() =>
-      'MoveResult(newRect: $newRect, oldRect: $oldRect, delta: $delta)';
+      'MoveResult(newRect: $newBox, oldRect: $oldBox, delta: $delta)';
 }
 
 /// An object that represents the result of a resize operation.

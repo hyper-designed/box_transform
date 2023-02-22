@@ -8,9 +8,12 @@ import 'ui_resize_result.dart';
 
 /// A Flutter translation of [resizer.RectResizer].
 class UIRectResizer {
-  final resizer.RectResizer _resizer = resizer.RectResizer();
 
-  UIResizeResult resize({
+  /// A private constructor to prevent instantiation.
+  const UIRectResizer._();
+
+  /// The Flutter wrapper for [resizer.RectResizer.resize].
+  static UIResizeResult resize({
     required ui.Rect initialRect,
     required ui.Offset initialLocalPosition,
     required ui.Offset localPosition,
@@ -20,31 +23,28 @@ class UIRectResizer {
     ui.Rect clampingBox = ui.Rect.largest,
     widgets.BoxConstraints constraints = const widgets.BoxConstraints(),
   }) =>
-      _resizer
-          .resize(
-            initialRect: initialRect.toResizerBox(),
-            initialLocalPosition: initialLocalPosition.toResizerVector2(),
-            localPosition: localPosition.toResizerVector2(),
-            handle: handle,
-            resizeMode: resizeMode,
-            initialFlip: initialFlip,
-            clampingBox: clampingBox.toResizerBox(),
-            constraints: constraints.toResizerConstraints(),
-          )
-          .toFlutterResizeResult();
+      resizer.RectResizer.resize(
+        initialBox: initialRect.toResizerBox(),
+        initialLocalPosition: initialLocalPosition.toResizerVector2(),
+        localPosition: localPosition.toResizerVector2(),
+        handle: handle,
+        resizeMode: resizeMode,
+        initialFlip: initialFlip,
+        clampingBox: clampingBox.toResizerBox(),
+        constraints: constraints.toResizerConstraints(),
+      ).toFlutterResizeResult();
 
-  UIMoveResult move({
+  /// The Flutter wrapper for [resizer.RectResizer.move].
+  static UIMoveResult move({
     required ui.Rect initialRect,
     required ui.Offset initialLocalPosition,
     required ui.Offset localPosition,
     ui.Rect clampingBox = ui.Rect.largest,
   }) =>
-      _resizer
-          .move(
-            initialRect: initialRect.toResizerBox(),
-            initialLocalPosition: initialLocalPosition.toResizerVector2(),
-            localPosition: localPosition.toResizerVector2(),
-            clampingBox: clampingBox.toResizerBox(),
-          )
-          .toFlutterMoveResult();
+      resizer.RectResizer.move(
+        initialBox: initialRect.toResizerBox(),
+        initialLocalPosition: initialLocalPosition.toResizerVector2(),
+        localPosition: localPosition.toResizerVector2(),
+        clampingBox: clampingBox.toResizerBox(),
+      ).toFlutterMoveResult();
 }

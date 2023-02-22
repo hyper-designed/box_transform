@@ -38,10 +38,6 @@ ResizeMode defaultResolveResizeModeCallback() {
 
 /// A controller class that is used to control the [ResizableBox] widget.
 class ResizableBoxController extends ChangeNotifier {
-  /// The [UIRectResizer] instance that is used to resize the [Rect] of the
-  /// [ResizableBox].
-  final UIRectResizer resizer = UIRectResizer();
-
   /// The callback function that is used to resolve the [ResizeMode] based on
   /// the pressed keys on the keyboard.
   final ResolveResizeModeCallback? resolveResizeModeCallback;
@@ -141,7 +137,7 @@ class ResizableBoxController extends ChangeNotifier {
     Offset localPosition, {
     bool notify = true,
   }) {
-    final UIMoveResult result = resizer.move(
+    final UIMoveResult result = UIRectResizer.move(
       initialRect: initialRect,
       initialLocalPosition: initialLocalPosition,
       localPosition: localPosition,
@@ -193,7 +189,7 @@ class ResizableBoxController extends ChangeNotifier {
     bool notify = true,
   }) {
     // Calculate the new rect based on the initial rect, initial local position,
-    final UIResizeResult result = resizer.resize(
+    final UIResizeResult result = UIRectResizer.resize(
       localPosition: localPosition,
       handle: handle,
       initialRect: initialRect,
@@ -222,10 +218,8 @@ class ResizableBoxController extends ChangeNotifier {
 
   /// Recalculates the current state of this [box] to ensure the position is
   /// correct in case of extreme jumps of the [ResizableBox].
-  void recalculateBox({
-    bool notify = true,
-  }) {
-    final UIMoveResult result = resizer.move(
+  void recalculateBox({bool notify = true}) {
+    final UIMoveResult result = UIRectResizer.move(
       initialRect: box,
       initialLocalPosition: initialLocalPosition,
       localPosition: initialLocalPosition,

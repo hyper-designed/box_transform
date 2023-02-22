@@ -1,0 +1,25 @@
+# Rect Resizer
+
+Rect Resizer is a pure-Dart base package that allows you to programmatically handle box resizing and dragging without
+relying on Flutter. It provides highly flexible, programmatically resizable and draggable boxes that can be used in any
+Dart project.
+
+## Models
+
+Rect Resizer defines several models to mimic that of Flutter's.
+
+* The equivalent of `Size` is `Dimension`.
+* The equivalent of `Offset` is `Vector2` from the `vector_math` package.
+* The equivalent of `Rect` is `Box`.
+* The equivalent of `BoxConstraints` is `Constraints`.
+
+The APIs are very similar to Flutter's, so you should be able to pick it up quickly or be able to reference
+Flutter's documentation for more information.
+
+## Resizing
+
+Resizing is done by using the static `resize` function from the `RectResizer` dart class.
+
+It takes in an immutable `initialRect` as an input, as well as an initial `Vector2` position and a `Vector2` position
+that represents the position the cursor moved from point A to point B. A delta is calculated internally
+and used to resize the box.
