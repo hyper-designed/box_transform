@@ -30,8 +30,8 @@ extension MoveResultExt on resizer.MoveResult {
   UIMoveResult toFlutterMoveResult() {
     return UIMoveResult(
       /// Creates a new `UIMoveResult` instance with the converted data
-      newRect: newRect.toUiRect(),
-      oldRect: oldRect.toUiRect(),
+      newRect: newBox.toUiRect(),
+      oldRect: oldBox.toUiRect(),
       delta: delta.toUiVector2(),
     );
   }

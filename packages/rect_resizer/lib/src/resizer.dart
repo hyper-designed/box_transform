@@ -6,49 +6,52 @@ import 'result.dart';
 
 /// A class that resizes a [Box] in several different supported forms.
 class RectResizer {
-  /// Calculates the new position of the [initialRect] based on the
+  /// A private constructor to prevent instantiation.
+  const RectResizer._();
+
+  /// Calculates the new position of the [initialBox] based on the
   /// [initialLocalPosition] of the mouse cursor and wherever [localPosition]
   /// of the mouse cursor is currently at.
   ///
-  /// The [clampingBox] is the box that the [initialRect] is not allowed
+  /// The [clampingBox] is the box that the [initialBox] is not allowed
   /// to go outside of when dragging or resizing.
-  MoveResult move({
-    required Box initialRect,
+  static MoveResult move({
+    required Box initialBox,
     required Vector2 initialLocalPosition,
     required Vector2 localPosition,
     Box clampingBox = Box.largest,
   }) {
     final Vector2 delta = localPosition - initialLocalPosition;
 
-    final Box unclampedRect = initialRect.translate(delta.x, delta.y);
-    final Box clampedRect = clampingBox.containOther(unclampedRect);
-    final Vector2 clampedDelta = clampedRect.topLeft - initialRect.topLeft;
+    final Box unclampedBox = initialBox.translate(delta.x, delta.y);
+    final Box clampedBox = clampingBox.containOther(unclampedBox);
+    final Vector2 clampedDelta = clampedBox.topLeft - initialBox.topLeft;
 
-    final Box newRect = initialRect.translate(clampedDelta.x, clampedDelta.y);
+    final Box newBox = initialBox.translate(clampedDelta.x, clampedDelta.y);
 
     return MoveResult(
-      newRect: newRect,
-      oldRect: initialRect,
+      newBox: newBox,
+      oldBox: initialBox,
       delta: delta,
     );
   }
 
-  /// Resizes the given [initialRect] with given [initialLocalPosition] of
+  /// Resizes the given [initialBox] with given [initialLocalPosition] of
   /// the mouse cursor and wherever [localPosition] of the mouse cursor is
   /// currently at.
   ///
   /// Specifying the [handle] and [resizeMode] will determine how the
-  /// [initialRect] will be resized.
+  /// [initialBox] will be resized.
   ///
   /// The [initialFlip] helps determine the initial state of the rectangle.
   ///
-  /// The [clampingBox] is the box that the [initialRect] is not allowed
+  /// The [clampingBox] is the box that the [initialBox] is not allowed
   /// to go outside of when dragging or resizing.
   ///
-  /// The [constraints] is the constraints that the [initialRect] is not allowed
+  /// The [constraints] is the constraints that the [initialBox] is not allowed
   /// to shrink or grow beyond.
-  ResizeResult resize({
-    required Box initialRect,
+  static ResizeResult resize({
+    required Box initialBox,
     required Vector2 initialLocalPosition,
     required Vector2 localPosition,
     required HandlePosition handle,
@@ -57,6 +60,9 @@ class RectResizer {
     Box clampingBox = Box.largest,
     Constraints constraints = const Constraints.unconstrained(),
   }) {
+    final Flip currentFlip =
+        getFlipForBox(initialBox, localPosition, handle, resizeMode);
+
     Vector2 delta = localPosition - initialLocalPosition;
 
     final Flip currentFlip =
@@ -65,7 +71,7 @@ class RectResizer {
     if (resizeMode.hasSymmetry) delta = Vector2(delta.x * 2, delta.y * 2);
 
     final Dimension newSize = _calculateNewSize(
-      initialRect: initialRect,
+      initialBox: initialBox,
       handle: handle,
       delta: delta,
       flip: currentFlip,
@@ -76,22 +82,22 @@ class RectResizer {
     final double newWidth = newSize.width.abs();
     final double newHeight = newSize.height.abs();
 
-    Box newRect;
+    Box newBox;
     if (resizeMode.hasSymmetry) {
-      newRect = Box.fromCenter(
-          center: initialRect.center, width: newWidth, height: newHeight);
+      newBox = Box.fromCenter(
+          center: initialBox.center, width: newWidth, height: newHeight);
     } else {
       Box rect = Box.fromLTWH(
-        handle.influencesLeft ? initialRect.right - newWidth : initialRect.left,
-        handle.influencesTop ? initialRect.bottom - newHeight : initialRect.top,
+        handle.influencesLeft ? initialBox.right - newWidth : initialBox.left,
+        handle.influencesTop ? initialBox.bottom - newHeight : initialBox.top,
         newWidth,
         newHeight,
       );
 
-      newRect = flipRect(rect, currentFlip, handle);
+      newBox = flipBox(rect, currentFlip, handle);
     }
 
-    newRect = clampingBox.containOther(newRect);
+    newBox = clampingBox.containOther(newBox);
 
     // Detect terminal resizing, where the resizing reached a hard limit.
     bool minWidthReached = false;
@@ -99,31 +105,31 @@ class RectResizer {
     bool minHeightReached = false;
     bool maxHeightReached = false;
     if (delta.x != 0) {
-      if (newRect.width <= initialRect.width &&
-          newRect.width == constraints.minWidth) {
+      if (newBox.width <= initialBox.width &&
+          newBox.width == constraints.minWidth) {
         minWidthReached = true;
       }
-      if (newRect.width >= initialRect.width &&
-          (newRect.width == constraints.maxWidth ||
-              newRect.width == clampingBox.width)) {
+      if (newBox.width >= initialBox.width &&
+          (newBox.width == constraints.maxWidth ||
+              newBox.width == clampingBox.width)) {
         maxWidthReached = true;
       }
     }
     if (delta.y != 0) {
-      if (newRect.height <= initialRect.height &&
-          newRect.height == constraints.minHeight) {
+      if (newBox.height <= initialBox.height &&
+          newBox.height == constraints.minHeight) {
         minHeightReached = true;
       }
-      if (newRect.height >= initialRect.height &&
-              newRect.height == constraints.maxHeight ||
-          newRect.height == clampingBox.height) {
+      if (newBox.height >= initialBox.height &&
+              newBox.height == constraints.maxHeight ||
+          newBox.height == clampingBox.height) {
         maxHeightReached = true;
       }
     }
 
     return ResizeResult(
-      newBox: newRect,
-      oldBox: initialRect,
+      newBox: newBox,
+      oldBox: initialBox,
       flip: currentFlip * initialFlip,
       resizeMode: resizeMode,
       delta: delta,
@@ -137,7 +143,7 @@ class RectResizer {
 
   /// Flips the given [rect] with given [flip] with [handle] being the
   /// pivot point.
-  Box flipRect(Box rect, Flip flip, HandlePosition handle) {
+  static Box flipBox(Box rect, Flip flip, HandlePosition handle) {
     switch (handle) {
       case HandlePosition.topLeft:
         return rect.translate(
@@ -165,7 +171,7 @@ class RectResizer {
   /// Calculates flip state of the given [rect] w.r.t [localPosition] and
   /// [handle]. It uses [handle] and [localPosition] to determine the quadrant
   /// of the [rect] and then checks if the [rect] is flipped in that quadrant.
-  Flip getFlipForRect(
+  static Flip getFlipForBox(
     Box rect,
     Vector2 localPosition,
     HandlePosition handle,
@@ -186,8 +192,8 @@ class RectResizer {
     return Flip.fromValue(posX, posY);
   }
 
-  Dimension _calculateNewSize({
-    required Box initialRect,
+  static Dimension _calculateNewSize({
+    required Box initialBox,
     required HandlePosition handle,
     required Vector2 delta,
     required Flip flip,
@@ -195,24 +201,24 @@ class RectResizer {
     Box clampingBox = Box.largest,
     Constraints constraints = const Constraints.unconstrained(),
   }) {
-    final double aspectRatio = initialRect.width / initialRect.height;
+    final double aspectRatio = initialBox.width / initialBox.height;
 
-    initialRect = flipRect(initialRect, flip, handle);
+    initialBox = flipBox(initialBox, flip, handle);
     Box rect;
     rect = Box.fromLTRB(
-      initialRect.left + (handle.influencesLeft ? delta.x : 0),
-      initialRect.top + (handle.influencesTop ? delta.y : 0),
-      initialRect.right + (handle.influencesRight ? delta.x : 0),
-      initialRect.bottom + (handle.influencesBottom ? delta.y : 0),
+      initialBox.left + (handle.influencesLeft ? delta.x : 0),
+      initialBox.top + (handle.influencesTop ? delta.y : 0),
+      initialBox.right + (handle.influencesRight ? delta.x : 0),
+      initialBox.bottom + (handle.influencesBottom ? delta.y : 0),
     );
     if (resizeMode.hasSymmetry) {
-      final widthDelta = (initialRect.width - rect.width) / 2;
-      final heightDelta = (initialRect.height - rect.height) / 2;
+      final widthDelta = (initialBox.width - rect.width) / 2;
+      final heightDelta = (initialBox.height - rect.height) / 2;
       rect = Box.fromLTRB(
-        initialRect.left + widthDelta,
-        initialRect.top + heightDelta,
-        initialRect.right - widthDelta,
-        initialRect.bottom - heightDelta,
+        initialBox.left + widthDelta,
+        initialBox.top + heightDelta,
+        initialBox.right - widthDelta,
+        initialBox.bottom - heightDelta,
       );
     }
 
