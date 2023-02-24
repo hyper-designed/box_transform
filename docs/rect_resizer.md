@@ -46,19 +46,29 @@ be resized. The modes available are:
 
 # ResizeMode.freeform
 
-![Freeform Resize Mode](assets/resize_freeform.mp4)
+![Freeform Resize Mode](assets/resize_freeform.gif)
 
 This is the default mode where the rectangle can be resized freely without any constraints. This mode is usually used
 when no modifier keys are pressed.
 
-* `ResizeMode.symmetric`: This mode is similar to `ResizeMode.freeform`, but it is symmetric with respect to the center
+## ResizeMode.scale
+
+![Scale Resize Mode](assets/resize_scale.gif)
+
+This mode is similar to ResizeMode.freeform, but it preserves the aspect ratio of the rectangle.
+This means that if you resize the rectangle from the right edge, it will also resize from the left edge, but the aspect
+ratio will be preserved. This mode is usually activated when the SHIFT key is pressed.
+
+## ResizeMode.symmetric
+
+This mode is similar to `ResizeMode.freeform`, but it is symmetric with respect to the center
 of the rectangle. This means that if you resize the rectangle from the right edge, it will also resize from the left
 edge. This mode is useful when you want to resize the rectangle from the center. This mode is usually activated when
 the ALT key is pressed.
-* `ResizeMode.scale`: This mode is similar to ResizeMode.freeform, but it preserves the aspect ratio of the rectangle.
-This means that if you resize the rectangle from the right edge, it will also resize from the left edge, but the aspect
-ratio will be preserved. This mode is usually activated when the SHIFT key is pressed.
-* `ResizeMode.symmetricScale`: This mode is similar to ResizeMode.scale, but it is symmetric with respect to the center
+
+## ResizeMode.symmetricScale
+
+This mode is similar to ResizeMode.scale, but it is symmetric with respect to the center
 of the rectangle. This means that if you resize the rectangle from the bottom-right corner, it will also resize from the
 top-left corner while preserving the aspect ratio. This mode is usually activated when both the ALT and SHIFT keys are
 pressed.
