@@ -4,7 +4,8 @@
   "logo": "/assets/logo.png",
   "logoDark": "/assets/logo-dark.png",
   "sidebar": [
-    ["Intro", "/"],
+    ["Home", "/"],
+    ["Motivation", "/motivation"],
     ["Rect Resizer", "/rect_resizer"],
     ["Flutter Rect Resizer", [
       ["Intro", "/reference"],
