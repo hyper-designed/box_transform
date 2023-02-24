@@ -5,14 +5,11 @@
   "logoDark": "/assets/logo-dark.png",
   "sidebar": [
     ["Intro", "/"],
-    ["Rect Resizer", [
-      ["Intro", "/reference"],
-      ["FAQs", "/faqs"]
-    ]],
+    ["Rect Resizer", "/rect_resizer"],
     ["Flutter Rect Resizer", [
       ["Intro", "/reference"],
-      ["FAQs", "/faqs"
-    ]]
+      ["FAQs", "/faqs"]
+      ]
+    ]
   ]
-
 }
