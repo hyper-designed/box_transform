@@ -2,7 +2,7 @@ import 'package:adaptive_theme/adaptive_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_rect_resizer/flutter_rect_resizer.dart';
+import 'package:flutter_box_transform/flutter_box_transform.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -44,7 +44,7 @@ class MyApp extends StatelessWidget {
       ),
       initial: AdaptiveThemeMode.system,
       builder: (theme, darkTheme) => MaterialApp(
-        title: 'Rect resizer demo',
+        title: 'Box Transform demo',
         debugShowCheckedModeBanner: false,
         theme: theme,
         darkTheme: darkTheme,
@@ -269,7 +269,7 @@ class _ImageBoxState extends State<ImageBox> {
   Widget build(BuildContext context) {
     final PlaygroundModel model = context.watch<PlaygroundModel>();
     final Color handleColor = Theme.of(context).colorScheme.primary;
-    return ResizableBox(
+    return BoxTransform(
       key: const ValueKey('image-box'),
       box: model.box,
       flip: model.flip,
@@ -384,7 +384,7 @@ class _ClampingBoxState extends State<ClampingBox> {
       label = 'Clamping Box';
     }
 
-    return ResizableBox(
+    return BoxTransform(
       key: const ValueKey('clamping-box'),
       box: model.clampingBox,
       flip: Flip.none,

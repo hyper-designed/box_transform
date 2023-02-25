@@ -1,3 +1,5 @@
 .idea/
 
 pubspec_overrides.yaml
+
+**/*.iml

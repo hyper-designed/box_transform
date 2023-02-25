@@ -1,4 +1,4 @@
-name: rect_resizer
+name: box_transform
 description: A pure dart implementation for advanced resizing of rect in UI.
 
 version: 0.1.0

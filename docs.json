@@ -1,13 +1,13 @@
 {
-  "name": "Rect Resizer",
+  "name": "Box Transform",
   "description": "Easily create the best possible resizable and draggable boxes for your project.",
   "logo": "/assets/logo.png",
   "logoDark": "/assets/logo-dark.png",
   "sidebar": [
     ["Home", "/"],
     ["Motivation", "/motivation"],
-    ["Rect Resizer", "/rect_resizer"],
-    ["Flutter Rect Resizer", [
+    ["Box Transform", "/box_transform"],
+    ["Flutter Box Transform", [
       ["Intro", "/reference"],
       ["FAQs", "/faqs"]
       ]
