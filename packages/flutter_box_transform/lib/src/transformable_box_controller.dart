@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../flutter_rect_resizer.dart';
+import '../flutter_box_transform.dart';
 
 /// A callback function type definition that is used to resolve the
 /// [ResizeMode] based on the pressed keys on the keyboard.
@@ -15,7 +15,7 @@ typedef ResolveResizeModeCallback = ValueGetter<ResizeMode>;
 ///
 /// If you want to use it on soft keyboards, you can
 /// implement your own [ResolveResizeModeCallback] and pass it to the
-/// [ResizableBoxController] constructor.
+/// [BoxTransformController] constructor.
 ResizeMode defaultResolveResizeModeCallback() {
   final pressedKeys = WidgetsBinding.instance.keyboard.logicalKeysPressed;
 
@@ -36,108 +36,108 @@ ResizeMode defaultResolveResizeModeCallback() {
   }
 }
 
-/// A controller class that is used to control the [ResizableBox] widget.
-class ResizableBoxController extends ChangeNotifier {
+/// A controller class that is used to control the [BoxTransform] widget.
+class BoxTransformController extends ChangeNotifier {
   /// The callback function that is used to resolve the [ResizeMode] based on
   /// the pressed keys on the keyboard.
   final ResolveResizeModeCallback? resolveResizeModeCallback;
 
-  /// Creates a [ResizableBoxController] instance.
-  ResizableBoxController({
+  /// Creates a [BoxTransformController] instance.
+  BoxTransformController({
     this.resolveResizeModeCallback = defaultResolveResizeModeCallback,
   });
 
-  /// The current [Rect] of the [ResizableBox].
+  /// The current [Rect] of the [BoxTransform].
   Rect box = Rect.zero;
 
-  /// The current [Flip] of the [ResizableBox].
+  /// The current [Flip] of the [BoxTransform].
   Flip flip = Flip.none;
 
-  /// The initial [Offset] of the [ResizableBox] when the resizing starts.
+  /// The initial [Offset] of the [BoxTransform] when the resizing starts.
   Offset initialLocalPosition = Offset.zero;
 
   Offset offsetFromTopLeft = Offset.zero;
 
-  /// The initial [Rect] of the [ResizableBox] when the resizing starts.
+  /// The initial [Rect] of the [BoxTransform] when the resizing starts.
   Rect initialRect = Rect.zero;
 
-  /// The initial [Flip] of the [ResizableBox] when the resizing starts.
+  /// The initial [Flip] of the [BoxTransform] when the resizing starts.
   Flip initialFlip = Flip.none;
 
-  /// The box that limits the dragging and resizing of the [ResizableBox] inside
+  /// The box that limits the dragging and resizing of the [BoxTransform] inside
   /// its bounds.
   Rect clampingBox = Rect.largest;
 
-  /// The constraints that limits the resizing of the [ResizableBox] inside its
+  /// The constraints that limits the resizing of the [BoxTransform] inside its
   /// bounds.
   BoxConstraints constraints = const BoxConstraints.expand();
 
-  /// Sets the current [box] of the [ResizableBox].
+  /// Sets the current [box] of the [BoxTransform].
   void setRect(Rect box) {
     this.box = box;
     notifyListeners();
   }
 
-  /// Sets the current [flip] of the [ResizableBox].
+  /// Sets the current [flip] of the [BoxTransform].
   void setFlip(Flip flip) {
     this.flip = flip;
     notifyListeners();
   }
 
-  /// Sets the initial local position of the [ResizableBox].
+  /// Sets the initial local position of the [BoxTransform].
   void setInitialLocalPosition(Offset initialLocalPosition) {
     this.initialLocalPosition = initialLocalPosition;
     notifyListeners();
   }
 
-  /// Sets the initial [Rect] of the [ResizableBox].
+  /// Sets the initial [Rect] of the [BoxTransform].
   void setInitialRect(Rect initialRect) {
     this.initialRect = initialRect;
     notifyListeners();
   }
 
-  /// Sets the initial [Flip] of the [ResizableBox].
+  /// Sets the initial [Flip] of the [BoxTransform].
   void setInitialFlip(Flip initialFlip) {
     this.initialFlip = initialFlip;
     notifyListeners();
   }
 
-  /// Sets the current [clampingBox] of the [ResizableBox].
+  /// Sets the current [clampingBox] of the [BoxTransform].
   void setClampingBox(Rect clampingBox, {bool notify = true}) {
     this.clampingBox = clampingBox;
     if (notify) notifyListeners();
   }
 
-  /// Sets the current [constraints] of the [ResizableBox].
+  /// Sets the current [constraints] of the [BoxTransform].
   void setConstraints(BoxConstraints constraints, {bool notify = true}) {
     this.constraints = constraints;
     if (notify) notifyListeners();
   }
 
-  /// Called when dragging of the [ResizableBox] starts.
+  /// Called when dragging of the [BoxTransform] starts.
   ///
   /// [localPosition] is the position of the pointer relative to the
-  ///               [ResizableBox] when the dragging starts.
+  ///               [BoxTransform] when the dragging starts.
   void onDragStart(Offset localPosition) {
     initialLocalPosition = localPosition;
     initialRect = box;
     offsetFromTopLeft = box.topLeft - localPosition;
   }
 
-  /// Called when the [ResizableBox] is dragged.
+  /// Called when the [BoxTransform] is dragged.
   ///
   /// [localPosition] is the position of the pointer relative to the
-  ///                [ResizableBox].
+  ///                [BoxTransform].
   ///
   /// [notify] is a boolean value that determines whether to notify the
   ///          listeners or not. It is set to `true` by default.
-  ///          If you want to update the [ResizableBox] without notifying the
+  ///          If you want to update the [BoxTransform] without notifying the
   ///          listeners, you can set it to `false`.
   UIMoveResult onDragUpdate(
     Offset localPosition, {
     bool notify = true,
   }) {
-    final UIMoveResult result = UIRectResizer.move(
+    final UIMoveResult result = UIBoxTransform.move(
       initialRect: initialRect,
       initialLocalPosition: initialLocalPosition,
       localPosition: localPosition,
@@ -151,7 +151,7 @@ class ResizableBoxController extends ChangeNotifier {
     return result;
   }
 
-  /// Called when the dragging of the [ResizableBox] ends.
+  /// Called when the dragging of the [BoxTransform] ends.
   void onDragEnd() {
     initialLocalPosition = Offset.zero;
     initialRect = Rect.zero;
@@ -160,28 +160,28 @@ class ResizableBoxController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Called when the resizing starts on [ResizableBox].
+  /// Called when the resizing starts on [BoxTransform].
   ///
   /// [localPosition] is the position of the pointer relative to the
-  ///               [ResizableBox] when the resizing starts.
+  ///               [BoxTransform] when the resizing starts.
   void onResizeStart(Offset localPosition) {
     initialLocalPosition = localPosition;
     initialRect = box;
     initialFlip = flip;
   }
 
-  /// Called when the [ResizableBox] is being resized.
+  /// Called when the [BoxTransform] is being resized.
   ///
   /// [localPosition] is the position of the pointer relative to the
-  ///                 [ResizableBox] when the resizing starts.
+  ///                 [BoxTransform] when the resizing starts.
   ///                 It is used to calculate the new [Rect] of the
-  ///                 [ResizableBox].
+  ///                 [BoxTransform].
   ///
   /// [handle] is the handle that is being dragged.
   ///
   /// [notify] is a boolean value that determines whether to notify the
   ///          listeners or not. It is set to `true` by default.
-  ///          If you want to update the [ResizableBox] without notifying the
+  ///          If you want to update the [BoxTransform] without notifying the
   ///          listeners, you can set it to `false`.
   UIResizeResult onResizeUpdate(
     Offset localPosition,
@@ -189,7 +189,7 @@ class ResizableBoxController extends ChangeNotifier {
     bool notify = true,
   }) {
     // Calculate the new rect based on the initial rect, initial local position,
-    final UIResizeResult result = UIRectResizer.resize(
+    final UIResizeResult result = UIBoxTransform.resize(
       localPosition: localPosition,
       handle: handle,
       initialRect: initialRect,
@@ -207,7 +207,7 @@ class ResizableBoxController extends ChangeNotifier {
     return result;
   }
 
-  /// Called when the resizing ends on [ResizableBox].
+  /// Called when the resizing ends on [BoxTransform].
   void onResizeEnd() {
     initialLocalPosition = Offset.zero;
     initialRect = Rect.zero;
@@ -217,9 +217,9 @@ class ResizableBoxController extends ChangeNotifier {
   }
 
   /// Recalculates the current state of this [box] to ensure the position is
-  /// correct in case of extreme jumps of the [ResizableBox].
+  /// correct in case of extreme jumps of the [BoxTransform].
   void recalculateBox({bool notify = true}) {
-    final UIMoveResult result = UIRectResizer.move(
+    final UIMoveResult result = UIBoxTransform.move(
       initialRect: box,
       initialLocalPosition: initialLocalPosition,
       localPosition: initialLocalPosition,

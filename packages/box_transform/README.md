@@ -1,5 +1,5 @@
-# Rect Resizer
-Rect Resizer is a pure-Dart base package that allows you to programmatically handle box resizing and dragging without
+# Box Transform
+Box Transform is a pure-Dart base package that allows you to programmatically handle box resizing and dragging without
 relying on Flutter. It provides highly flexible, programmatically resizable and draggable boxes that can be used in any
 Dart project.
 
@@ -12,11 +12,11 @@ Detailed documentation: [https://docs.page/birjuvachhani/rect_resizer](https://d
 * 🔒 Drag Clamping: Clamp boxes inside a parent box to contain them within a specific area.
 * 🎨 Flexible Resizing Modes: Choose from four different resizing modes for more flexibility in how boxes are resized.
 * 📍 Customizable Anchor Points: Define resizing corner-handles to anchor different parts of the box when resizing.
-* 🚀 Easy Integration: Integrate Rect Resizer into your project with ease using stateless and static functions.
+* 🚀 Easy Integration: Integrate Box Transform into your project with ease using stateless and static functions.
 
 ## Getting started
 
-Rect resizer offers a `resizer.dart` class that holds functions that take initial box states
+Box Transform offers a `resizer.dart` class that holds functions that take initial box states
 and returns new box states with the desired actions.
 
 Since this is a pure-Dart package, it offers a `Box` (as opposed to a `Rect`) class that holds

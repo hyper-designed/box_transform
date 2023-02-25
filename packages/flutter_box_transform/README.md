@@ -11,7 +11,7 @@ and the Flutter guide for
 [developing packages and plugins](https://flutter.dev/developing-packages).
 -->
 
-# Flutter Rect Resizer
+# Flutter Box Transform
 A Flutter implementation of rect_resizer package.
 
 ## Features

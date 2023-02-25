@@ -1,4 +1,4 @@
-import 'package:rect_resizer/rect_resizer.dart';
+import 'package:box_transform/box_transform.dart';
 import 'package:test/test.dart';
 import 'package:vector_math/vector_math.dart';
 
@@ -14,7 +14,7 @@ void main() {
       expect(box.bottom, 150);
 
       // Resize the box with no position movement. Nothing should change.
-      final ResizeResult result1 = RectResizer.resize(
+      final ResizeResult result1 = BoxTransformer.resize(
         handle: HandlePosition.bottomRight,
         initialBox: box,
         initialLocalPosition: Vector2.zero(),
@@ -35,7 +35,7 @@ void main() {
 
       // Resize the box from the bottom right handle. The box should grow by
       // 10x20px.
-      final ResizeResult result2 = RectResizer.resize(
+      final ResizeResult result2 = BoxTransformer.resize(
         handle: HandlePosition.bottomRight,
         initialBox: box,
         initialLocalPosition: Vector2.zero(),
@@ -74,7 +74,7 @@ void main() {
 
       // Resize the box from the bottom right handle. The box should grow by
       // 10x20px.
-      final ResizeResult result2 = RectResizer.resize(
+      final ResizeResult result2 = BoxTransformer.resize(
         handle: HandlePosition.bottomRight,
         initialBox: box,
         initialLocalPosition: Vector2.zero(),
@@ -98,7 +98,7 @@ void main() {
       expect(result2.newBox.bottom, 170);
 
       // Resize the box from the bottom right handle to an extreme position.
-      final ResizeResult result3 = RectResizer.resize(
+      final ResizeResult result3 = BoxTransformer.resize(
         handle: HandlePosition.bottomRight,
         initialBox: box,
         initialLocalPosition: Vector2.zero(),
@@ -144,7 +144,7 @@ void main() {
 
       // Resize the box from the bottom right handle. The box should grow by
       // 10x20px.
-      final ResizeResult result2 = RectResizer.resize(
+      final ResizeResult result2 = BoxTransformer.resize(
         handle: HandlePosition.bottomRight,
         initialBox: box,
         initialLocalPosition: Vector2.zero(),
@@ -168,7 +168,7 @@ void main() {
       expect(result2.newBox.bottom, 170);
 
       // Resize the box from the bottom right handle to an extreme position.
-      final ResizeResult result3 = RectResizer.resize(
+      final ResizeResult result3 = BoxTransformer.resize(
         handle: HandlePosition.bottomRight,
         initialBox: box,
         initialLocalPosition: Vector2.zero(),
@@ -219,7 +219,7 @@ void main() {
       expect(clampingBox.bottom, 200);
 
       // Resize the box from the bottom right handle to an extreme position.
-      final ResizeResult result = RectResizer.resize(
+      final ResizeResult result = BoxTransformer.resize(
         handle: HandlePosition.bottomRight,
         initialBox: box,
         initialLocalPosition: Vector2.zero(),

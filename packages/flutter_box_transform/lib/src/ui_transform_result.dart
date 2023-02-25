@@ -1,8 +1,8 @@
 import 'dart:ui' as ui;
 
-import 'package:rect_resizer/rect_resizer.dart' as resizer;
+import 'package:box_transform/box_transform.dart' as transform;
 
-/// A Flutter translation of a [resizer.MoveResult].
+/// A Flutter translation of a [transform.MoveResult].
 class UIMoveResult {
   /// The new [Rect] of the node after the move.
   final ui.Rect newRect;
@@ -35,7 +35,7 @@ class UIMoveResult {
       'UIMoveResult(newRect: $newRect, oldRect: $oldRect, delta: $delta)';
 }
 
-/// A Flutter translation of a [resizer.ResizeResult].
+/// A Flutter translation of a [transform.ResizeResult].
 class UIResizeResult {
   /// The new [Rect] of the node after the resize.
   final ui.Rect newRect;
@@ -44,10 +44,10 @@ class UIResizeResult {
   final ui.Rect oldRect;
 
   /// The [Flip] of the node after the resize.
-  final resizer.Flip flip;
+  final transform.Flip flip;
 
   /// The [ResizeMode] of the node after the resize.
-  final resizer.ResizeMode resizeMode;
+  final transform.ResizeMode resizeMode;
 
   /// The delta used to resize the node.
   final ui.Offset delta;

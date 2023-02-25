@@ -1,4 +1,4 @@
-name: rect_resizer
+name: box_transform
 
 packages:
   - packages/*
@@ -21,3 +21,5 @@ scripts:
   format:
     run: melos exec dart format . --fix
     description: Run `dart format` for all packages.
+  clean:
+    run: melos exec flutter clean && melos exec dart pub get

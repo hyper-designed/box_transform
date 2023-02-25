@@ -1,4 +1,4 @@
-name: flutter_rect_resizer
+name: flutter_box_transform
 description: A Flutter implementation of rect_resizer package.
 
 version: 0.1.0
@@ -12,7 +12,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  rect_resizer: ^0.1.0
+  box_transform: ^0.1.0
   vector_math: ^2.1.4
 
 dev_dependencies:

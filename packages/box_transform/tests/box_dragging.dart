@@ -1,4 +1,4 @@
-import 'package:rect_resizer/rect_resizer.dart';
+import 'package:box_transform/box_transform.dart';
 import 'package:test/test.dart';
 import 'package:vector_math/vector_math.dart';
 
@@ -12,7 +12,7 @@ void main() {
     expect(box.bottom, 100);
 
     // Move the box to the same position. Nothing should change.
-    final MoveResult result1 = RectResizer.move(
+    final MoveResult result1 = BoxTransformer.move(
       initialBox: box,
       initialLocalPosition: Vector2.zero(),
       localPosition: Vector2.zero(),
@@ -35,7 +35,7 @@ void main() {
     expect(result1.newBox.bottom, 100);
 
     // Move the box to the right by 10px to the right with a centered cursor.
-    final MoveResult result2 = RectResizer.move(
+    final MoveResult result2 = BoxTransformer.move(
       initialBox: box,
       initialLocalPosition: Vector2(50, 50),
       localPosition: Vector2(60, 50),
@@ -68,7 +68,7 @@ void main() {
     expect(box.bottom, 150);
 
     // Move the box to the same position. Nothing should change.
-    final MoveResult result1 = RectResizer.move(
+    final MoveResult result1 = BoxTransformer.move(
       initialBox: box,
       initialLocalPosition: Vector2.zero(),
       localPosition: Vector2.zero(),
@@ -92,7 +92,7 @@ void main() {
     expect(result1.newBox.bottom, 150);
 
     // Move the box to the right by 10px to the right with a centered cursor.
-    final MoveResult result2 = RectResizer.move(
+    final MoveResult result2 = BoxTransformer.move(
       initialBox: box,
       initialLocalPosition: Vector2(75, 75),
       localPosition: Vector2(85, 75),
@@ -117,7 +117,7 @@ void main() {
 
     // Move the box to the right by 200px to the bottom right with a centered
     // cursor.
-    final MoveResult result3 = RectResizer.move(
+    final MoveResult result3 = BoxTransformer.move(
       initialBox: box,
       initialLocalPosition: Vector2(50, 50),
       localPosition: Vector2(200, 200),

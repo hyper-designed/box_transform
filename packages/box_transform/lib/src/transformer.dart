@@ -4,10 +4,10 @@ import 'enums.dart';
 import 'geometry.dart';
 import 'result.dart';
 
-/// A class that resizes a [Box] in several different supported forms.
-class RectResizer {
+/// A class that transforms a [Box] in several different supported forms.
+class BoxTransformer {
   /// A private constructor to prevent instantiation.
-  const RectResizer._();
+  const BoxTransformer._();
 
   /// Calculates the new position of the [initialBox] based on the
   /// [initialLocalPosition] of the mouse cursor and wherever [localPosition]

@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:vector_math/vector_math.dart';
 
-import '../rect_resizer.dart';
+import '../box_transform.dart';
 
 /// Holds a set of constraints to apply to any [Dimension] or [Box].
 class Constraints {
