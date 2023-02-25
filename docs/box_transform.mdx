@@ -1,12 +1,12 @@
-# Rect Resizer
+# Box Transform
 
-Rect Resizer is a pure-Dart base package that allows you to programmatically handle box resizing and dragging without
+Box Transform is a pure-Dart base package that allows you to programmatically handle box resizing and dragging without
 relying on Flutter. It provides highly flexible, programmatically resizable and draggable boxes that can be used in any
 Dart project.
 
 ## Models
 
-Rect Resizer defines several models to mimic that of Flutter's.
+Box Transform defines several models to mimic that of Flutter's.
 
 * The equivalent of `Size` is `Dimension`.
 * The equivalent of `Offset` is `Vector2` from the `vector_math` package.
@@ -31,6 +31,19 @@ Resizing is done by using the static resize function from the RectResizer dart c
 
 The function returns a `ResizeResult` object that contains information about the resized box.
 
+```dart title="Resizing a Box"
+final Box box = Box.fromLTWH(50, 50, 100, 100);
+
+final ResizeResult result = BoxTransformer.resize(
+    handle: HandlePosition.bottomRight,
+    initialBox: box,
+    initialLocalPosition: Vector2.zero(),
+    localPosition: Vector2.zero(),
+    resizeMode: ResizeMode.freeform,
+    initialFlip: Flip.none,
+);
+```
+
 Internally, the function calculates the difference between the initial position of the mouse cursor and the current
 position, and uses this delta to resize the box according to the specified resizing mode and handle position.
 
@@ -38,41 +51,3 @@ The resulting box is then checked to ensure that it falls within the specified b
 
 If the resizing reaches a minimum or maximum width or height, the function sets flags in the ResizeResult object to
 indicate that these limits have been reached.
-
-## ResizeModes
-
-The ResizeMode enum represents different types of resizing modes that can be used to determine how the rectangle should
-be resized. The modes available are:
-
-### ResizeMode.freeform
-
-![Freeform Resize Mode](assets/resize_freeform.gif)
-
-This is the default mode where the rectangle can be resized freely without any constraints. This mode is usually used
-when no modifier keys are pressed.
-
-### ResizeMode.scale
-
-![Scale Resize Mode](assets/resize_scale.gif)
-
-This mode is similar to ResizeMode.freeform, but it preserves the aspect ratio of the rectangle.
-This means that if you resize the rectangle from the right edge, it will also resize from the left edge, but the aspect
-ratio will be preserved. This mode is usually activated when the SHIFT key is pressed.
-
-### ResizeMode.symmetric
-
-![Symmetric Resize Mode](assets/resize_symmetric.gif)
-
-This mode is similar to `ResizeMode.freeform`, but it is symmetric with respect to the center
-of the rectangle. This means that if you resize the rectangle from the right edge, it will also resize from the left
-edge. This mode is useful when you want to resize the rectangle from the center. This mode is usually activated when
-the ALT key is pressed.
-
-### ResizeMode.symmetricScale
-
-![Symmetric Scale Resize Mode](assets/resize_symmetric_scale.gif)
-
-This mode is similar to ResizeMode.scale, but it is symmetric with respect to the center
-of the rectangle. This means that if you resize the rectangle from the bottom-right corner, it will also resize from the
-top-left corner while preserving the aspect ratio. This mode is usually activated when both the ALT and SHIFT keys are
-pressed.
