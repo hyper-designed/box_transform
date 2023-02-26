@@ -1,37 +1,40 @@
-# Resize Modes
+---
+title: Resize Modes
+---
 
 The `ResizeMode` enum represents different types of resizing modes that can be used to determine how the rectangle should
 be resized. The modes available are:
 
 ## ResizeMode.freeform
 
-![Freeform Resize Mode](assets/resize_freeform.gif)
+<Image alt="Freeform Resizing" caption="Freeform Resizing" src="assets/resize_freeform.gif" />
 
 This is the default mode where the rectangle can be resized freely without any constraints. This mode is usually used
 when no modifier keys are pressed.
 
 ## ResizeMode.scale
 
-![Scale Resize Mode](assets/resize_scale.gif)
+<Image alt="Scale Resize Mode" caption="Resizing while preserving aspect ratio" src="assets/resize_scale.gif" />
 
-This mode is similar to ResizeMode.freeform, but it preserves the aspect ratio of the rectangle.
+This mode is similar to `ResizeMode.freeform`, but it preserves the **aspect ratio** of the rectangle.
 This means that if you resize the rectangle from the right edge, it will also resize from the left edge, but the aspect
-ratio will be preserved. This mode is usually activated when the SHIFT key is pressed.
+ratio will be preserved. This mode is usually activated when the `SHIFT` key is pressed.
 
 ## ResizeMode.symmetric
 
-![Symmetric Resize Mode](assets/resize_symmetric.gif)
+<Image alt="Symmetric Resize Mode" caption="Resizing w.r.t the center" src="assets/resize_symmetric.gif" />
 
-This mode is similar to `ResizeMode.freeform`, but it is symmetric with respect to the center
+
+This mode is similar to `ResizeMode.freeform`, but it is symmetric with respect to the **center**
 of the rectangle. This means that if you resize the rectangle from the right edge, it will also resize from the left
 edge. This mode is useful when you want to resize the rectangle from the center. This mode is usually activated when
-the ALT key is pressed.
+the `ALT` key is pressed.
 
 ## ResizeMode.symmetricScale
 
-![Symmetric Scale Resize Mode](assets/resize_symmetric_scale.gif)
+<Image alt="Symmetric Scale Resize Mode" caption="Resizing w.r.t the center while preserving aspect ratio" src="assets/resize_symmetric_scale.gif" />
 
-This mode is similar to ResizeMode.scale, but it is symmetric with respect to the center
+This mode is similar to `ResizeMode.scale`, but it is symmetric with respect to the **center**
 of the rectangle. This means that if you resize the rectangle from the bottom-right corner, it will also resize from the
-top-left corner while preserving the aspect ratio. This mode is usually activated when both the ALT and SHIFT keys are
+top-left corner while preserving the **aspect ratio**. This mode is usually activated when both the `ALT` and `SHIFT` keys are
 pressed.

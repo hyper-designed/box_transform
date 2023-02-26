@@ -1,24 +1,26 @@
-# Box Transform
+---
+title: Box Transform
+---
 
-Box Transform is a pure-Dart base package that allows you to programmatically handle box resizing and dragging without
-relying on Flutter. It provides highly flexible, programmatically resizable and draggable boxes that can be used in any
-Dart project.
+[Box Transform](boxTransform) is a **pure-Dart** base package that allows you to programmatically handle box
+**resizing** and **dragging** without relying on [Flutter](flutter). It provides highly flexible, programmatically
+resizable and draggable boxes that can be used in any Dart project.
 
 ## Models
 
-Box Transform defines several models to mimic that of Flutter's.
+[Box Transform](boxTransform) defines several models to mimic that of Flutter's.
 
 * The equivalent of `Size` is `Dimension`.
 * The equivalent of `Offset` is `Vector2` from the `vector_math` package.
 * The equivalent of `Rect` is `Box`.
 * The equivalent of `BoxConstraints` is `Constraints`.
 
-The APIs are very similar to Flutter's, so you should be able to pick it up quickly or be able to reference
-Flutter's documentation for more information.
+The APIs are very similar to Flutter's, so you should be able to pick it up quickly or be able to reference Flutter's
+documentation for more information.
 
 ## Resizing
 
-Resizing is done by using the static resize function from the RectResizer dart class. It takes in several parameters:
+Resizing is done by using the static `BoxTransformer.resize` function. It takes in several parameters:
 
 `initialBox`: An immutable `Box` object representing the original size and position of the box before resizing.
 `initialLocalPosition`: A Vector2 object representing the initial position of the mouse cursor relative to the box.
@@ -31,18 +33,42 @@ Resizing is done by using the static resize function from the RectResizer dart c
 
 The function returns a `ResizeResult` object that contains information about the resized box.
 
+<Tabs
+  defaultValue="first"
+  values={[
+    { label: 'Pure Dart', value: 'first' },
+    { label: 'Flutter', value: 'second' },
+  ]}
+>
+  <TabItem value="first">
 ```dart title="Resizing a Box"
 final Box box = Box.fromLTWH(50, 50, 100, 100);
 
 final ResizeResult result = BoxTransformer.resize(
-    handle: HandlePosition.bottomRight,
-    initialBox: box,
-    initialLocalPosition: Vector2.zero(),
-    localPosition: Vector2.zero(),
-    resizeMode: ResizeMode.freeform,
-    initialFlip: Flip.none,
+  handle: HandlePosition.bottomRight,
+  initialBox: box,
+  initialLocalPosition: Vector2.zero(),
+  localPosition: Vector2.zero(),
+  resizeMode: ResizeMode.freeform,
+  initialFlip: Flip.none,
 );
 ```
+      </TabItem>
+  <TabItem value="second">
+```dart title="Resizing a Rect"
+final Rect rect = Rect.fromLTWH(50, 50, 100, 100);
+
+final UIResizeResult result = UIBoxTransformer.resize(
+  handle: HandlePosition.bottomRight,
+  initialBox: rect,
+  initialLocalPosition: Offset.zero,
+  localPosition: Offset.zero,
+  resizeMode: ResizeMode.freeform,
+  initialFlip: Flip.none,
+);
+```
+      </TabItem>
+</Tabs>
 
 Internally, the function calculates the difference between the initial position of the mouse cursor and the current
 position, and uses this delta to resize the box according to the specified resizing mode and handle position.
@@ -51,3 +77,7 @@ The resulting box is then checked to ensure that it falls within the specified b
 
 If the resizing reaches a minimum or maximum width or height, the function sets flags in the ResizeResult object to
 indicate that these limits have been reached.
+
+[boxTransform]: https://github.com/BirjuVachhani/box_transform/tree/main/packages/box_transform
+[flutterBoxTransform]: https://github.com/BirjuVachhani/box_transform/tree/main/packages/flutter_box_transform
+[flutter]: https://flutter.dev
