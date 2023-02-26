@@ -4,7 +4,8 @@
   "logo": "/assets/logo.png",
   "logoDark": "/assets/logo-dark.png",
   "sidebar": [
-    ["Home", "/"],
+    ["Overview", "/"],
+    ["Getting Started", "/get_started"],
     ["Motivation", "/motivation"],
     ["Resize Modes", "/resize_modes"],
     ["Box Transform", "/box_transform"],

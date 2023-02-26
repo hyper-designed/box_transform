@@ -39,10 +39,24 @@ The function returns a `ResizeResult` object that contains information about the
   defaultValue="first"
   groupId="packages"
   values={[
-    { label: 'Pure Dart', value: 'first' },
-    { label: 'Flutter', value: 'second' },
+      { label: 'Flutter', value: 'first' },
+      { label: 'Dart', value: 'second' },
   ]}
 >
+<TabItem value="second">
+    ```dart title="Resizing a Rect"
+    final Rect rect = Rect.fromLTWH(50, 50, 100, 100);
+
+final UIResizeResult result = UIBoxTransformer.resize(
+handle: HandlePosition.bottomRight,
+initialBox: rect,
+initialLocalPosition: Offset.zero,
+localPosition: Offset.zero,
+resizeMode: ResizeMode.freeform,
+initialFlip: Flip.none,
+);
+```
+</TabItem>
   <TabItem value="first">
 ```dart title="Resizing a Box"
 final Box box = Box.fromLTWH(50, 50, 100, 100);
@@ -52,20 +66,6 @@ final ResizeResult result = BoxTransformer.resize(
   initialBox: box,
   initialLocalPosition: Vector2.zero(),
   localPosition: Vector2.zero(),
-  resizeMode: ResizeMode.freeform,
-  initialFlip: Flip.none,
-);
-```
-      </TabItem>
-  <TabItem value="second">
-```dart title="Resizing a Rect"
-final Rect rect = Rect.fromLTWH(50, 50, 100, 100);
-
-final UIResizeResult result = UIBoxTransformer.resize(
-  handle: HandlePosition.bottomRight,
-  initialBox: rect,
-  initialLocalPosition: Offset.zero,
-  localPosition: Offset.zero,
   resizeMode: ResizeMode.freeform,
   initialFlip: Flip.none,
 );
