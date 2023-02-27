@@ -65,9 +65,6 @@ class BoxTransformer {
 
     Vector2 delta = localPosition - initialLocalPosition;
 
-    final Flip currentFlip =
-        getFlipForRect(initialRect, delta, handle, resizeMode);
-
     if (resizeMode.hasSymmetry) delta = Vector2(delta.x * 2, delta.y * 2);
 
     final Dimension newSize = _calculateNewSize(
