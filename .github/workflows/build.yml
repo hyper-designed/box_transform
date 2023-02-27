@@ -51,11 +51,14 @@ jobs:
           flutter build web
       - name: Show build content
         run: ls -la packages/flutter_box_transform/example/build/web
+      - name: Archive artifact
+        run: tar --dereference --hard-dereference --directory "packages/flutter_box_transform/example/build/web" -cvf "artifact.tar" --exclude=.git --exclude=.github .
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-artifact@main
         with:
-          # Upload entire repository
-          path: /packages/flutter_box_transform/example/build/web/
+          name: 'github-pages'
+          path: ./artifact.tar
+          retention-days: 5
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1
