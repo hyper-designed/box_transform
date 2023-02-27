@@ -1,6 +1,6 @@
 {
-    "name": "Rect resizer demo",
-    "short_name": "Resizer",
+    "name": "Box Transform demo",
+    "short_name": "Transform",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
