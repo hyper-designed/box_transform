@@ -49,11 +49,13 @@ jobs:
         run: |
           cd packages/flutter_box_transform/example
           flutter build web
+      - name: Build contents
+        run: ls -la packages/flutter_box_transform/example/build/web
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
           # Upload entire repository
-          path: packages/flutter_box_transform/example/build/web/*
+          path: /packages/flutter_box_transform/example/build/web
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1
