@@ -68,6 +68,14 @@ class TransformableBoxController extends ChangeNotifier {
   /// its bounds.
   Rect clampingBox = Rect.largest;
 
+  /// /// Whether the box is movable or not. Setting this to false will disable
+  /// all moving operations.
+  bool movable = true;
+
+  /// Whether the box is resizable or not. Setting this to false will disable
+  /// all resizing operations.
+  bool resizable = true;
+
   /// The constraints that limits the resizing of the [TransformableBox] inside its
   /// bounds.
   BoxConstraints constraints = const BoxConstraints.expand();

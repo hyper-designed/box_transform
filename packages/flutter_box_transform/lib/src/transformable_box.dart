@@ -204,6 +204,14 @@ class TransformableBox extends StatefulWidget {
   /// [onTerminalHeightReached] into one callback function.
   final TerminalEvent? onTerminalSizeReached;
 
+  /// Whether the box is resizable or not. Setting this to false will disable
+  /// all resizing operations.
+  final bool resizable;
+
+  /// Whether the box is movable or not. Setting this to false will disable
+  /// all moving operations.
+  final bool movable;
+
   /// Creates a [TransformableBox] widget.
   const TransformableBox({
     super.key,
@@ -229,6 +237,8 @@ class TransformableBox extends StatefulWidget {
     this.onTerminalWidthReached,
     this.onTerminalHeightReached,
     this.onTerminalSizeReached,
+    this.resizable = true,
+    this.movable = true,
   })  : assert(
           handleGestureResponseDiameter >= handleRenderedDiameter,
           'The handle gesture response diameter must be '
@@ -275,7 +285,9 @@ class _TransformableBoxState extends State<TransformableBox> {
         ..flip = widget.flip
         ..clampingBox = widget.clampingBox
         ..constraints = widget.constraints
-        ..resolveResizeModeCallback = widget.resolveResizeModeCallback;
+        ..resolveResizeModeCallback = widget.resolveResizeModeCallback
+        ..movable = widget.movable
+        ..resizable = widget.resizable;
     }
   }
 
@@ -297,7 +309,9 @@ class _TransformableBoxState extends State<TransformableBox> {
         ..flip = widget.flip
         ..clampingBox = widget.clampingBox
         ..constraints = widget.constraints
-        ..resolveResizeModeCallback = widget.resolveResizeModeCallback;
+        ..resolveResizeModeCallback = widget.resolveResizeModeCallback
+        ..resizable = widget.resizable
+        ..movable = widget.movable;
     }
 
     // Return if the controller is external.
@@ -324,6 +338,14 @@ class _TransformableBoxState extends State<TransformableBox> {
       controller.constraints = widget.constraints;
       controller.recalculateBox(notify: false);
     }
+
+    if (oldWidget.resizable != widget.resizable) {
+      controller.resizable = widget.resizable;
+    }
+
+    if (oldWidget.movable != widget.movable) {
+      controller.movable = widget.movable;
+    }
   }
 
   @override
@@ -347,6 +369,7 @@ class _TransformableBoxState extends State<TransformableBox> {
 
   /// Called when the handle drag updates.
   void onHandlePanUpdate(Offset localPosition, HandlePosition handlePosition) {
+    if (!controller.resizable) return;
     final UIResizeResult result = controller.onResizeUpdate(
       localPosition,
       handlePosition,
@@ -407,6 +430,7 @@ class _TransformableBoxState extends State<TransformableBox> {
               onPointerDown: (event) =>
                   controller.onDragStart(event.localPosition),
               onPointerMove: (event) {
+                if (!controller.movable) return;
                 final UIMoveResult result = controller.onDragUpdate(
                   event.localPosition,
                   notify: false,

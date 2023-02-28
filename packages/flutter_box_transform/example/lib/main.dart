@@ -66,6 +66,9 @@ class PlaygroundModel with ChangeNotifier {
   bool flipEnabled = true;
   bool clampingEnabled = false;
 
+  bool resizable = true;
+  bool movable = true;
+
   void reset(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
     final double width = size.width - 300;
@@ -83,6 +86,10 @@ class PlaygroundModel with ChangeNotifier {
       size.width - kSidePanelWidth,
       size.height,
     );
+
+    resizable = true;
+    movable = true;
+
     notifyListeners();
   }
 
@@ -130,6 +137,16 @@ class PlaygroundModel with ChangeNotifier {
 
   void toggleClamping(bool enabled) {
     clampingEnabled = enabled;
+    notifyListeners();
+  }
+
+  void toggleResizing(bool enabled) {
+    resizable = enabled;
+    notifyListeners();
+  }
+
+  void toggleMoving(bool enabled) {
+    movable = enabled;
     notifyListeners();
   }
 
@@ -275,6 +292,8 @@ class _ImageBoxState extends State<ImageBox> {
       flip: model.flip,
       clampingBox: model.clampingEnabled ? model.clampingBox : null,
       onChanged: model.onRectChanged,
+      resizable: model.resizable,
+      movable: model.movable,
       onTerminalSizeReached: (
         bool reachedMinWidth,
         bool reachedMaxWidth,
@@ -511,6 +530,62 @@ class ControlPanel extends StatelessWidget {
             const FlipControls(),
             const Divider(height: 1),
             const ClampingControls(),
+            const Divider(height: 1),
+            Container(
+              height: 44,
+              padding: const EdgeInsets.fromLTRB(16, 0, 6, 0),
+              alignment: Alignment.centerLeft,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Resizable',
+                      style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                            color: Theme.of(context).colorScheme.secondary,
+                          ),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 20,
+                    child: Transform.scale(
+                      scale: 0.7,
+                      child: Switch(
+                        value: model.resizable,
+                        onChanged: (value) => model.toggleResizing(value),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            Container(
+              height: 44,
+              padding: const EdgeInsets.fromLTRB(16, 0, 6, 0),
+              alignment: Alignment.centerLeft,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Movable',
+                      style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                            color: Theme.of(context).colorScheme.secondary,
+                          ),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 20,
+                    child: Transform.scale(
+                      scale: 0.7,
+                      child: Switch(
+                        value: model.movable,
+                        onChanged: (value) => model.toggleMoving(value),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const Divider(height: 1),
           ],
         ),
