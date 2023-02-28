@@ -11,6 +11,8 @@ A library for advanced resizing of rect in UI.
 TODO:
 ```
 
+### Live Demo: [box-transform.codemagic.app](https://box-transform.codemagic.app)
+
 ## Setting up project for development
 
 This project uses melos to manage the monorepo. To get started, clone the repository and run the following commands:
