@@ -62,10 +62,14 @@ class PlaygroundModel with ChangeNotifier {
   Flip flip = Flip.none;
   Rect clampingBox = Rect.largest;
   Rect? playgroundArea;
+  late BoxConstraints constraints = const BoxConstraints(
+    minWidth: double.infinity,
+    minHeight: double.infinity,
+  );
 
   bool flipEnabled = true;
   bool clampingEnabled = false;
-
+  bool constraintsEnabled = false;
   bool resizable = true;
   bool movable = true;
 
@@ -87,8 +91,15 @@ class PlaygroundModel with ChangeNotifier {
       size.height,
     );
 
+    constraints = const BoxConstraints(
+      minWidth: double.infinity,
+      minHeight: double.infinity,
+    );
+
     resizable = true;
     movable = true;
+    clampingEnabled = false;
+    constraintsEnabled = false;
 
     notifyListeners();
   }
@@ -125,6 +136,12 @@ class PlaygroundModel with ChangeNotifier {
     if (notify) notifyListeners();
   }
 
+  void setConstraints(BoxConstraints constraints, {bool notify = true}) {
+    this.constraints = constraints;
+
+    if (notify) notifyListeners();
+  }
+
   void flipHorizontally() {
     flip = Flip.fromValue(flip.horizontalValue * -1, flip.verticalValue);
     notifyListeners();
@@ -150,6 +167,11 @@ class PlaygroundModel with ChangeNotifier {
     notifyListeners();
   }
 
+  void toggleConstraints(bool enabled) {
+    constraintsEnabled = enabled;
+    notifyListeners();
+  }
+
   void onClampingBoxChanged({
     double? left,
     double? top,
@@ -161,6 +183,33 @@ class PlaygroundModel with ChangeNotifier {
       top ?? clampingBox.top,
       right ?? clampingBox.right,
       bottom ?? clampingBox.bottom,
+    );
+    notifyListeners();
+  }
+
+  void onConstraintsChanged({
+    double? minWidth,
+    double? minHeight,
+    double? maxWidth,
+    double? maxHeight,
+    bool forceMinWidth = false,
+    bool forceMinHeight = false,
+    bool forceMaxWidth = false,
+    bool forceMaxHeight = false,
+  }) {
+    constraints = BoxConstraints(
+      minWidth: forceMinWidth
+          ? minWidth ?? double.infinity
+          : minWidth ?? constraints.minWidth,
+      minHeight: forceMinHeight
+          ? minHeight ?? double.infinity
+          : minHeight ?? constraints.minHeight,
+      maxWidth: forceMaxWidth
+          ? maxWidth ?? double.infinity
+          : maxWidth ?? constraints.maxWidth,
+      maxHeight: forceMaxHeight
+          ? maxHeight ?? double.infinity
+          : maxHeight ?? constraints.maxHeight,
     );
     notifyListeners();
   }
@@ -291,6 +340,7 @@ class _ImageBoxState extends State<ImageBox> {
       box: model.box,
       flip: model.flip,
       clampingBox: model.clampingEnabled ? model.clampingBox : null,
+      constraints: model.constraintsEnabled ? model.constraints : null,
       onChanged: model.onRectChanged,
       resizable: model.resizable,
       movable: model.movable,
@@ -527,10 +577,6 @@ class ControlPanel extends StatelessWidget {
             const Divider(height: 1),
             const PositionControls(),
             const Divider(height: 1),
-            const FlipControls(),
-            const Divider(height: 1),
-            const ClampingControls(),
-            const Divider(height: 1),
             Container(
               height: 44,
               padding: const EdgeInsets.fromLTRB(16, 0, 6, 0),
@@ -586,6 +632,12 @@ class ControlPanel extends StatelessWidget {
                 ],
               ),
             ),
+            const Divider(height: 1),
+            const FlipControls(),
+            const Divider(height: 1),
+            const ClampingControls(),
+            const Divider(height: 1),
+            const ConstraintsControls(),
             const Divider(height: 1),
           ],
         ),
@@ -1001,12 +1053,277 @@ class _ClampingControlsState extends State<ClampingControls> {
                           const SizedBox(height: 16),
                           FilledButton.tonalIcon(
                             onPressed: () {
-                              model.setClampingBox(
-                                model.playgroundArea!,
-                              );
+                              model.setClampingBox(model.playgroundArea!);
                             },
                             icon: const Icon(Icons.fullscreen_rounded),
                             label: const Text('Full screen'),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    model.removeListener(onModelChanged);
+    super.dispose();
+  }
+}
+
+class ConstraintsControls extends StatefulWidget {
+  const ConstraintsControls({super.key});
+
+  @override
+  State<ConstraintsControls> createState() => _ConstraintsControlsState();
+}
+
+class _ConstraintsControlsState extends State<ConstraintsControls> {
+  late final PlaygroundModel model = context.read<PlaygroundModel>();
+
+  late final TextEditingController minWidthController;
+  late final TextEditingController minHeightController;
+  late final TextEditingController maxWidthController;
+  late final TextEditingController maxHeightController;
+
+  double? get minWidth => double.tryParse(minWidthController.text);
+
+  double? get minHeight => double.tryParse(minHeightController.text);
+
+  double? get maxWidth => double.tryParse(maxWidthController.text);
+
+  double? get maxHeight => double.tryParse(maxHeightController.text);
+
+  @override
+  void initState() {
+    super.initState();
+    minWidthController =
+        TextEditingController(text: formatted(model.constraints.minWidth));
+    minHeightController =
+        TextEditingController(text: formatted(model.constraints.minHeight));
+    maxHeightController =
+        TextEditingController(text: formatted(model.constraints.maxHeight));
+    maxWidthController =
+        TextEditingController(text: formatted(model.constraints.maxWidth));
+
+    model.addListener(onModelChanged);
+  }
+
+  void onModelChanged() {
+    if (model.constraints.minWidth != minWidth) {
+      minWidthController.text = formatted(model.constraints.minWidth);
+    }
+    if (model.constraints.minHeight != minHeight) {
+      minHeightController.text = formatted(model.constraints.minHeight);
+    }
+    if (model.constraints.maxHeight != maxHeight) {
+      maxHeightController.text = formatted(model.constraints.maxHeight);
+    }
+    if (model.constraints.maxWidth != maxWidth) {
+      maxWidthController.text = formatted(model.constraints.maxWidth);
+    }
+  }
+
+  String formatted(double? value) {
+    if (value == null || value == 0) return '';
+    if (value.isInfinite) return '';
+    return value.toStringAsFixed(0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final PlaygroundModel model = context.watch<PlaygroundModel>();
+    return FocusScope(
+      child: Builder(
+        builder: (context) {
+          return GestureDetector(
+            onTap: () {
+              FocusScope.of(context).unfocus();
+              model.onConstraintsChanged(
+                minWidth: minWidth,
+                minHeight: minHeight,
+                maxHeight: maxHeight,
+                maxWidth: maxWidth,
+                forceMinWidth: true,
+                forceMinHeight: true,
+                forceMaxWidth: true,
+                forceMaxHeight: true,
+              );
+            },
+            child: AnimatedSize(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              alignment: Alignment.topCenter,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    height: 44,
+                    padding: const EdgeInsets.fromLTRB(16, 0, 6, 0),
+                    alignment: Alignment.centerLeft,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'CONSTRAINTS',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleSmall!
+                                .copyWith(
+                                  color:
+                                      Theme.of(context).colorScheme.secondary,
+                                ),
+                          ),
+                        ),
+                        SizedBox(
+                          height: 20,
+                          child: Transform.scale(
+                            scale: 0.7,
+                            child: Switch(
+                              value: model.constraintsEnabled,
+                              onChanged: (value) =>
+                                  model.toggleConstraints(value),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (model.constraintsEnabled)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            children: const [
+                              Expanded(child: Label('Min W')),
+                              SizedBox(width: 16),
+                              Expanded(child: Label('Min H')),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  enabled: model.constraintsEnabled,
+                                  controller: minWidthController,
+                                  onSubmitted: (value) {
+                                    model.onConstraintsChanged(
+                                      minWidth: minWidth,
+                                      forceMinWidth: true,
+                                    );
+                                  },
+                                  decoration: const InputDecoration(
+                                    suffixText: 'px',
+                                    hintText: '0',
+                                  ),
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.allow(
+                                      RegExp(r'[0-9]*'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: TextField(
+                                  enabled: model.constraintsEnabled,
+                                  controller: minHeightController,
+                                  onSubmitted: (value) {
+                                    model.onConstraintsChanged(
+                                      minHeight: minHeight,
+                                      forceMinHeight: true,
+                                    );
+                                  },
+                                  decoration: const InputDecoration(
+                                    suffixText: 'px',
+                                    hintText: '0',
+                                  ),
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.allow(
+                                      RegExp(r'[0-9]*'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: const [
+                              Expanded(child: Label('Max W')),
+                              SizedBox(width: 16),
+                              Expanded(child: Label('Max H')),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextFormField(
+                                  enabled: model.constraintsEnabled,
+                                  controller: maxWidthController,
+                                  onFieldSubmitted: (value) {
+                                    model.onConstraintsChanged(
+                                      maxWidth: maxWidth,
+                                      forceMaxWidth: true,
+                                    );
+                                  },
+                                  decoration: const InputDecoration(
+                                    suffixText: 'px',
+                                    hintText: '∞',
+                                  ),
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.allow(
+                                      RegExp(r'[0-9]*'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: TextField(
+                                  enabled: model.constraintsEnabled,
+                                  controller: maxHeightController,
+                                  onSubmitted: (value) {
+                                    model.onConstraintsChanged(
+                                      maxHeight: maxHeight,
+                                      forceMaxHeight: true,
+                                    );
+                                  },
+                                  decoration: const InputDecoration(
+                                    suffixText: 'px',
+                                    hintText: '∞',
+                                  ),
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.allow(
+                                      RegExp(r'[0-9]*'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          FilledButton.tonalIcon(
+                            onPressed: () {
+                              model.setConstraints(const BoxConstraints(
+                                minWidth: double.infinity,
+                                minHeight: double.infinity,
+                              ));
+                            },
+                            icon: const Icon(Icons.fullscreen_rounded),
+                            label: const Text('Reset'),
                           ),
                         ],
                       ),
