@@ -269,7 +269,7 @@ class _ImageBoxState extends State<ImageBox> {
   Widget build(BuildContext context) {
     final PlaygroundModel model = context.watch<PlaygroundModel>();
     final Color handleColor = Theme.of(context).colorScheme.primary;
-    return BoxTransform(
+    return TransformableBox(
       key: const ValueKey('image-box'),
       box: model.box,
       flip: model.flip,
@@ -384,7 +384,7 @@ class _ClampingBoxState extends State<ClampingBox> {
       label = 'Clamping Box';
     }
 
-    return BoxTransform(
+    return TransformableBox(
       key: const ValueKey('clamping-box'),
       box: model.clampingBox,
       flip: Flip.none,

@@ -55,23 +55,23 @@ Widget _defaultHandleBuilder(BuildContext context, HandlePosition handle) {
 }
 
 /// A widget that allows you to resize and drag a box around a widget.
-class BoxTransform extends StatefulWidget {
-  /// If you need more control over the [BoxTransform] you can pass a
-  /// custom [BoxTransformController] instance through the [controller]
+class TransformableBox extends StatefulWidget {
+  /// If you need more control over the [TransformableBox] you can pass a
+  /// custom [TransformableBoxController] instance through the [controller]
   /// parameter.
   ///
-  /// If you do not specify one, a default [BoxTransformController] instance
+  /// If you do not specify one, a default [TransformableBoxController] instance
   /// will be created internally, along with its lifecycle.
-  final BoxTransformController? controller;
+  final TransformableBoxController? controller;
 
   /// A builder function that is used to build the content of the
-  /// [BoxTransform]. This is the physical widget you wish to show resizable
+  /// [TransformableBox]. This is the physical widget you wish to show resizable
   /// handles on. It's most commonly something like an image widget, but it
   /// could be anything you want to have resizable & draggable box handles on.
   final BoxContentBuilder contentBuilder;
 
   /// A builder function that is used to build the handles of the
-  /// [BoxTransform]. If you don't specify it, the default handles will be
+  /// [TransformableBox]. If you don't specify it, the default handles will be
   /// used.
   ///
   /// Note that this will build for all four corners of the rectangle.
@@ -97,19 +97,19 @@ class BoxTransform extends StatefulWidget {
   final double handleRenderedDiameter;
 
   /// The initial box that will be used to position set the initial size of
-  /// the [BoxTransform] widget.
+  /// the [TransformableBox] widget.
   ///
-  /// This initial box will be mutated by the [BoxTransformController] through
+  /// This initial box will be mutated by the [TransformableBoxController] through
   /// different dragging, panning, and resizing operations.
   ///
   /// [Rect] is immutable, so a new [Rect] instance will be created every time
-  /// the [BoxTransformController] mutates the box. You can acquire your
+  /// the [TransformableBoxController] mutates the box. You can acquire your
   /// updated box through the [onChanged] callback or through an externally
-  /// provided [BoxTransformController] instance.
+  /// provided [TransformableBoxController] instance.
   final Rect box;
 
   /// The initial flip that will be used to set the initial flip of the
-  /// [BoxTransform] widget. Normally, flipping is done by the user through
+  /// [TransformableBox] widget. Normally, flipping is done by the user through
   /// the handles, but you can set the initial flip through this parameter in
   /// case the initial state of the box is in a flipped state.
   ///
@@ -132,11 +132,11 @@ class BoxTransform extends StatefulWidget {
   final Rect clampingBox;
 
   /// A set of constraints that will be applied to the [box] when it is
-  /// resized by the [BoxTransformController].
+  /// resized by the [TransformableBoxController].
   final BoxConstraints constraints;
 
-  /// A callback that is called every time the [BoxTransform] is updated.
-  /// This is called every time the [BoxTransformController] mutates the box
+  /// A callback that is called every time the [TransformableBox] is updated.
+  /// This is called every time the [TransformableBoxController] mutates the box
   /// or the flip.
   final OnBoxChanged? onChanged;
 
@@ -148,8 +148,8 @@ class BoxTransform extends StatefulWidget {
   final TerminalAxisEvent? onTerminalHeightReached;
   final TerminalEvent? onTerminalSizeReached;
 
-  /// Creates a [BoxTransform] widget.
-  const BoxTransform({
+  /// Creates a [TransformableBox] widget.
+  const TransformableBox({
     super.key,
     required this.contentBuilder,
     this.onChanged,
@@ -185,11 +185,11 @@ class BoxTransform extends StatefulWidget {
         constraints = constraints ?? const BoxConstraints.expand();
 
   @override
-  State<BoxTransform> createState() => _BoxTransformState();
+  State<TransformableBox> createState() => _TransformableBoxState();
 }
 
-class _BoxTransformState extends State<BoxTransform> {
-  late BoxTransformController controller;
+class _TransformableBoxState extends State<TransformableBox> {
+  late TransformableBoxController controller;
 
   @override
   void initState() {
@@ -201,7 +201,7 @@ class _BoxTransformState extends State<BoxTransform> {
       controller.addListener(onControllerUpdate);
     } else {
       // If it is provided internally, we should not listen to it.
-      controller = BoxTransformController()
+      controller = TransformableBoxController()
         ..box = widget.box
         ..flip = widget.flip
         ..clampingBox = widget.clampingBox
@@ -210,7 +210,7 @@ class _BoxTransformState extends State<BoxTransform> {
   }
 
   @override
-  void didUpdateWidget(covariant BoxTransform oldWidget) {
+  void didUpdateWidget(covariant TransformableBox oldWidget) {
     super.didUpdateWidget(oldWidget);
 
     if (widget.controller != null && oldWidget.controller == null ||
@@ -222,7 +222,7 @@ class _BoxTransformState extends State<BoxTransform> {
     } else if (oldWidget.controller != null && widget.controller == null) {
       // Explicit controller removed.
       controller.removeListener(onControllerUpdate);
-      controller = BoxTransformController()
+      controller = TransformableBoxController()
         ..box = widget.box
         ..flip = widget.flip
         ..clampingBox = widget.clampingBox
