@@ -23,3 +23,12 @@ scripts:
     description: Run `dart format` for all packages.
   clean:
     run: melos exec flutter clean && melos exec dart pub get
+  dry-run:
+    run: melos exec flutter pub publish --dry-run
+  build-web:
+    run: cd packages/flutter_box_transform/example && flutter build web
+  archive-web:
+    run: |
+      cd packages/flutter_box_transform/example
+      flutter build web
+      tar --directory build/web -cvf ../../../artifact.tar .

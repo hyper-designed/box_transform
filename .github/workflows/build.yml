@@ -45,14 +45,8 @@ jobs:
         run:  melos bootstrap
       - name: Install dependencies
         run: melos deps
-      - name: Build example
-        run: |
-          cd packages/flutter_box_transform/example
-          flutter build web
-      - name: Show build content
-        run: ls -la packages/flutter_box_transform/example/build/web
-      - name: Archive artifact
-        run: tar --dereference --hard-dereference --directory "packages/flutter_box_transform/example/build/web" -cvf "artifact.tar" --exclude=.git --exclude=.github .
+      - name: Archive
+        run: melos archive-web
       - name: Upload artifact
         uses: actions/upload-artifact@main
         with:
