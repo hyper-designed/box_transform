@@ -40,7 +40,7 @@ ResizeMode defaultResolveResizeModeCallback() {
 class TransformableBoxController extends ChangeNotifier {
   /// The callback function that is used to resolve the [ResizeMode] based on
   /// the pressed keys on the keyboard.
-  final ResolveResizeModeCallback? resolveResizeModeCallback;
+  ResolveResizeModeCallback? resolveResizeModeCallback;
 
   /// Creates a [TransformableBoxController] instance.
   TransformableBoxController({

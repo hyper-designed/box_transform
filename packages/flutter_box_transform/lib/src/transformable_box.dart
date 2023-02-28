@@ -140,12 +140,48 @@ class TransformableBox extends StatefulWidget {
   /// or the flip.
   final OnBoxChanged? onChanged;
 
+  /// The callback function that is used to resolve the [ResizeMode] based on
+  /// the pressed keys on the keyboard.
+  final ResolveResizeModeCallback? resolveResizeModeCallback;
+
+  /// A callback function that triggers when the box reaches its minimum width
+  /// when resizing.
   final TerminalEdgeEvent? onMinWidthReached;
+
+  /// A callback function that triggers when the box reaches its maximum width
+  /// when resizing.
   final TerminalEdgeEvent? onMaxWidthReached;
+
+  /// A callback function that triggers when the box reaches its minimum height
+  /// when resizing.
   final TerminalEdgeEvent? onMinHeightReached;
+
+  /// A callback function that triggers when the box reaches its maximum height
+  /// when resizing.
   final TerminalEdgeEvent? onMaxHeightReached;
+
+  /// A callback function that triggers when the box reaches a terminal width
+  /// when resizing. A terminal width is a width that is either the minimum or
+  /// maximum width of the box.
+  ///
+  /// This function combines both [onMinWidthReached] and [onMaxWidthReached]
+  /// into one callback function.
   final TerminalAxisEvent? onTerminalWidthReached;
+
+  /// A callback function that triggers when the box reaches a terminal height
+  /// when resizing. A terminal height is a height that is either the minimum or
+  /// maximum height of the box.
+  ///
+  /// This function combines both [onMinHeightReached] and [onMaxHeightReached]
+  /// into one callback function.
   final TerminalAxisEvent? onTerminalHeightReached;
+
+  /// A callback function that triggers when the box reaches a terminal size
+  /// when resizing. A terminal size is a size that is either the minimum or
+  /// maximum size of the box on either axis.
+  ///
+  /// This function combines both [onTerminalWidthReached] and
+  /// [onTerminalHeightReached] into one callback function.
   final TerminalEvent? onTerminalSizeReached;
 
   /// Creates a [TransformableBox] widget.
@@ -162,6 +198,7 @@ class TransformableBox extends StatefulWidget {
     Flip? flip,
     Rect? clampingBox,
     BoxConstraints? constraints,
+    ResolveResizeModeCallback? resolveResizeModeCallback,
     // terminal update events
     this.onMinWidthReached,
     this.onMaxWidthReached,
@@ -176,13 +213,23 @@ class TransformableBox extends StatefulWidget {
           'greater than or equal to the handle rendered diameter.',
         ),
         assert(
-            controller == null ||
-                (box == null && flip == null && clampingBox == null),
-            'You can either provide a controller or a box, flip, and clamping box, but not both.'),
+          controller == null ||
+              (box == null &&
+                  flip == null &&
+                  clampingBox == null &&
+                  constraints == null &&
+                  resolveResizeModeCallback == null),
+          'You can either provide a [controller] OR a [box], [flip], '
+          '[clampingBox], [constraints], and [resolveResizeModeCallback]. '
+          'You cannot use any of those properties when providing a controller and'
+          'vice versa.',
+        ),
         box = box ?? Rect.zero,
         flip = flip ?? Flip.none,
         clampingBox = clampingBox ?? Rect.largest,
-        constraints = constraints ?? const BoxConstraints.expand();
+        constraints = constraints ?? const BoxConstraints.expand(),
+        resolveResizeModeCallback =
+            resolveResizeModeCallback ?? defaultResolveResizeModeCallback;
 
   @override
   State<TransformableBox> createState() => _TransformableBoxState();
@@ -205,7 +252,8 @@ class _TransformableBoxState extends State<TransformableBox> {
         ..box = widget.box
         ..flip = widget.flip
         ..clampingBox = widget.clampingBox
-        ..constraints = widget.constraints;
+        ..constraints = widget.constraints
+        ..resolveResizeModeCallback = widget.resolveResizeModeCallback;
     }
   }
 
@@ -226,7 +274,8 @@ class _TransformableBoxState extends State<TransformableBox> {
         ..box = widget.box
         ..flip = widget.flip
         ..clampingBox = widget.clampingBox
-        ..constraints = widget.constraints;
+        ..constraints = widget.constraints
+        ..resolveResizeModeCallback = widget.resolveResizeModeCallback;
     }
 
     // Return if the controller is external.
@@ -239,6 +288,10 @@ class _TransformableBoxState extends State<TransformableBox> {
     }
     if (oldWidget.flip != widget.flip) {
       controller.flip = widget.flip;
+    }
+    if (oldWidget.resolveResizeModeCallback !=
+        widget.resolveResizeModeCallback) {
+      controller.resolveResizeModeCallback = widget.resolveResizeModeCallback;
     }
     if (oldWidget.clampingBox != widget.clampingBox) {
       controller.clampingBox = widget.clampingBox;
