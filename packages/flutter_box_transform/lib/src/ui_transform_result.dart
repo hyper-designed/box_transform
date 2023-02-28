@@ -2,8 +2,8 @@ import 'dart:ui' as ui;
 
 import 'package:box_transform/box_transform.dart' as transform;
 
-/// A Flutter translation of a [transform.MoveResult].
-class UIMoveResult {
+/// An abstract class that represents the result of a transform operation.
+abstract class UIBoxTransformResult {
   /// The new [Rect] of the node after the move.
   final ui.Rect newRect;
 
@@ -14,7 +14,7 @@ class UIMoveResult {
   final ui.Offset delta;
 
   /// Creates a [UIMoveResult] object.
-  UIMoveResult({
+  UIBoxTransformResult({
     required this.newRect,
     required this.oldRect,
     required this.delta,
@@ -35,22 +35,24 @@ class UIMoveResult {
       'UIMoveResult(newRect: $newRect, oldRect: $oldRect, delta: $delta)';
 }
 
+/// A Flutter translation of a [transform.MoveResult].
+/// Helps disambiguate between [UIMoveResult] and [UIResizeResult].
+class UIMoveResult extends UIBoxTransformResult {
+  /// Creates a [UIMoveResult] object.
+  UIMoveResult({
+    required super.newRect,
+    required super.oldRect,
+    required super.delta,
+  });
+}
+
 /// A Flutter translation of a [transform.ResizeResult].
-class UIResizeResult {
-  /// The new [Rect] of the node after the resize.
-  final ui.Rect newRect;
-
-  /// The old [Rect] of the node before the resize.
-  final ui.Rect oldRect;
-
+class UIResizeResult extends UIBoxTransformResult {
   /// The [Flip] of the node after the resize.
   final transform.Flip flip;
 
   /// The [ResizeMode] of the node after the resize.
   final transform.ResizeMode resizeMode;
-
-  /// The delta used to resize the node.
-  final ui.Offset delta;
 
   /// The new size of the node after the resize.
   final ui.Size newSize;
@@ -69,11 +71,11 @@ class UIResizeResult {
 
   /// Creates a [UIResizeResult] object.
   UIResizeResult({
-    required this.newRect,
-    required this.oldRect,
+    required super.newRect,
+    required super.oldRect,
+    required super.delta,
     required this.flip,
     required this.resizeMode,
-    required this.delta,
     required this.newSize,
     required this.minWidthReached,
     required this.maxWidthReached,

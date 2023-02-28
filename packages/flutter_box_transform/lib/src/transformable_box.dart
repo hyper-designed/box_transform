@@ -19,9 +19,13 @@ typedef BoxContentBuilder = Widget Function(
 );
 
 /// A callback that is called when the box is moved or resized.
-/// The [rect] is the current position and size of the box.
-/// The [flip] is the current flip state of the box.
-typedef OnBoxChanged = void Function(Rect rect, Flip flip);
+typedef OnBoxChanged = void Function(UIBoxTransformResult result);
+
+/// A callback that is called when the box is moved.
+typedef OnBoxMoved = void Function(UIBoxTransformResult result);
+
+/// A callback that is called when the box is resized.
+typedef OnBoxResized = void Function(UIBoxTransformResult result);
 
 /// A callback that is called when the box reaches a terminal edge when
 /// resizing.
@@ -140,6 +144,22 @@ class TransformableBox extends StatefulWidget {
   /// or the flip.
   final OnBoxChanged? onChanged;
 
+  /// A callback that is called every time the [TransformableBox] is moved.
+  /// This is called every time the [TransformableBoxController] mutates the
+  /// box.
+  ///
+  /// This is different from [onChanged] in that it is only called when the box
+  /// is moved, not when the box is resized.
+  final OnBoxMoved? onMoved;
+
+  /// A callback that is called every time the [TransformableBox] is resized.
+  /// This is called every time the [TransformableBoxController] mutates the
+  /// box.
+  ///
+  /// This is different from [onChanged] in that it is only called when the box
+  /// is resized, not when the box is moved.
+  final OnBoxResized? onResized;
+
   /// The callback function that is used to resolve the [ResizeMode] based on
   /// the pressed keys on the keyboard.
   final ResolveResizeModeCallback? resolveResizeModeCallback;
@@ -189,6 +209,8 @@ class TransformableBox extends StatefulWidget {
     super.key,
     required this.contentBuilder,
     this.onChanged,
+    this.onMoved,
+    this.onResized,
     this.controller,
     this.handleBuilder = _defaultHandleBuilder,
     this.handleGestureResponseDiameter = 24,
@@ -331,7 +353,8 @@ class _TransformableBoxState extends State<TransformableBox> {
       notify: false,
     );
 
-    widget.onChanged?.call(result.newRect, controller.flip);
+    widget.onChanged?.call(result);
+    widget.onResized?.call(result);
     widget.onMinWidthReached?.call(result.minWidthReached);
     widget.onMaxWidthReached?.call(result.maxWidthReached);
     widget.onMinHeightReached?.call(result.minHeightReached);
@@ -388,7 +411,8 @@ class _TransformableBoxState extends State<TransformableBox> {
                   event.localPosition,
                   notify: false,
                 );
-                widget.onChanged?.call(result.newRect, flip);
+                widget.onChanged?.call(result);
+                widget.onMoved?.call(result);
               },
               onPointerUp: (event) => controller.onDragEnd(),
               onPointerCancel: (event) => controller.onDragEnd(),
