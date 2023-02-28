@@ -86,9 +86,9 @@ class PlaygroundModel with ChangeNotifier {
     notifyListeners();
   }
 
-  void onRectChanged(Rect box, Flip flip) {
-    this.box = box;
-    this.flip = flip;
+  void onRectChanged(UIBoxTransformResult result) {
+    box = result.newRect;
+    flip = result is UIResizeResult ? result.flip : flip;
     notifyListeners();
   }
 
@@ -393,9 +393,7 @@ class _ClampingBoxState extends State<ClampingBox> {
         minWidth: model.box.width,
         minHeight: model.box.height,
       ),
-      onChanged: (rect, flip) {
-        model.setClampingBox(rect);
-      },
+      onChanged: (result) => model.setClampingBox(result.newRect),
       onTerminalSizeReached: (
         bool reachedMinWidth,
         bool reachedMaxWidth,

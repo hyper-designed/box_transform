@@ -9,10 +9,6 @@
     ["Motivation", "/motivation"],
     ["Resize Modes", "/resize_modes"],
     ["Box Transform", "/box_transform"],
-    ["Flutter Box Transform", [
-      ["Intro", "/reference"],
-      ["FAQs", "/faqs"]
-      ]
-    ]
+    ["Flutter Box Transform", "/flutter_transformable_box"]
   ]
 }
