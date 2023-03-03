@@ -8,80 +8,56 @@ title: Getting Started
 
 Add this package as dependency in your `pubspec.yaml` file:
 
-<Tabs
-  defaultValue="first"
-  groupId="packages"
-  groupId="packages"
-  values={[
-      { label: 'Flutter', value: 'first' },
-      { label: 'Pure Dart', value: 'second' },
-  ]}
->
-  <TabItem value="first">
-```dart title="Add dependency"
-dependencies:
-  flutter_box_transform: <latest_version>
+```dart
+  dependencies:
+    box_transform: <latest_version>
 ```
-  </TabItem>
-  <TabItem value="first">
-```dart title="Add dependency"
-dependencies:
-  box_transform: <latest_version>
-```
-  </TabItem>
-</Tabs>
+
+## Models
+
+[Box Transform](boxTransform) defines several models to mimic that of Flutter's.
+
+- The equivalent of `Size` is `Dimension`.
+- The equivalent of `Offset` is `Vector2` from the `vector_math` package.
+- The equivalent of `Rect` is `Box`.
+- The equivalent of `BoxConstraints` is `Constraints`.
 
 ## Usage
 
-<Tabs
-  defaultValue="first"
-  groupId="packages"
-  groupId="packages"
-  values={[
-    { label: 'Flutter', value: 'first' },
-    { label: 'Dart', value: 'second' },
-  ]}
->
-  <TabItem value="first">
-```dart title="Using as a widget"
-Stack(
-  children: [
-    BoxTransform(
-      box: box,
-      flip: flip,
-      onChanged: (box, flip) {
-        setState(() {
-          this.box = box;
-          this.flip = flip;
-        });
-      },
-      contentBuilder: (context, rect, flip) => Transform.scale(
-        scaleX: flip.isHorizontal ? -1 : 1,
-        scaleY: flip.isVertical ? -1 : 1,
-        child: Image.asset(
-          'assets/images/landscape.jpg',
-          width: rect.width,
-          height: rect.height,
-          fit: BoxFit.fill,
-        ),
-      ),
-    ),
-  ],
-);
-```
-  </TabItem>
-  <TabItem value="first">
-```dart title="Resizing a Box"
-final Box box = Box.fromLTWH(50, 50, 100, 100);
+You can call the `BoxTransformer.resize` method to resize a box. The method takes the following parameters:
 
-final ResizeResult result = BoxTransformer.resize(
-  handle: HandlePosition.bottomRight,
-  initialBox: box,
-  initialLocalPosition: Vector2.zero(),
-  localPosition: Vector2.zero(),
-  resizeMode: ResizeMode.freeform,
-  initialFlip: Flip.none,
-);
+`handle`: The handle that is being dragged.
+`initialRect`: The box before resizing started.
+`initialLocalPosition`: The position of the mouse pointer before resizing started.
+`localPosition`: The current position of the mouse pointer.
+`resizeMode`: The resize mode. See [Resize Modes](/resize_modes) for more information.
+`initialFlip`: The flip state before resizing started.
+
+```dart title="Resizing a Box"
+  final Box rect = Box.fromLTWH(50, 50, 100, 100);
+  
+  final ResizeResult result = BoxTransformer.resize(
+    handle: HandlePosition.bottomRight, // handle that is being dragged
+    initialRect: rect,
+    initialLocalPosition: Vector2.zero(),
+    localPosition: Vector2.zero(),
+    resizeMode: ResizeMode.freeform,
+    initialFlip: Flip.none,
+  );
+  
+  result.rect; // the new rect
 ```
-  </TabItem>
-</Tabs>
+<Info>You can also use an **_isolates_** for these simultaneous resizing operations since this is a pure dart implementation.</Info>
+
+You can use `BoxTransformer.move` to move a box.
+
+```dart title="Moving a box"
+  final Box rect = Box.fromLTWH(50, 50, 100, 100);
+  final MoveResult result = BoxTransformer.move(
+    initialRect: rect,
+    initialLocalPosition: Vector2.zero(),
+    localPosition: Vector2.zero(),
+  );
+  
+  result.position; // the new position of the box
+```

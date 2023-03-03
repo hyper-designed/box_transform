@@ -1,85 +1,87 @@
 ---
-title: Box Transform
+title: Resizing
 ---
 
-# Box Transform
+# Resizing
 
-[Box Transform](boxTransform) is a **pure-Dart** base package that allows you to programmatically handle box
-**resizing** and **dragging** without relying on [Flutter](flutter). It provides highly flexible, programmatically
-resizable and draggable boxes that can be used in any Dart project.
-
-## Models
-
-[Box Transform](boxTransform) defines several models to mimic that of Flutter's.
-
-- The equivalent of `Size` is `Dimension`.
-- The equivalent of `Offset` is `Vector2` from the `vector_math` package.
-- The equivalent of `Rect` is `Box`.
-- The equivalent of `BoxConstraints` is `Constraints`.
-
-The APIs are very similar to Flutter's, so you should be able to pick it up quickly or be able to reference Flutter's
-documentation for more information.
-
-## Resizing
-
-Resizing is done by using the static `BoxTransformer.resize` function. It takes in several parameters:
-
-- `initialBox`: An immutable `Box` object representing the original size and position of the box before resizing.
-- `initialLocalPosition`: A Vector2 object representing the initial position of the mouse cursor relative to the box.
-- `localPosition`: A `Vector2` object representing the current position of the mouse cursor relative to the box.
-- `handle`: A `HandlePosition` object representing the handle that is being used to resize the box.
-- `resizeMode`: A `ResizeMode` object representing the mode in which the box is being resized.
-- `initialFlip`: A `Flip` object representing the initial state of the box.
-- `clampingRect`: A `Box` object representing the bounds within which the box can be resized.
-- `constraints`: A `Constraints` object representing the constraints that limit the minimum and maximum size of the box.
-
-The function returns a `ResizeResult` object that contains information about the resized box.
-
-<Tabs
-  defaultValue="first"
-  groupId="packages"
-  values={[
-      { label: 'Flutter', value: 'first' },
-      { label: 'Dart', value: 'second' },
-  ]}
->
-<TabItem value="second">
-```dart title="Resizing a Rect"
-final Rect rect = Rect.fromLTWH(50, 50, 100, 100);
-
-final UIResizeResult result = UIBoxTransformer.resize(
-  handle: HandlePosition.bottomRight,
-  initialBox: rect,
-  initialLocalPosition: Offset.zero,
-  localPosition: Offset.zero,
-  resizeMode: ResizeMode.freeform,
-  initialFlip: Flip.none,
-);
+```dart
+  final Box rect = Box.fromLTWH(50, 50, 100, 100);
+  final ResizeResult result = BoxTransformer.resize(
+    handle: HandlePosition.bottomRight,
+    initialRect: rect,
+    initialLocalPosition: Vector2.zero(),
+    localPosition: Vector2.zero(),
+    resizeMode: ResizeMode.freeform,
+    initialFlip: Flip.none,
+  );
+  
+  result.rect; // the new rect
 ```
-</TabItem>
-  <TabItem value="first">
-```dart title="Resizing a Box"
-final Box box = Box.fromLTWH(50, 50, 100, 100);
 
-final ResizeResult result = BoxTransformer.resize(
-  handle: HandlePosition.bottomRight,
-  initialBox: box,
-  initialLocalPosition: Vector2.zero(),
-  localPosition: Vector2.zero(),
-  resizeMode: ResizeMode.freeform,
-  initialFlip: Flip.none,
-);
+`BoxTransformer.resize` returns a `ResizeResult` object that contains information about the resized box.
+`result.rect` is a `Box` that defines the new position of the box.
+
+Resizing is freeform by default, meaning that the user can resize the box in any direction and in any size. You can
+pass `ResizeMode.scale` to `BoxTransformer.resize` to limit the resizing to a specific direction.
+
+See [Resize Modes](/resize_modes) for more information about different resizing modes.
+
+## Flipping
+
+By default, resizing allows flipping the rect horizontally and vertically. `result.rawSize` contains information about
+flipping. Negative values indicate that the rect has been flipped on that axis. e.g. `result.rawSize.width` is negative
+if the rect has been flipped horizontally.
+
+### Flipping the rect while resizing
+While resizing, the rect can be flipped horizontally and vertically whenever the
+user drags a handle beyond the opposite side of the rect. This allows more flexibility in resizing the box. However,
+this is not responsible for flipping the content of the box.
+
+This behavior can be disabled by setting `flipRectWhileResizing` to `false`.
+
+```dart title="Disable flipping the rect while resizing"
+  final Box rect = Box.fromLTWH(50, 50, 100, 100);
+  final ResizeResult result = BoxTransformer.resize(
+    handle: HandlePosition.bottomRight,
+    initialRect: rect,
+    initialLocalPosition: Vector2.zero(),
+    localPosition: Vector2.zero(),
+    resizeMode: ResizeMode.freeform,
+    initialFlip: Flip.none,
+    flipRectWhileResizing: false, // disables flipping the rect while resizing
+  );
+  
+  result.rect; // the new rect
 ```
-      </TabItem>
-</Tabs>
 
-Internally, the function calculates the difference between the initial position of the mouse cursor and the current
-position, and uses this delta to resize the box according to the specified resizing mode and handle position.
+## Constraints
 
-The resulting box is then checked to ensure that it falls within the specified bounds and constraints.
+Resizing can be constrained by providing `minSize` and `maxSize` using `constraints` property.
 
-If the resizing reaches a minimum or maximum width or height, the function sets flags in the ResizeResult object to
-indicate that these limits have been reached.
+```dart title="Resizable widget with constrained resizing"
+  final Box rect = Box.fromLTWH(50, 50, 100, 100);
+  final ResizeResult result = BoxTransformer.resize(
+    handle: HandlePosition.bottomRight,
+    initialRect: rect,
+    initialLocalPosition: Vector2.zero(),
+    localPosition: Vector2.zero(),
+    resizeMode: ResizeMode.freeform,
+    initialFlip: Flip.none,
+    constraints: Constraints(
+      minWidth: 100,
+      minHeight: 100,
+      maxWidth: 500,
+      maxHeight: 500,
+    ),
+  );
+  
+  result.rect; // the new rect
+```
+This will allow resizing the box between 100x100 and 500x500 pixels.
+
+`ResizeResult` also provides information about whether the resizing was constrained or not. 
+`ResizeResult.minWidthReached`, `ResizeResult.minHeightReached`, `ResizeResult.maxWidthReached` and
+`ResizeResult.maxHeightReached` are `bool` values that indicate whether the resizing was constrained or not.
 
 [boxTransform]: https://github.com/BirjuVachhani/box_transform/tree/main/packages/box_transform
 [flutterBoxTransform]: https://github.com/BirjuVachhani/box_transform/tree/main/packages/flutter_box_transform

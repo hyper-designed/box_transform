@@ -3,9 +3,26 @@
   "description": "Easily create the best possible resizable and draggable boxes for your project.",
   "logo": "/assets/logo.png",
   "logoDark": "/assets/logo-dark.png",
+  "favicon": "/assets/logo-dark.png",
+  "anchors": [
+    {
+      "title": "Live Demo",
+      "icon": "arrow-up-right-from-square",
+      "link": "https://box-transform.codemagic.app"
+    },
+    {
+      "title": "Report a bug",
+      "icon": "bug",
+      "link": "https://github.com/BirjuVachhani/box_transform/issues/new"
+    },
+    {
+      "title": "Pub.dev",
+      "icon": "arrow-up-right-from-square",
+      "link": "https://pub.dev/packages/flutter_box_transform"
+    }
+  ],
   "sidebar": [
     ["Overview", "/"],
-    ["Getting Started", "/get_started"],
     ["Motivation", "/motivation"],
     [
       "Definitions", [
@@ -14,15 +31,20 @@
     ],
     [
       "Using with Flutter", [
-      ["Moving", "/flutter_moving.mdx"],
-      ["Resizing", "/flutter_resizing.mdx"],
-      ["Using controller", "/flutter_controller.mdx"]
+      ["Getting Started", "/flutter_get_started"],
+      ["Moving", "/flutter_moving"],
+      ["Resizing", "/flutter_resizing"],
+      ["Handles", "/handles"],
+      ["Using a controller", "/flutter_controller"],
+      ["API Reference\uD83D\uDD17", "https://pub.dev/documentation/flutter_box_transform/latest/"]
     ]
     ],
     [
       "Using the Dart API", [
-      ["Moving", "/moving.mdx"],
-      ["Resizing", "/resizing.mdx"]
+      ["Getting Started", "/get_started"],
+      ["Moving", "/moving"],
+      ["Resizing", "/resizing"],
+      ["API Reference\uD83D\uDD17", "https://pub.dev/documentation/box_transform/latest/"]
     ]
     ],
     ["License", "/license"]

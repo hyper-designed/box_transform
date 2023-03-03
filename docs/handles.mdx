@@ -1,0 +1,127 @@
+---
+title: Resize Handles
+---
+
+# Resize Handles
+
+By default, circular resize handles are used to resize the box. These handles ideal for are highly customizable and
+can be used to create any type of resize handles.
+
+Use `handleTapSize` to change the size of the invisible interactive handle area that is used to resize the box.
+
+<Warning>Changing `handleTapSize` doesn't change the size of the default handle UI.</Warning>
+
+```dart title="Custom sized default handles"
+  TransformableBox(
+    rect: rect,
+    flip: flip,
+    handleTapSize: 34,
+    onChanged: (event) {...},
+    contentBuilder: (context, rect, flip) {...},
+  );
+```
+
+You can customize the default handles or build your own handles using `cornerHandleBuilder` and `sideHandleBuilder` 
+properties in `TransformableBox` constructor. It provides access to the `Buildcontext` and `HandlePosition` of 
+the handle.
+
+You can use `handleAlign` on `TransformableBox` to change the position of the handle's interactive area. By default,
+the interactive area is aligned to the center of box corner/side.
+
+```dart title="Putting handle completely inside the box area"
+  TransformableBox(
+    rect: rect,
+    flip: flip,
+    handleAlign: HandleAlign.inside,
+    onChanged: (event) {...},
+    contentBuilder: (context, rect, flip) {...},
+  );
+```
+
+## Customizing the default handles
+
+By default, `TransformableBox` uses `DefaultCornerHandle` and `DefaultSideHandle` to build the handles. You can
+customize the default handles by providing a custom `decoration` and `size` to the `DefaultCornerHandle` and
+`DefaultSideHandle` constructors.
+
+```dart title="Custom sized default handles with rectangular shape"
+  TransformableBox(
+    rect: rect,
+    flip: flip,
+    cornerHandleBuilder: (context, handle) {
+      return DefaultCornerHandle(
+        handle: handle,
+        size: 34,
+        decoration: BoxDecoration(
+          color: Colors.red,
+          shape: BoxShape.rectangle,
+        ),
+      );
+    },
+    sideHandleBuilder: (context, handle) {
+      return DefaultSideHandle(
+        handle: handle,
+        length: 34,
+        thickness: 12,
+        decoration: BoxDecoration(
+          color: Colors.red,
+        ),
+      );
+    },
+    onChanged: (event) {...},
+    contentBuilder: (context, rect, flip) {...},
+  );
+```
+
+Since, side handles are not square, you can use `length` and `thickness` properties to customize the size of the
+side handles.
+
+## Custom Handles
+
+You can also use `cornerHandleBuilder` and `sideHandleBuilder` to build your own handles. You can use any widget
+to build the handles.
+
+```dart title="Using your own custom handles"
+  TransformableBox(
+    rect: rect,
+    flip: flip,
+    handleBuilder: (context, handle) {
+      return MyCustomHandleWidget(handle: handle);
+    },
+    onChanged: (event) {...},
+    contentBuilder: (context, rect, flip) {...},
+  );
+``` 
+## Angular Handles
+
+You can use `AngularHandle` to build angular handles that look like corner brackets.
+
+<Image alt="Angular Handles" src="assets/angular_handles.png" />
+
+<Info>`AngularHandle` can render both corner handles and side handles.</Info>
+
+```dart title="Using angular handles"
+  TransformableBox(
+    rect: rect,
+    flip: flip,
+    handleAlign: HandleAlign.inside,
+    cornerHandleBuilder: (context, handle) {
+      return AngularCornerHandle(
+        handle: handle, 
+        handleAlign: HandleAlign.inside,
+      );
+    },
+    sideHandleBuilder: (context, handle) {
+      return AngularSideHandle(
+        handle: handle,
+        handleAlign: HandleAlign.inside,
+      );
+    },
+    onChanged: (event) {...},
+    contentBuilder: (context, rect, flip) {...},
+  );
+```
+
+Use `handleAlign` to align `AngularHandle` to the inside, outside or in the center of the box.
+
+<Image alt="Angular Handle Alignements" src="assets/angular_handle_alignments.png" />
