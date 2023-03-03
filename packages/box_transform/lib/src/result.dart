@@ -2,9 +2,23 @@ import 'package:vector_math/vector_math.dart';
 
 import 'enums.dart';
 import 'geometry.dart';
+import 'transformer.dart';
+
+/// A convenient typedef for [TransformResult] with [Box], [Vector2], and
+/// [Dimension] as the generic types that is used by [BoxTransformer].
+typedef RawMoveResult = MoveResult<Box, Vector2, Dimension>;
+
+/// A convenient typedef for [TransformResult] with [Box], [Vector2], and
+/// [Dimension] as the generic types that is used by [BoxTransformer].
+typedef RawResizeResult = ResizeResult<Box, Vector2, Dimension>;
+
+/// A convenient typedef for [TransformResult] with [Box], [Vector2], and
+/// [Dimension] as the generic types that is used by [BoxTransformer].
+typedef RawTransformResult = TransformResult<Box, Vector2, Dimension>;
 
 /// An abstract class that represents the result of a transform operation.
 abstract class BoxResult {
+  /// Creates a [BoxResult].
   const BoxResult();
 
   @override
@@ -19,15 +33,16 @@ abstract class BoxResult {
 
 /// An object that represents the result of a transform operation. Could be
 /// resize or move or both.
-class TransformResult extends BoxResult {
+class TransformResult<B extends Object, V extends Object, D extends Object>
+    extends BoxResult {
   /// The new [Box] of the node after the resize.
-  final Box box;
+  final B rect;
 
   /// The old [Box] of the node before the resize.
-  final Box oldBox;
+  final B oldRect;
 
   /// The delta used to move the node.
-  final Vector2 delta;
+  final V delta;
 
   /// The [Flip] of the node after the resize.
   final Flip flip;
@@ -35,10 +50,10 @@ class TransformResult extends BoxResult {
   /// The [ResizeMode] of the node after the resize.
   final ResizeMode resizeMode;
 
-  /// The new [Dimension] of the node after the resize. Unlike [newBox], this
+  /// The new [Dimension] of the node after the resize. Unlike [newRect], this
   /// reflects flip state. For example, if the node is flipped horizontally,
   /// the width of the [newSize] will be negative.
-  final Dimension rawSize;
+  final D rawSize;
 
   /// Whether the resizing box hit its maximum possible width.
   final bool minWidthReached;
@@ -52,22 +67,10 @@ class TransformResult extends BoxResult {
   /// Whether the resizing box hit its minimum possible height.
   final bool maxHeightReached;
 
-  /// Convenient getter for [box.size].
-  Dimension get size => box.size;
-
-  /// Convenient getter for [box.topLeft].
-  Vector2 get position => box.topLeft;
-
-  /// Convenient getter for [oldBox.size].
-  Dimension get oldSize => oldBox.size;
-
-  /// Convenient getter for [oldBox.topLeft].
-  Vector2 get oldPosition => oldBox.topLeft;
-
   /// Creates a [ResizeResult] object.
   const TransformResult({
-    required this.box,
-    required this.oldBox,
+    required this.rect,
+    required this.oldRect,
     required this.delta,
     required this.flip,
     required this.resizeMode,
@@ -83,8 +86,8 @@ class TransformResult extends BoxResult {
     if (identical(this, other)) return true;
 
     return other is TransformResult &&
-        other.box == box &&
-        other.oldBox == oldBox &&
+        other.rect == rect &&
+        other.oldRect == oldRect &&
         other.delta == delta &&
         other.flip == flip &&
         other.resizeMode == resizeMode &&
@@ -97,8 +100,8 @@ class TransformResult extends BoxResult {
 
   @override
   int get hashCode => Object.hash(
-        box,
-        oldBox,
+        rect,
+        oldRect,
         delta,
         flip,
         resizeMode,
@@ -111,25 +114,23 @@ class TransformResult extends BoxResult {
 
   @override
   String toString() {
-    return 'TransformResult(box: $box, oldBox: $oldBox, flip: $flip, resizeMode: $resizeMode, delta: $delta, rawSize: $rawSize, minWidthReached: $minWidthReached, maxWidthReached: $maxWidthReached, minHeightReached: $minHeightReached, maxHeightReached: $maxHeightReached)';
+    return 'TransformResult(box: $rect, oldBox: $oldRect, flip: $flip, resizeMode: $resizeMode, delta: $delta, rawSize: $rawSize, minWidthReached: $minWidthReached, maxWidthReached: $maxWidthReached, minHeightReached: $minHeightReached, maxHeightReached: $maxHeightReached)';
   }
 }
 
 /// An object that represents the result of a move operation.
 /// Helps disambiguate between [MoveResult] and [ResizeResult].
-class MoveResult extends TransformResult {
-  @override
-  Dimension get rawSize => box.size;
-
+class MoveResult<B extends Object, V extends Object, D extends Object>
+    extends TransformResult<B, V, D> {
   /// Creates a [MoveResult] object.
   const MoveResult({
-    required super.box,
-    required super.oldBox,
+    required super.rect,
+    required super.oldRect,
     required super.delta,
+    required super.rawSize,
   }) : super(
           flip: Flip.none,
           resizeMode: ResizeMode.freeform,
-          rawSize: Dimension.zero,
           minWidthReached: false,
           maxWidthReached: false,
           minHeightReached: false,
@@ -138,15 +139,17 @@ class MoveResult extends TransformResult {
 
   @override
   String toString() {
-    return 'MoveResult(box: $box, oldBox: $oldBox, delta: $delta)';
+    return 'MoveResult(box: $rect, oldBox: $oldRect, delta: $delta)';
   }
 }
 
 /// An object that represents the result of a resize operation.
-class ResizeResult extends TransformResult {
+class ResizeResult<B extends Object, V extends Object, D extends Object>
+    extends TransformResult<B, V, D> {
+  /// Creates a [ResizeResult] object.
   const ResizeResult({
-    required super.box,
-    required super.oldBox,
+    required super.rect,
+    required super.oldRect,
     required super.delta,
     required super.flip,
     required super.resizeMode,
@@ -159,6 +162,6 @@ class ResizeResult extends TransformResult {
 
   @override
   String toString() {
-    return 'ResizeResult(box: $box, oldBox: $oldBox, flip: $flip, resizeMode: $resizeMode, delta: $delta, rawSize: $rawSize, minWidthReached: $minWidthReached, maxWidthReached: $maxWidthReached, minHeightReached: $minHeightReached, maxHeightReached: $maxHeightReached)';
+    return 'ResizeResult(box: $rect, oldBox: $oldRect, flip: $flip, resizeMode: $resizeMode, delta: $delta, rawSize: $rawSize, minWidthReached: $minWidthReached, maxWidthReached: $maxWidthReached, minHeightReached: $minHeightReached, maxHeightReached: $maxHeightReached)';
   }
 }

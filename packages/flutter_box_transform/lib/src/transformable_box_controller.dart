@@ -56,8 +56,6 @@ class TransformableBoxController extends ChangeNotifier {
   /// The initial [Offset] of the [TransformableBox] when the resizing starts.
   Offset initialLocalPosition = Offset.zero;
 
-  Offset offsetFromTopLeft = Offset.zero;
-
   /// The initial [Rect] of the [TransformableBox] when the resizing starts.
   Rect initialRect = Rect.zero;
 
@@ -80,7 +78,7 @@ class TransformableBoxController extends ChangeNotifier {
   /// bounds.
   BoxConstraints constraints = const BoxConstraints.expand();
 
-  /// Sets the current [box] of the [TransformableBox].
+  /// Sets the current [rect] of the [TransformableBox].
   void setRect(Rect rect) {
     this.rect = rect;
     notifyListeners();
@@ -129,7 +127,6 @@ class TransformableBoxController extends ChangeNotifier {
   void onDragStart(Offset localPosition) {
     initialLocalPosition = localPosition;
     initialRect = rect;
-    offsetFromTopLeft = rect.topLeft - localPosition;
   }
 
   /// Called when the [TransformableBox] is dragged.
@@ -163,7 +160,6 @@ class TransformableBoxController extends ChangeNotifier {
   void onDragEnd() {
     initialLocalPosition = Offset.zero;
     initialRect = Rect.zero;
-    offsetFromTopLeft = Offset.zero;
 
     notifyListeners();
   }

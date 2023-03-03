@@ -3,8 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/rendering.dart' as widgets;
 import 'package:box_transform/box_transform.dart' as transform;
 
-import 'extensions.dart';
-import 'ui_transform_result.dart';
+import '../flutter_box_transform.dart';
 
 /// A Flutter translation of [transform.BoxTransformer].
 class UIBoxTransform {
@@ -29,7 +28,7 @@ class UIBoxTransform {
         handle: handle,
         resizeMode: resizeMode,
         initialFlip: initialFlip,
-        clampingBox: clampingRect.toBox(),
+        clampingRect: clampingRect.toBox(),
         constraints: constraints.toConstraints(),
       ).toUI();
 
@@ -44,6 +43,6 @@ class UIBoxTransform {
         initialBox: initialRect.toBox(),
         initialLocalPosition: initialLocalPosition.toVector2(),
         localPosition: localPosition.toVector2(),
-        clampingBox: clampingRect.toBox(),
+        clampingRect: clampingRect.toBox(),
       ).toUI();
 }

@@ -15,7 +15,7 @@ include: package:lints/recommended.yaml
 
 linter:
   rules:
-    package_api_docs: true
+    public_member_api_docs: true
     use_super_parameters: true
     prefer_relative_imports: true
 

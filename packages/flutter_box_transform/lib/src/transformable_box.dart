@@ -44,6 +44,16 @@ typedef TerminalEvent = void Function(
   bool reachedMaxHeight,
 );
 
+/// A callback for pointer down events.
+typedef PointerDownCallback = void Function(Offset localPosition);
+
+/// A callback for pointer update events.
+typedef PointerUpdateCallback = void Function(
+    Offset localPosition, HandlePosition handlePosition);
+
+/// A callback for pointer up events.
+typedef PointerUpCallback = VoidCallback;
+
 /// A default implementation of the [HandleBuilder] callback.
 Widget _defaultHandleBuilder(BuildContext context, HandlePosition handle) {
   return Container(
@@ -485,13 +495,6 @@ class _TransformableBoxState extends State<TransformableBox> {
   }
 }
 
-typedef PointerDownCallback = void Function(Offset localPosition);
-typedef PointerUpdateCallback = void Function(
-  Offset localPosition,
-  HandlePosition handlePosition,
-);
-typedef PointerUpCallback = VoidCallback;
-
 /// Creates a new handle widget, with its appropriate gesture splash zone.
 class HandleWidget extends StatelessWidget {
   /// The position of the handle.
@@ -563,6 +566,7 @@ class HandleWidget extends StatelessWidget {
     );
   }
 
+  /// Returns the cursor for the given handle position.
   MouseCursor getCursorForHandle(HandlePosition handle) {
     switch (handle) {
       case HandlePosition.topLeft:
