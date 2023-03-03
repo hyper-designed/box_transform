@@ -48,7 +48,7 @@ class TransformableBoxController extends ChangeNotifier {
   });
 
   /// The current [Rect] of the [TransformableBox].
-  Rect box = Rect.zero;
+  Rect rect = Rect.zero;
 
   /// The current [Flip] of the [TransformableBox].
   Flip flip = Flip.none;
@@ -66,7 +66,7 @@ class TransformableBoxController extends ChangeNotifier {
 
   /// The box that limits the dragging and resizing of the [TransformableBox] inside
   /// its bounds.
-  Rect clampingBox = Rect.largest;
+  Rect clampingRect = Rect.largest;
 
   /// /// Whether the box is movable or not. Setting this to false will disable
   /// all moving operations.
@@ -81,8 +81,8 @@ class TransformableBoxController extends ChangeNotifier {
   BoxConstraints constraints = const BoxConstraints.expand();
 
   /// Sets the current [box] of the [TransformableBox].
-  void setRect(Rect box) {
-    this.box = box;
+  void setRect(Rect rect) {
+    this.rect = rect;
     notifyListeners();
   }
 
@@ -110,9 +110,9 @@ class TransformableBoxController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Sets the current [clampingBox] of the [TransformableBox].
-  void setClampingBox(Rect clampingBox, {bool notify = true}) {
-    this.clampingBox = clampingBox;
+  /// Sets the current [clampingRect] of the [TransformableBox].
+  void setClampingRect(Rect clampingRect, {bool notify = true}) {
+    this.clampingRect = clampingRect;
     if (notify) notifyListeners();
   }
 
@@ -128,8 +128,8 @@ class TransformableBoxController extends ChangeNotifier {
   ///               [TransformableBox] when the dragging starts.
   void onDragStart(Offset localPosition) {
     initialLocalPosition = localPosition;
-    initialRect = box;
-    offsetFromTopLeft = box.topLeft - localPosition;
+    initialRect = rect;
+    offsetFromTopLeft = rect.topLeft - localPosition;
   }
 
   /// Called when the [TransformableBox] is dragged.
@@ -149,10 +149,10 @@ class TransformableBoxController extends ChangeNotifier {
       initialRect: initialRect,
       initialLocalPosition: initialLocalPosition,
       localPosition: localPosition,
-      clampingBox: clampingBox,
+      clampingRect: clampingRect,
     );
 
-    box = result.newRect;
+    rect = result.rect;
 
     if (notify) notifyListeners();
 
@@ -174,7 +174,7 @@ class TransformableBoxController extends ChangeNotifier {
   ///               [TransformableBox] when the resizing starts.
   void onResizeStart(Offset localPosition) {
     initialLocalPosition = localPosition;
-    initialRect = box;
+    initialRect = rect;
     initialFlip = flip;
   }
 
@@ -204,11 +204,11 @@ class TransformableBoxController extends ChangeNotifier {
       initialLocalPosition: initialLocalPosition,
       resizeMode: resolveResizeModeCallback!(),
       initialFlip: initialFlip,
-      clampingBox: clampingBox,
+      clampingRect: clampingRect,
       constraints: constraints,
     );
 
-    box = result.newRect;
+    rect = result.rect;
     flip = result.flip;
 
     if (notify) notifyListeners();
@@ -224,17 +224,17 @@ class TransformableBoxController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Recalculates the current state of this [box] to ensure the position is
+  /// Recalculates the current state of this [rect] to ensure the position is
   /// correct in case of extreme jumps of the [TransformableBox].
   void recalculateBox({bool notify = true}) {
     final UIMoveResult result = UIBoxTransform.move(
-      initialRect: box,
+      initialRect: rect,
       initialLocalPosition: initialLocalPosition,
       localPosition: initialLocalPosition,
-      clampingBox: clampingBox,
+      clampingRect: clampingRect,
     );
 
-    box = result.newRect;
+    rect = result.rect;
 
     if (notify) notifyListeners();
   }

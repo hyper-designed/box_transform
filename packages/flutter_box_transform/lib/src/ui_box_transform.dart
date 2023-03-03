@@ -19,7 +19,7 @@ class UIBoxTransform {
     required transform.HandlePosition handle,
     required transform.ResizeMode resizeMode,
     required transform.Flip initialFlip,
-    ui.Rect clampingBox = ui.Rect.largest,
+    ui.Rect clampingRect = ui.Rect.largest,
     widgets.BoxConstraints constraints = const widgets.BoxConstraints(),
   }) =>
       transform.BoxTransformer.resize(
@@ -29,7 +29,7 @@ class UIBoxTransform {
         handle: handle,
         resizeMode: resizeMode,
         initialFlip: initialFlip,
-        clampingBox: clampingBox.toBox(),
+        clampingBox: clampingRect.toBox(),
         constraints: constraints.toConstraints(),
       ).toUI();
 
@@ -38,12 +38,12 @@ class UIBoxTransform {
     required ui.Rect initialRect,
     required ui.Offset initialLocalPosition,
     required ui.Offset localPosition,
-    ui.Rect clampingBox = ui.Rect.largest,
+    ui.Rect clampingRect = ui.Rect.largest,
   }) =>
       transform.BoxTransformer.move(
         initialBox: initialRect.toBox(),
         initialLocalPosition: initialLocalPosition.toVector2(),
         localPosition: localPosition.toVector2(),
-        clampingBox: clampingBox.toBox(),
+        clampingBox: clampingRect.toBox(),
       ).toUI();
 }

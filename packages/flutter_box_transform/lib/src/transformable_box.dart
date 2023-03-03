@@ -19,13 +19,13 @@ typedef BoxContentBuilder = Widget Function(
 );
 
 /// A callback that is called when the box is moved or resized.
-typedef OnBoxChanged = void Function(UIBoxTransformResult result);
+typedef OnBoxChanged = void Function(UITransformResult result);
 
 /// A callback that is called when the box is moved.
-typedef OnBoxMoved = void Function(UIBoxTransformResult result);
+typedef OnBoxMoved = void Function(UIMoveResult result);
 
 /// A callback that is called when the box is resized.
-typedef OnBoxResized = void Function(UIBoxTransformResult result);
+typedef OnBoxResized = void Function(UIResizeResult result);
 
 /// A callback that is called when the box reaches a terminal edge when
 /// resizing.
@@ -110,7 +110,7 @@ class TransformableBox extends StatefulWidget {
   /// the [TransformableBoxController] mutates the box. You can acquire your
   /// updated box through the [onChanged] callback or through an externally
   /// provided [TransformableBoxController] instance.
-  final Rect box;
+  final Rect rect;
 
   /// The initial flip that will be used to set the initial flip of the
   /// [TransformableBox] widget. Normally, flipping is done by the user through
@@ -131,11 +131,11 @@ class TransformableBox extends StatefulWidget {
   /// on the state of the box if flipping were to occur.
   final Flip flip;
 
-  /// A box that will contain the [box] inside of itself, forcing [box] to
-  /// be clamped inside of this [clampingBox].
-  final Rect clampingBox;
+  /// A box that will contain the [rect] inside of itself, forcing [rect] to
+  /// be clamped inside of this [clampingRect].
+  final Rect clampingRect;
 
-  /// A set of constraints that will be applied to the [box] when it is
+  /// A set of constraints that will be applied to the [rect] when it is
   /// resized by the [TransformableBoxController].
   final BoxConstraints constraints;
 
@@ -224,9 +224,9 @@ class TransformableBox extends StatefulWidget {
     this.handleGestureResponseDiameter = 24,
     this.handleRenderedDiameter = 12,
     // raw
-    Rect? box,
+    Rect? rect,
     Flip? flip,
-    Rect? clampingBox,
+    Rect? clampingRect,
     BoxConstraints? constraints,
     ResolveResizeModeCallback? resolveResizeModeCallback,
     // terminal update events
@@ -246,19 +246,19 @@ class TransformableBox extends StatefulWidget {
         ),
         assert(
           controller == null ||
-              (box == null &&
+              (rect == null &&
                   flip == null &&
-                  clampingBox == null &&
+                  clampingRect == null &&
                   constraints == null &&
                   resolveResizeModeCallback == null),
           'You can either provide a [controller] OR a [box], [flip], '
-          '[clampingBox], [constraints], and [resolveResizeModeCallback]. '
+          '[clampingRect], [constraints], and [resolveResizeModeCallback]. '
           'You cannot use any of those properties when providing a controller and'
           'vice versa.',
         ),
-        box = box ?? Rect.zero,
+        rect = rect ?? Rect.zero,
         flip = flip ?? Flip.none,
-        clampingBox = clampingBox ?? Rect.largest,
+        clampingRect = clampingRect ?? Rect.largest,
         constraints = constraints ?? const BoxConstraints.expand(),
         resolveResizeModeCallback =
             resolveResizeModeCallback ?? defaultResolveResizeModeCallback;
@@ -281,9 +281,9 @@ class _TransformableBoxState extends State<TransformableBox> {
     } else {
       // If it is provided internally, we should not listen to it.
       controller = TransformableBoxController()
-        ..box = widget.box
+        ..rect = widget.rect
         ..flip = widget.flip
-        ..clampingBox = widget.clampingBox
+        ..clampingRect = widget.clampingRect
         ..constraints = widget.constraints
         ..resolveResizeModeCallback = widget.resolveResizeModeCallback
         ..movable = widget.movable
@@ -305,9 +305,9 @@ class _TransformableBoxState extends State<TransformableBox> {
       // Explicit controller removed.
       controller.removeListener(onControllerUpdate);
       controller = TransformableBoxController()
-        ..box = widget.box
+        ..rect = widget.rect
         ..flip = widget.flip
-        ..clampingBox = widget.clampingBox
+        ..clampingRect = widget.clampingRect
         ..constraints = widget.constraints
         ..resolveResizeModeCallback = widget.resolveResizeModeCallback
         ..resizable = widget.resizable
@@ -319,8 +319,8 @@ class _TransformableBoxState extends State<TransformableBox> {
 
     // Below code should only be executed if the controller is internal.
 
-    if (oldWidget.box != widget.box) {
-      controller.box = widget.box;
+    if (oldWidget.rect != widget.rect) {
+      controller.rect = widget.rect;
     }
     if (oldWidget.flip != widget.flip) {
       controller.flip = widget.flip;
@@ -329,8 +329,8 @@ class _TransformableBoxState extends State<TransformableBox> {
         widget.resolveResizeModeCallback) {
       controller.resolveResizeModeCallback = widget.resolveResizeModeCallback;
     }
-    if (oldWidget.clampingBox != widget.clampingBox) {
-      controller.clampingBox = widget.clampingBox;
+    if (oldWidget.clampingRect != widget.clampingRect) {
+      controller.clampingRect = widget.clampingRect;
       controller.recalculateBox(notify: false);
     }
 
@@ -357,7 +357,7 @@ class _TransformableBoxState extends State<TransformableBox> {
 
   /// Called when the controller is updated.
   void onControllerUpdate() {
-    if (widget.box != controller.box || widget.flip != controller.flip) {
+    if (widget.rect != controller.rect || widget.flip != controller.flip) {
       if (mounted) setState(() {});
     }
   }
@@ -413,7 +413,7 @@ class _TransformableBoxState extends State<TransformableBox> {
   @override
   Widget build(BuildContext context) {
     final Flip flip = controller.flip;
-    final Rect box = controller.box;
+    final Rect box = controller.rect;
     return Positioned.fromRect(
       rect: box.inflate(widget.handleGestureResponseDiameter / 2),
       child: Stack(

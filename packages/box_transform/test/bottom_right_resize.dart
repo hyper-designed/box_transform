@@ -31,7 +31,7 @@ void main() {
       expect(result1.oldBox, box);
 
       // New Box is the same as the [box].
-      expect(result1.newBox, result1.oldBox);
+      expect(result1.box, result1.oldBox);
 
       // Resize the box from the bottom right handle. The box should grow by
       // 10x20px.
@@ -52,10 +52,10 @@ void main() {
       expect(result2.oldBox, box);
 
       // New Box is enlarged to the right by 10px and to the bottom by 20px.
-      expect(result2.newBox.left, 50);
-      expect(result2.newBox.top, 50);
-      expect(result2.newBox.right, 160);
-      expect(result2.newBox.bottom, 170);
+      expect(result2.box.left, 50);
+      expect(result2.box.top, 50);
+      expect(result2.box.right, 160);
+      expect(result2.box.bottom, 170);
     });
 
     test('clamped resize', () {
@@ -92,10 +92,10 @@ void main() {
       expect(result2.oldBox, box);
 
       // New Box is moved to the right by 10px.
-      expect(result2.newBox.left, 50);
-      expect(result2.newBox.top, 50);
-      expect(result2.newBox.right, 160);
-      expect(result2.newBox.bottom, 170);
+      expect(result2.box.left, 50);
+      expect(result2.box.top, 50);
+      expect(result2.box.right, 160);
+      expect(result2.box.bottom, 170);
 
       // Resize the box from the bottom right handle to an extreme position.
       final ResizeResult result3 = BoxTransformer.resize(
@@ -118,10 +118,10 @@ void main() {
       // New Box is enlarged to the right by 75px and to the bottom by 100px.
       // The box resizing stops at 200, 200, but resizing continues due to
       // growth-overflow.
-      expect(result3.newBox.left, 25);
-      expect(result3.newBox.top, 0);
-      expect(result3.newBox.right, 200);
-      expect(result3.newBox.bottom, 200);
+      expect(result3.box.left, 25);
+      expect(result3.box.top, 0);
+      expect(result3.box.right, 200);
+      expect(result3.box.bottom, 200);
     });
 
     test('constrained resize', () {
@@ -162,10 +162,10 @@ void main() {
       expect(result2.oldBox, box);
 
       // New Box is moved to the right by 10px.
-      expect(result2.newBox.left, 50);
-      expect(result2.newBox.top, 50);
-      expect(result2.newBox.right, 160);
-      expect(result2.newBox.bottom, 170);
+      expect(result2.box.left, 50);
+      expect(result2.box.top, 50);
+      expect(result2.box.right, 160);
+      expect(result2.box.bottom, 170);
 
       // Resize the box from the bottom right handle to an extreme position.
       final ResizeResult result3 = BoxTransformer.resize(
@@ -187,10 +187,10 @@ void main() {
 
       // New Box's size is constrained to 150x190px. Overflow happens to a
       // limit.
-      expect(result3.newBox.left, 50);
-      expect(result3.newBox.top, 50);
-      expect(result3.newBox.right, 200);
-      expect(result3.newBox.bottom, 240);
+      expect(result3.box.left, 50);
+      expect(result3.box.top, 50);
+      expect(result3.box.right, 200);
+      expect(result3.box.bottom, 240);
     });
 
     test('constrained resize with clamping', () {
@@ -239,10 +239,10 @@ void main() {
 
       // New Box is resized according to the constraints.
       // The box resizing stops at 150, 190 due to constraints and clamping.
-      expect(result.newBox.left, 50);
-      expect(result.newBox.top, 10);
-      expect(result.newBox.right, 200);
-      expect(result.newBox.bottom, 200);
+      expect(result.box.left, 50);
+      expect(result.box.top, 10);
+      expect(result.box.right, 200);
+      expect(result.box.bottom, 200);
     });
   });
 

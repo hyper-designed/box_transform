@@ -29,10 +29,10 @@ void main() {
     expect(result1.oldBox.bottom, 100);
 
     // New Box is the same as the [box].
-    expect(result1.newBox.left, 0);
-    expect(result1.newBox.top, 0);
-    expect(result1.newBox.right, 100);
-    expect(result1.newBox.bottom, 100);
+    expect(result1.box.left, 0);
+    expect(result1.box.top, 0);
+    expect(result1.box.right, 100);
+    expect(result1.box.bottom, 100);
 
     // Move the box to the right by 10px to the right with a centered cursor.
     final MoveResult result2 = BoxTransformer.move(
@@ -52,10 +52,10 @@ void main() {
     expect(result2.oldBox.bottom, 100);
 
     // New Box is moved to the right by 10px.
-    expect(result2.newBox.left, 10);
-    expect(result2.newBox.top, 0);
-    expect(result2.newBox.right, 110);
-    expect(result2.newBox.bottom, 100);
+    expect(result2.box.left, 10);
+    expect(result2.box.top, 0);
+    expect(result2.box.right, 110);
+    expect(result2.box.bottom, 100);
   });
 
   test("Drag a clamped box", () {
@@ -86,10 +86,10 @@ void main() {
     expect(result1.oldBox.bottom, 150);
 
     // New Box is the same as the [box].
-    expect(result1.newBox.left, 50);
-    expect(result1.newBox.top, 50);
-    expect(result1.newBox.right, 150);
-    expect(result1.newBox.bottom, 150);
+    expect(result1.box.left, 50);
+    expect(result1.box.top, 50);
+    expect(result1.box.right, 150);
+    expect(result1.box.bottom, 150);
 
     // Move the box to the right by 10px to the right with a centered cursor.
     final MoveResult result2 = BoxTransformer.move(
@@ -110,10 +110,10 @@ void main() {
     expect(result2.oldBox.bottom, 150);
 
     // New Box is moved to the right by 10px.
-    expect(result2.newBox.left, 60);
-    expect(result2.newBox.top, 50);
-    expect(result2.newBox.right, 160);
-    expect(result2.newBox.bottom, 150);
+    expect(result2.box.left, 60);
+    expect(result2.box.top, 50);
+    expect(result2.box.right, 160);
+    expect(result2.box.bottom, 150);
 
     // Move the box to the right by 200px to the bottom right with a centered
     // cursor.
@@ -136,9 +136,9 @@ void main() {
 
     // New Box is moved to the bottom right by 100px so as to stay in the
     // clamping box.
-    expect(result3.newBox.left, 100);
-    expect(result3.newBox.top, 100);
-    expect(result3.newBox.right, 200);
-    expect(result3.newBox.bottom, 200);
+    expect(result3.box.left, 100);
+    expect(result3.box.top, 100);
+    expect(result3.box.right, 200);
+    expect(result3.box.bottom, 200);
   });
 }

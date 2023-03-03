@@ -11,12 +11,12 @@ extension ResizeResultExt on transform.ResizeResult {
   UIResizeResult toUI() {
     return UIResizeResult(
       /// Creates a new `UIResizeResult` instance with the converted data
-      newRect: newBox.toRect(),
+      rect: box.toRect(),
       oldRect: oldBox.toRect(),
       flip: flip,
       resizeMode: resizeMode,
       delta: delta.toOffset(),
-      newSize: newSize.toSize(),
+      rawSize: rawSize.toSize(),
       minWidthReached: minWidthReached,
       minHeightReached: minHeightReached,
       maxWidthReached: maxWidthReached,
@@ -30,7 +30,7 @@ extension MoveResultExt on transform.MoveResult {
   UIMoveResult toUI() {
     return UIMoveResult(
       /// Creates a new `UIMoveResult` instance with the converted data
-      newRect: newBox.toRect(),
+      rect: box.toRect(),
       oldRect: oldBox.toRect(),
       delta: delta.toOffset(),
     );

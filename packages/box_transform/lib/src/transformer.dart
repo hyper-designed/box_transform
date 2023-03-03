@@ -30,7 +30,7 @@ class BoxTransformer {
     final Box newBox = initialBox.translate(clampedDelta.x, clampedDelta.y);
 
     return MoveResult(
-      newBox: newBox,
+      box: newBox,
       oldBox: initialBox,
       delta: delta,
     );
@@ -125,12 +125,12 @@ class BoxTransformer {
     }
 
     return ResizeResult(
-      newBox: newBox,
+      box: newBox,
       oldBox: initialBox,
       flip: currentFlip * initialFlip,
       resizeMode: resizeMode,
       delta: delta,
-      newSize: newSize,
+      rawSize: newSize,
       minWidthReached: minWidthReached,
       maxWidthReached: maxWidthReached,
       minHeightReached: minHeightReached,

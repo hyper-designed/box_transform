@@ -104,8 +104,8 @@ class PlaygroundModel with ChangeNotifier {
     notifyListeners();
   }
 
-  void onRectChanged(UIBoxTransformResult result) {
-    box = result.newRect;
+  void onRectChanged(UITransformResult result) {
+    box = result.rect;
     flip = result is UIResizeResult ? result.flip : flip;
     notifyListeners();
   }
@@ -337,9 +337,9 @@ class _ImageBoxState extends State<ImageBox> {
     final Color handleColor = Theme.of(context).colorScheme.primary;
     return TransformableBox(
       key: const ValueKey('image-box'),
-      box: model.box,
+      rect: model.box,
       flip: model.flip,
-      clampingBox: model.clampingEnabled ? model.clampingBox : null,
+      clampingRect: model.clampingEnabled ? model.clampingBox : null,
       constraints: model.constraintsEnabled ? model.constraints : null,
       onChanged: model.onRectChanged,
       resizable: model.resizable,
@@ -455,14 +455,14 @@ class _ClampingBoxState extends State<ClampingBox> {
 
     return TransformableBox(
       key: const ValueKey('clamping-box'),
-      box: model.clampingBox,
+      rect: model.clampingBox,
       flip: Flip.none,
-      clampingBox: model.playgroundArea!,
+      clampingRect: model.playgroundArea!,
       constraints: BoxConstraints(
         minWidth: model.box.width,
         minHeight: model.box.height,
       ),
-      onChanged: (result) => model.setClampingBox(result.newRect),
+      onChanged: (result) => model.setClampingBox(result.rect),
       onTerminalSizeReached: (
         bool reachedMinWidth,
         bool reachedMaxWidth,
