@@ -14,7 +14,7 @@ void main() {
       expect(box.bottom, 150);
 
       // Resize the box with no position movement. Nothing should change.
-      final ResizeResult result1 = BoxTransformer.resize(
+      final result1 = BoxTransformer.resize(
         handle: HandlePosition.bottomRight,
         initialBox: box,
         initialLocalPosition: Vector2.zero(),
@@ -28,14 +28,14 @@ void main() {
       expect(result1.delta.y, 0);
 
       // Old Box is the same as the [box].
-      expect(result1.oldBox, box);
+      expect(result1.oldRect, box);
 
       // New Box is the same as the [box].
-      expect(result1.box, result1.oldBox);
+      expect(result1.rect, result1.oldRect);
 
       // Resize the box from the bottom right handle. The box should grow by
       // 10x20px.
-      final ResizeResult result2 = BoxTransformer.resize(
+      final result2 = BoxTransformer.resize(
         handle: HandlePosition.bottomRight,
         initialBox: box,
         initialLocalPosition: Vector2.zero(),
@@ -49,39 +49,39 @@ void main() {
       expect(result2.delta.y, 20);
 
       // Old Box is the same as the [box].
-      expect(result2.oldBox, box);
+      expect(result2.oldRect, box);
 
       // New Box is enlarged to the right by 10px and to the bottom by 20px.
-      expect(result2.box.left, 50);
-      expect(result2.box.top, 50);
-      expect(result2.box.right, 160);
-      expect(result2.box.bottom, 170);
+      expect(result2.rect.left, 50);
+      expect(result2.rect.top, 50);
+      expect(result2.rect.right, 160);
+      expect(result2.rect.bottom, 170);
     });
 
     test('clamped resize', () {
       final Box box = Box.fromLTWH(50, 50, 100, 100);
-      final Box clampingBox = Box.fromLTWH(0, 0, 200, 200);
+      final Box clampingRect = Box.fromLTWH(0, 0, 200, 200);
 
       expect(box.left, 50);
       expect(box.top, 50);
       expect(box.right, 150);
       expect(box.bottom, 150);
 
-      expect(clampingBox.left, 0);
-      expect(clampingBox.top, 0);
-      expect(clampingBox.right, 200);
-      expect(clampingBox.bottom, 200);
+      expect(clampingRect.left, 0);
+      expect(clampingRect.top, 0);
+      expect(clampingRect.right, 200);
+      expect(clampingRect.bottom, 200);
 
       // Resize the box from the bottom right handle. The box should grow by
       // 10x20px.
-      final ResizeResult result2 = BoxTransformer.resize(
+      final result2 = BoxTransformer.resize(
         handle: HandlePosition.bottomRight,
         initialBox: box,
         initialLocalPosition: Vector2.zero(),
         localPosition: Vector2(10, 20),
         resizeMode: ResizeMode.freeform,
         initialFlip: Flip.none,
-        clampingBox: clampingBox,
+        clampingRect: clampingRect,
       );
 
       // Delta is 10x20px.
@@ -89,23 +89,23 @@ void main() {
       expect(result2.delta.y, 20);
 
       // Old Box is the same as the [box].
-      expect(result2.oldBox, box);
+      expect(result2.oldRect, box);
 
       // New Box is moved to the right by 10px.
-      expect(result2.box.left, 50);
-      expect(result2.box.top, 50);
-      expect(result2.box.right, 160);
-      expect(result2.box.bottom, 170);
+      expect(result2.rect.left, 50);
+      expect(result2.rect.top, 50);
+      expect(result2.rect.right, 160);
+      expect(result2.rect.bottom, 170);
 
       // Resize the box from the bottom right handle to an extreme position.
-      final ResizeResult result3 = BoxTransformer.resize(
+      final result3 = BoxTransformer.resize(
         handle: HandlePosition.bottomRight,
         initialBox: box,
         initialLocalPosition: Vector2.zero(),
         localPosition: Vector2(75, 100),
         resizeMode: ResizeMode.freeform,
         initialFlip: Flip.none,
-        clampingBox: clampingBox,
+        clampingRect: clampingRect,
       );
 
       // Delta is 75x100px.
@@ -113,15 +113,15 @@ void main() {
       expect(result3.delta.y, 100);
 
       // Old Box is the same as the [box].
-      expect(result3.oldBox, box);
+      expect(result3.oldRect, box);
 
       // New Box is enlarged to the right by 75px and to the bottom by 100px.
       // The box resizing stops at 200, 200, but resizing continues due to
       // growth-overflow.
-      expect(result3.box.left, 25);
-      expect(result3.box.top, 0);
-      expect(result3.box.right, 200);
-      expect(result3.box.bottom, 200);
+      expect(result3.rect.left, 25);
+      expect(result3.rect.top, 0);
+      expect(result3.rect.right, 200);
+      expect(result3.rect.bottom, 200);
     });
 
     test('constrained resize', () {
@@ -144,7 +144,7 @@ void main() {
 
       // Resize the box from the bottom right handle. The box should grow by
       // 10x20px.
-      final ResizeResult result2 = BoxTransformer.resize(
+      final result2 = BoxTransformer.resize(
         handle: HandlePosition.bottomRight,
         initialBox: box,
         initialLocalPosition: Vector2.zero(),
@@ -159,16 +159,16 @@ void main() {
       expect(result2.delta.y, 20);
 
       // Old Box is the same as the [box].
-      expect(result2.oldBox, box);
+      expect(result2.oldRect, box);
 
       // New Box is moved to the right by 10px.
-      expect(result2.box.left, 50);
-      expect(result2.box.top, 50);
-      expect(result2.box.right, 160);
-      expect(result2.box.bottom, 170);
+      expect(result2.rect.left, 50);
+      expect(result2.rect.top, 50);
+      expect(result2.rect.right, 160);
+      expect(result2.rect.bottom, 170);
 
       // Resize the box from the bottom right handle to an extreme position.
-      final ResizeResult result3 = BoxTransformer.resize(
+      final result3 = BoxTransformer.resize(
         handle: HandlePosition.bottomRight,
         initialBox: box,
         initialLocalPosition: Vector2.zero(),
@@ -183,14 +183,14 @@ void main() {
       expect(result3.delta.y, 100);
 
       // Old Box is the same as the [box].
-      expect(result3.oldBox, box);
+      expect(result3.oldRect, box);
 
       // New Box's size is constrained to 150x190px. Overflow happens to a
       // limit.
-      expect(result3.box.left, 50);
-      expect(result3.box.top, 50);
-      expect(result3.box.right, 200);
-      expect(result3.box.bottom, 240);
+      expect(result3.rect.left, 50);
+      expect(result3.rect.top, 50);
+      expect(result3.rect.right, 200);
+      expect(result3.rect.bottom, 240);
     });
 
     test('constrained resize with clamping', () {
@@ -201,7 +201,7 @@ void main() {
         maxWidth: 150,
         maxHeight: 190,
       );
-      final Box clampingBox = Box.fromLTWH(0, 0, 200, 200);
+      final Box clampingRect = Box.fromLTWH(0, 0, 200, 200);
 
       expect(box.left, 50);
       expect(box.top, 50);
@@ -213,20 +213,20 @@ void main() {
       expect(constraints.maxWidth, 150);
       expect(constraints.maxHeight, 190);
 
-      expect(clampingBox.left, 0);
-      expect(clampingBox.top, 0);
-      expect(clampingBox.right, 200);
-      expect(clampingBox.bottom, 200);
+      expect(clampingRect.left, 0);
+      expect(clampingRect.top, 0);
+      expect(clampingRect.right, 200);
+      expect(clampingRect.bottom, 200);
 
       // Resize the box from the bottom right handle to an extreme position.
-      final ResizeResult result = BoxTransformer.resize(
+      final result = BoxTransformer.resize(
         handle: HandlePosition.bottomRight,
         initialBox: box,
         initialLocalPosition: Vector2.zero(),
         localPosition: Vector2(75, 100),
         resizeMode: ResizeMode.freeform,
         initialFlip: Flip.none,
-        clampingBox: clampingBox,
+        clampingRect: clampingRect,
         constraints: constraints,
       );
 
@@ -235,14 +235,14 @@ void main() {
       expect(result.delta.y, 100);
 
       // Old Box is the same as the [box].
-      expect(result.oldBox, box);
+      expect(result.oldRect, box);
 
       // New Box is resized according to the constraints.
       // The box resizing stops at 150, 190 due to constraints and clamping.
-      expect(result.box.left, 50);
-      expect(result.box.top, 10);
-      expect(result.box.right, 200);
-      expect(result.box.bottom, 200);
+      expect(result.rect.left, 50);
+      expect(result.rect.top, 10);
+      expect(result.rect.right, 200);
+      expect(result.rect.bottom, 200);
     });
   });
 

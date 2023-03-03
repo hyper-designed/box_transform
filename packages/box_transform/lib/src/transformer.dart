@@ -13,26 +13,27 @@ class BoxTransformer {
   /// [initialLocalPosition] of the mouse cursor and wherever [localPosition]
   /// of the mouse cursor is currently at.
   ///
-  /// The [clampingBox] is the box that the [initialBox] is not allowed
+  /// The [clampingRect] is the box that the [initialBox] is not allowed
   /// to go outside of when dragging or resizing.
-  static MoveResult move({
+  static RawMoveResult move({
     required Box initialBox,
     required Vector2 initialLocalPosition,
     required Vector2 localPosition,
-    Box clampingBox = Box.largest,
+    Box clampingRect = Box.largest,
   }) {
     final Vector2 delta = localPosition - initialLocalPosition;
 
     final Box unclampedBox = initialBox.translate(delta.x, delta.y);
-    final Box clampedBox = clampingBox.containOther(unclampedBox);
+    final Box clampedBox = clampingRect.containOther(unclampedBox);
     final Vector2 clampedDelta = clampedBox.topLeft - initialBox.topLeft;
 
-    final Box newBox = initialBox.translate(clampedDelta.x, clampedDelta.y);
+    final Box newRect = initialBox.translate(clampedDelta.x, clampedDelta.y);
 
     return MoveResult(
-      box: newBox,
-      oldBox: initialBox,
+      rect: newRect,
+      oldRect: initialBox,
       delta: delta,
+      rawSize: newRect.size,
     );
   }
 
@@ -45,19 +46,19 @@ class BoxTransformer {
   ///
   /// The [initialFlip] helps determine the initial state of the rectangle.
   ///
-  /// The [clampingBox] is the box that the [initialBox] is not allowed
+  /// The [clampingRect] is the box that the [initialBox] is not allowed
   /// to go outside of when dragging or resizing.
   ///
   /// The [constraints] is the constraints that the [initialBox] is not allowed
   /// to shrink or grow beyond.
-  static ResizeResult resize({
+  static RawResizeResult resize({
     required Box initialBox,
     required Vector2 initialLocalPosition,
     required Vector2 localPosition,
     required HandlePosition handle,
     required ResizeMode resizeMode,
     required Flip initialFlip,
-    Box clampingBox = Box.largest,
+    Box clampingRect = Box.largest,
     Constraints constraints = const Constraints.unconstrained(),
   }) {
     final Flip currentFlip =
@@ -73,15 +74,15 @@ class BoxTransformer {
       delta: delta,
       flip: currentFlip,
       resizeMode: resizeMode,
-      clampingBox: clampingBox,
+      clampingRect: clampingRect,
       constraints: constraints,
     );
     final double newWidth = newSize.width.abs();
     final double newHeight = newSize.height.abs();
 
-    Box newBox;
+    Box newRect;
     if (resizeMode.hasSymmetry) {
-      newBox = Box.fromCenter(
+      newRect = Box.fromCenter(
           center: initialBox.center, width: newWidth, height: newHeight);
     } else {
       Box rect = Box.fromLTWH(
@@ -91,10 +92,10 @@ class BoxTransformer {
         newHeight,
       );
 
-      newBox = flipBox(rect, currentFlip, handle);
+      newRect = flipBox(rect, currentFlip, handle);
     }
 
-    newBox = clampingBox.containOther(newBox);
+    newRect = clampingRect.containOther(newRect);
 
     // Detect terminal resizing, where the resizing reached a hard limit.
     bool minWidthReached = false;
@@ -102,31 +103,31 @@ class BoxTransformer {
     bool minHeightReached = false;
     bool maxHeightReached = false;
     if (delta.x != 0) {
-      if (newBox.width <= initialBox.width &&
-          newBox.width == constraints.minWidth) {
+      if (newRect.width <= initialBox.width &&
+          newRect.width == constraints.minWidth) {
         minWidthReached = true;
       }
-      if (newBox.width >= initialBox.width &&
-          (newBox.width == constraints.maxWidth ||
-              newBox.width == clampingBox.width)) {
+      if (newRect.width >= initialBox.width &&
+          (newRect.width == constraints.maxWidth ||
+              newRect.width == clampingRect.width)) {
         maxWidthReached = true;
       }
     }
     if (delta.y != 0) {
-      if (newBox.height <= initialBox.height &&
-          newBox.height == constraints.minHeight) {
+      if (newRect.height <= initialBox.height &&
+          newRect.height == constraints.minHeight) {
         minHeightReached = true;
       }
-      if (newBox.height >= initialBox.height &&
-              newBox.height == constraints.maxHeight ||
-          newBox.height == clampingBox.height) {
+      if (newRect.height >= initialBox.height &&
+              newRect.height == constraints.maxHeight ||
+          newRect.height == clampingRect.height) {
         maxHeightReached = true;
       }
     }
 
     return ResizeResult(
-      box: newBox,
-      oldBox: initialBox,
+      rect: newRect,
+      oldRect: initialBox,
       flip: currentFlip * initialFlip,
       resizeMode: resizeMode,
       delta: delta,
@@ -195,7 +196,7 @@ class BoxTransformer {
     required Vector2 delta,
     required Flip flip,
     required ResizeMode resizeMode,
-    Box clampingBox = Box.largest,
+    Box clampingRect = Box.largest,
     Constraints constraints = const Constraints.unconstrained(),
   }) {
     final double aspectRatio = initialBox.width / initialBox.height;
@@ -219,7 +220,7 @@ class BoxTransformer {
       );
     }
 
-    rect = clampingBox.containOther(
+    rect = clampingRect.containOther(
       rect,
       resizeMode: resizeMode,
       aspectRatio: aspectRatio,

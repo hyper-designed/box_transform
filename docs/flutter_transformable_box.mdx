@@ -27,7 +27,7 @@ constructor first:
     // raw
     Rect? box,
     Flip? flip,
-    Rect? clampingBox,
+    Rect? clampingRect,
     BoxConstraints? constraints,
     ResolveResizeModeCallback? resolveResizeModeCallback,
     // terminal update events
@@ -54,7 +54,7 @@ in the constructor excluding `contentBuilder`, `handleBuilder`, `handleGestureRe
 final TransformableBoxController controller = TransformableBoxController();
 ```
 
-When using a controller, you should not use the following parameters: `box`, `flip`, `clampingBox`, `constraints`,
+When using a controller, you should not use the following parameters: `box`, `flip`, `clampingRect`, `constraints`,
 and `resolveResizeModeCallback`. These are all intrinsically managed by the controller.
 
 Be sure to manage your `controller`'s lifecycle properly. You can use the `dispose` method to dispose of the controller
@@ -94,7 +94,7 @@ using a controller. The [Transformable Box](transformableBox) widget will handle
 controller automatically for you.
 
 To use the raw parameters, you should not use the `controller` parameter. You can use the following parameters:
-`box`, `flip`, `clampingBox`, `constraints`, and `resolveResizeModeCallback`.
+`box`, `flip`, `clampingRect`, `constraints`, and `resolveResizeModeCallback`.
 
 ```dart
 class MySexierBox extends StatefulWidget {
@@ -111,7 +111,7 @@ class _MySexierBoxState extends State<MySexierBox> {
     return TransformableBox(
       box: box,
       flip: flip, // optional.
-      clampingBox: Rect.fromLTWH(0, 0, 200, 200), // optional.
+      clampingRect: Rect.fromLTWH(0, 0, 200, 200), // optional.
       constraints: BoxConstraints(minWidth: 50, minHeight: 50), // optional.
       resolveResizeModeCallback: (ResizeMode mode) { /* ... */ }, // optional.
       onChanged: (UIBoxTransformResult result) {

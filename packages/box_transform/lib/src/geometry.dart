@@ -33,8 +33,10 @@ class Constraints {
         minHeight = double.infinity,
         maxHeight = double.infinity;
 
+  /// Whether the [minWidth] and [minHeight] are both zero.
   bool get goesToZero => minWidth == 0 && minHeight == 0;
 
+  /// Whether this [Constraints] object represents no constraints.
   bool get isUnconstrained =>
       minWidth == double.infinity &&
       minHeight == double.infinity &&
@@ -180,9 +182,11 @@ class Dimension {
   /// Negative areas are considered empty.
   bool get isEmpty => width <= 0.0 || height <= 0.0;
 
+  /// Removes [other] from this size.
   Dimension operator -(Dimension other) =>
       Dimension(width - other.width, height - other.height);
 
+  /// Adds [other] to this size.
   Dimension operator +(Dimension other) =>
       Dimension(width + other.width, height + other.height);
 
@@ -303,6 +307,7 @@ class Dimension {
     return vec.x >= 0.0 && vec.x < width && vec.y >= 0.0 && vec.y < height;
   }
 
+  /// Constrains this with given constraints.
   Dimension constrainBy(Constraints constraints) {
     return constraints.constrainDimension(this);
   }
@@ -654,13 +659,6 @@ class Box {
       newTop,
       newWidth * xSign,
       newHeight * ySign,
-    );
-  }
-
-  Vector2 clampVectorInsideThis(Vector2 vec) {
-    return Vector2(
-      math.max(left, math.min(right, vec.x)),
-      math.max(top, math.min(bottom, vec.y)),
     );
   }
 

@@ -58,9 +58,9 @@ class MyApp extends StatelessWidget {
 }
 
 class PlaygroundModel with ChangeNotifier {
-  Rect box = Rect.zero;
+  Rect rect = Rect.zero;
   Flip flip = Flip.none;
-  Rect clampingBox = Rect.largest;
+  Rect clampingRect = Rect.largest;
   Rect? playgroundArea;
   late BoxConstraints constraints = const BoxConstraints(
     minWidth: double.infinity,
@@ -77,14 +77,14 @@ class PlaygroundModel with ChangeNotifier {
     final Size size = MediaQuery.of(context).size;
     final double width = size.width - 300;
     final double height = size.height;
-    box = Rect.fromLTWH(
+    rect = Rect.fromLTWH(
       (width - kInitialWidth) / 2,
       (height - kInitialHeight) / 2,
       kInitialWidth,
       kInitialHeight,
     );
     flip = Flip.none;
-    clampingBox = Rect.fromLTWH(
+    clampingRect = Rect.fromLTWH(
       0,
       0,
       size.width - kSidePanelWidth,
@@ -105,7 +105,7 @@ class PlaygroundModel with ChangeNotifier {
   }
 
   void onRectChanged(UITransformResult result) {
-    box = result.rect;
+    rect = result.rect;
     flip = result is UIResizeResult ? result.flip : flip;
     notifyListeners();
   }
@@ -120,16 +120,16 @@ class PlaygroundModel with ChangeNotifier {
     notifyListeners();
   }
 
-  void setClampingBox(Rect rect,
+  void setclampingRect(Rect rect,
       {bool notify = true, bool insidePlayground = false}) {
-    clampingBox = rect;
+    clampingRect = rect;
 
     if (insidePlayground && playgroundArea != null) {
-      clampingBox = Rect.fromLTWH(
-        clampingBox.left.clamp(0.0, playgroundArea!.width),
-        clampingBox.top.clamp(0.0, playgroundArea!.height),
-        clampingBox.width.clamp(0.0, playgroundArea!.width),
-        clampingBox.height.clamp(0.0, playgroundArea!.height),
+      clampingRect = Rect.fromLTWH(
+        clampingRect.left.clamp(0.0, playgroundArea!.width),
+        clampingRect.top.clamp(0.0, playgroundArea!.height),
+        clampingRect.width.clamp(0.0, playgroundArea!.width),
+        clampingRect.height.clamp(0.0, playgroundArea!.height),
       );
     }
 
@@ -172,17 +172,17 @@ class PlaygroundModel with ChangeNotifier {
     notifyListeners();
   }
 
-  void onClampingBoxChanged({
+  void onClampingRectChanged({
     double? left,
     double? top,
     double? right,
     double? bottom,
   }) {
-    clampingBox = Rect.fromLTRB(
-      left ?? clampingBox.left,
-      top ?? clampingBox.top,
-      right ?? clampingBox.right,
-      bottom ?? clampingBox.bottom,
+    clampingRect = Rect.fromLTRB(
+      left ?? clampingRect.left,
+      top ?? clampingRect.top,
+      right ?? clampingRect.right,
+      bottom ?? clampingRect.bottom,
     );
     notifyListeners();
   }
@@ -276,10 +276,10 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
     );
 
     final Rect playgroundArea = model.playgroundArea!;
-    if (model.clampingBox.width > playgroundArea.width ||
-        model.clampingBox.height > playgroundArea.height) {
-      model.setClampingBox(
-        model.clampingBox,
+    if (model.clampingRect.width > playgroundArea.width ||
+        model.clampingRect.height > playgroundArea.height) {
+      model.setclampingRect(
+        model.clampingRect,
         notify: notify,
         insidePlayground: true,
       );
@@ -306,7 +306,7 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
                   ),
                 ),
                 if (model.clampingEnabled && model.playgroundArea != null)
-                  const ClampingBox(),
+                  const ClampingRect(),
                 const ImageBox(),
               ],
             ),
@@ -337,9 +337,9 @@ class _ImageBoxState extends State<ImageBox> {
     final Color handleColor = Theme.of(context).colorScheme.primary;
     return TransformableBox(
       key: const ValueKey('image-box'),
-      rect: model.box,
+      rect: model.rect,
       flip: model.flip,
-      clampingRect: model.clampingEnabled ? model.clampingBox : null,
+      clampingRect: model.clampingEnabled ? model.clampingRect : null,
       constraints: model.constraintsEnabled ? model.constraints : null,
       onChanged: model.onRectChanged,
       resizable: model.resizable,
@@ -399,14 +399,14 @@ class _ImageBoxState extends State<ImageBox> {
   }
 }
 
-class ClampingBox extends StatefulWidget {
-  const ClampingBox({super.key});
+class ClampingRect extends StatefulWidget {
+  const ClampingRect({super.key});
 
   @override
-  State<ClampingBox> createState() => _ClampingBoxState();
+  State<ClampingRect> createState() => _ClampingRectState();
 }
 
-class _ClampingBoxState extends State<ClampingBox> {
+class _ClampingRectState extends State<ClampingRect> {
   bool minWidthReached = false;
   bool minHeightReached = false;
   bool maxWidthReached = false;
@@ -455,14 +455,14 @@ class _ClampingBoxState extends State<ClampingBox> {
 
     return TransformableBox(
       key: const ValueKey('clamping-box'),
-      rect: model.clampingBox,
+      rect: model.clampingRect,
       flip: Flip.none,
       clampingRect: model.playgroundArea!,
       constraints: BoxConstraints(
-        minWidth: model.box.width,
-        minHeight: model.box.height,
+        minWidth: model.rect.width,
+        minHeight: model.rect.height,
       ),
-      onChanged: (result) => model.setClampingBox(result.rect),
+      onChanged: (result) => model.setclampingRect(result.rect),
       onTerminalSizeReached: (
         bool reachedMinWidth,
         bool reachedMaxWidth,
@@ -484,8 +484,8 @@ class _ClampingBoxState extends State<ClampingBox> {
       handleGestureResponseDiameter: 32,
       handleBuilder: (context, handle) => const ColoredBox(color: mainColor),
       contentBuilder: (context, _, flip) => Container(
-        width: model.clampingBox.width,
-        height: model.clampingBox.height,
+        width: model.clampingRect.width,
+        height: model.clampingRect.height,
         alignment: Alignment.bottomRight,
         decoration: BoxDecoration(
           border: Border.symmetric(
@@ -652,7 +652,7 @@ class PositionControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PlaygroundModel model = context.watch<PlaygroundModel>();
-    final Rect rect = model.box;
+    final Rect rect = model.rect;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
@@ -863,29 +863,29 @@ class _ClampingControlsState extends State<ClampingControls> {
   void initState() {
     super.initState();
     leftController =
-        TextEditingController(text: model.clampingBox.left.toStringAsFixed(0));
+        TextEditingController(text: model.clampingRect.left.toStringAsFixed(0));
     topController =
-        TextEditingController(text: model.clampingBox.top.toStringAsFixed(0));
+        TextEditingController(text: model.clampingRect.top.toStringAsFixed(0));
     bottomController = TextEditingController(
-        text: model.clampingBox.bottom.toStringAsFixed(0));
-    rightController =
-        TextEditingController(text: model.clampingBox.right.toStringAsFixed(0));
+        text: model.clampingRect.bottom.toStringAsFixed(0));
+    rightController = TextEditingController(
+        text: model.clampingRect.right.toStringAsFixed(0));
 
     model.addListener(onModelChanged);
   }
 
   void onModelChanged() {
-    if (model.clampingBox.left != left) {
-      leftController.text = model.clampingBox.left.toStringAsFixed(0);
+    if (model.clampingRect.left != left) {
+      leftController.text = model.clampingRect.left.toStringAsFixed(0);
     }
-    if (model.clampingBox.top != top) {
-      topController.text = model.clampingBox.top.toStringAsFixed(0);
+    if (model.clampingRect.top != top) {
+      topController.text = model.clampingRect.top.toStringAsFixed(0);
     }
-    if (model.clampingBox.bottom != bottom) {
-      bottomController.text = model.clampingBox.bottom.toStringAsFixed(0);
+    if (model.clampingRect.bottom != bottom) {
+      bottomController.text = model.clampingRect.bottom.toStringAsFixed(0);
     }
-    if (model.clampingBox.right != right) {
-      rightController.text = model.clampingBox.right.toStringAsFixed(0);
+    if (model.clampingRect.right != right) {
+      rightController.text = model.clampingRect.right.toStringAsFixed(0);
     }
   }
 
@@ -898,7 +898,7 @@ class _ClampingControlsState extends State<ClampingControls> {
           return GestureDetector(
             onTap: () {
               FocusScope.of(context).unfocus();
-              model.onClampingBoxChanged(
+              model.onClampingRectChanged(
                 left: left,
                 top: top,
                 bottom: bottom,
@@ -914,10 +914,6 @@ class _ClampingControlsState extends State<ClampingControls> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    // color: Theme.of(context)
-                    //     .colorScheme
-                    //     .secondary
-                    //     .withOpacity(0.1),
                     height: 44,
                     padding: const EdgeInsets.fromLTRB(16, 0, 6, 0),
                     alignment: Alignment.centerLeft,
@@ -970,7 +966,7 @@ class _ClampingControlsState extends State<ClampingControls> {
                                   enabled: model.clampingEnabled,
                                   controller: leftController,
                                   onSubmitted: (value) {
-                                    model.onClampingBoxChanged(left: left);
+                                    model.onClampingRectChanged(left: left);
                                   },
                                   decoration: const InputDecoration(
                                     suffixText: 'px',
@@ -988,7 +984,7 @@ class _ClampingControlsState extends State<ClampingControls> {
                                   enabled: model.clampingEnabled,
                                   controller: topController,
                                   onSubmitted: (value) {
-                                    model.onClampingBoxChanged(top: top);
+                                    model.onClampingRectChanged(top: top);
                                   },
                                   decoration: const InputDecoration(
                                     suffixText: 'px',
@@ -1018,7 +1014,7 @@ class _ClampingControlsState extends State<ClampingControls> {
                                   enabled: model.clampingEnabled,
                                   controller: rightController,
                                   onFieldSubmitted: (value) {
-                                    model.onClampingBoxChanged(right: right);
+                                    model.onClampingRectChanged(right: right);
                                   },
                                   decoration: const InputDecoration(
                                     suffixText: 'px',
@@ -1036,7 +1032,7 @@ class _ClampingControlsState extends State<ClampingControls> {
                                   enabled: model.clampingEnabled,
                                   controller: bottomController,
                                   onSubmitted: (value) {
-                                    model.onClampingBoxChanged(bottom: bottom);
+                                    model.onClampingRectChanged(bottom: bottom);
                                   },
                                   decoration: const InputDecoration(
                                     suffixText: 'px',
@@ -1053,7 +1049,7 @@ class _ClampingControlsState extends State<ClampingControls> {
                           const SizedBox(height: 16),
                           FilledButton.tonalIcon(
                             onPressed: () {
-                              model.setClampingBox(model.playgroundArea!);
+                              model.setclampingRect(model.playgroundArea!);
                             },
                             icon: const Icon(Icons.fullscreen_rounded),
                             label: const Text('Full screen'),
@@ -1322,7 +1318,7 @@ class _ConstraintsControlsState extends State<ConstraintsControls> {
                                 minHeight: double.infinity,
                               ));
                             },
-                            icon: const Icon(Icons.fullscreen_rounded),
+                            icon: const Icon(Icons.refresh),
                             label: const Text('Reset'),
                           ),
                         ],
