@@ -1,0 +1,37 @@
+---
+title: Moving
+---
+
+# Moving/Dragging
+
+You can use `BoxTransformer.move` to move a box.
+
+```dart title="Moving a box"
+  final Box rect = Box.fromLTWH(50, 50, 100, 100);
+  final MoveResult result = BoxTransformer.move(
+    initialRect: rect,
+    initialLocalPosition: Vector2.zero(),
+    localPosition: Vector2.zero(),
+  );
+  
+  result.position; // the new position of the box
+```
+`BoxTransformer.move` returns a `MoveResult` that contains information about the new position of the box. 
+`result.position` is a `Vector2` that defines the new position of the box.
+
+## Limiting movements
+
+You can limit the movements by providing `clampingRect` to `BoxTransformer.move` to limit the movements to a specific
+area.
+
+```dart title="Limiting movements"
+  final Box rect = Box.fromLTWH(50, 50, 100, 100);
+  final MoveResult result = BoxTransformer.move(
+    initialRect: rect,
+    initialLocalPosition: Vector2.zero(),
+    localPosition: Vector2.zero(),
+    clampingRect: Box.fromLTWH(0, 0, 1000, 1000),
+  );
+  
+  result.position; // the new position of the box
+```

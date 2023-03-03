@@ -1,0 +1,59 @@
+---
+title: Getting Started
+---
+
+# Getting Started
+
+## Installation
+
+Add this package as dependency in your `pubspec.yaml` file:
+
+```dart
+  dependencies:
+    flutter_box_transform: <latest_version>
+```
+or run following command in your project directory:
+
+```shell
+  flutter pub add flutter_box_transform
+```
+
+## Usage
+Wrap the widget you want to resize/move with `TransformableBox`. 
+
+<Warning>**_TransformableBox_** internally uses **_Positioned_** to place child at given position with given size. 
+So, **_TransformableBox_** must be a child of **_Stack_** widget.</Warning>
+
+```dart title="Using as a widget"
+  Stack(
+    children: [
+      TransformableBox(
+        rect: rect,
+        flip: flip,
+        onChanged: (event) {
+          setState(() { // update the state
+            box = event.rect;
+            flip = event.flip;
+          });
+        },
+        contentBuilder: (context, rect, flip) => Transform.scale(
+          scaleX: flip.isHorizontal ? -1 : 1,
+          scaleY: flip.isVertical ? -1 : 1,
+          child: Image.asset( // your widget goes here.
+            'assets/images/landscape.jpg',
+            width: rect.width,
+            height: rect.height,
+            fit: BoxFit.fill,
+          ),
+        ),
+      ),
+    ],
+  );
+```
+
+`onChanged` callback is called when user resizes/moves the box. You can use this callback to update the box by calling
+`setState` method explicitly.
+
+<Info>**_TransformableBox_** follows flutter widget pattern and does not store any state. So, you must store the box and 
+flip state in your widget state and pass it to **_TransformableBox_** as parameters. Don't forget to call **_setState_** 
+method to update the state.</Info>

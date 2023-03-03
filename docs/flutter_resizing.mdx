@@ -1,148 +1,187 @@
 ---
-title: Transformable Box
+title: Resizing
 ---
 
-[Transformable Box](transformableBox) is a Flutter widget that fully utilizes [Box Transform](boxTransform) to create
-a fully-featured Flutter implementation of the [Box Transform](boxTransform) API.
+# Resizing
 
-This widget exists out of convenience and is not essentially, but rather heavily simplifies the usage and implementation
-of a box that can be transformed. It is maximally customizable.
+`TransformableBox` can be used to resize a widget by default. [Transformable Box](transformableBox) utilizes 
+[Box Transform](boxTransform) to create a fully-featured Flutter implementation of the [Box Transform](boxTransform) API.
 
-## Usage
-
-The API of this widget is made in such a way so as to allow you to use it in several ways. Let's take a look at the
-constructor first:
-
-```dart
-  const TransformableBox({
-    super.key,
-    required this.contentBuilder,
-    this.onChanged,
-    this.onMoved,
-    this.onResized,
-    this.controller,
-    this.handleBuilder = _defaultHandleBuilder,
-    this.handleGestureResponseDiameter = 24,
-    this.handleRenderedDiameter = 12,
-    // raw
-    Rect? box,
-    Flip? flip,
-    Rect? clampingRect,
-    BoxConstraints? constraints,
-    ResolveResizeModeCallback? resolveResizeModeCallback,
-    // terminal update events
-    this.onMinWidthReached,
-    this.onMaxWidthReached,
-    this.onMinHeightReached,
-    this.onMaxHeightReached,
-    this.onTerminalWidthReached,
-    this.onTerminalHeightReached,
-    this.onTerminalSizeReached,
-  });
-```
-
-### Method 1 - Using the controller
-
-The first method is to use the controller to control the box. This is the most flexible method and allows you to
-control the transformable box externally with proper state management.
-
-To create a controller, you can use the `TransformableBoxController` class. It mirrors a lot of the observed parameters
-in the constructor excluding `contentBuilder`, `handleBuilder`, `handleGestureResponseDiameter` and
-`handleRenderedDiameter` since these are accessibility and rendering specific features.
-
-```dart
-final TransformableBoxController controller = TransformableBoxController();
-```
-
-When using a controller, you should not use the following parameters: `box`, `flip`, `clampingRect`, `constraints`,
-and `resolveResizeModeCallback`. These are all intrinsically managed by the controller.
-
-Be sure to manage your `controller`'s lifecycle properly. You can use the `dispose` method to dispose of the controller
-and release its resources.
-
-```dart
-class MySexyBox extends StatefulWidget {
-  @override
-  _MySexyBoxState createState() => _MySexyBoxState();
-}
-
-class _MySexyBoxState extends State<MySexyBox> {
-  final TransformableBoxController controller = TransformableBoxController(
-    resolveResizeModeCallback: (ResizeMode mode) { /* ... */ }, // optional.
+```dart title="Resizable widget"
+  Stack(
+    children: [
+      TransformableBox(
+        rect: rect,
+        flip: flip,
+        onChanged: (event) {
+          setState(() {
+            this.rect = event.rect;
+            this.flip = event.flip;
+          });
+        },
+        contentBuilder: (context, rect, flip) => Image.asset( // your widget goes here.
+          'assets/images/landscape.jpg',
+          width: rect.width,
+          height: rect.height,
+          fit: BoxFit.fill,
+        ),
+      ),
+    ],
   );
-
-  @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return TransformableBox(
-      controller: controller,
-      contentBuilder: (context, box) { /* ... */ },
-    );
-  }
-}
 ```
 
-### Method 2 - Using the raw parameters
+<Info>**_onChanged_** callback is a general callback that is called whenever a change is made to the box. To listen to specific
+changes, you can use **_onResized_** and **_onMoved_** callbacks for resizing and moving respectively.</Info>
 
-The second method is to use the raw parameters to control the box. This allows you to control the box without
-using a controller. The [Transformable Box](transformableBox) widget will handle the lifecycle of an internal
-controller automatically for you.
+By default, resizing allows flipping the rect horizontally and vertically. Flipping is done by using the 
+`Transform.scale` widget with negative scale values.
 
-To use the raw parameters, you should not use the `controller` parameter. You can use the following parameters:
-`box`, `flip`, `clampingRect`, `constraints`, and `resolveResizeModeCallback`.
+Resizing is freeform by default, meaning that the user can resize the box in any direction and in any size.
 
-```dart
-class MySexierBox extends StatefulWidget {
-  @override
-  _MySexierBoxState createState() => _MySexierBoxState();
-}
-
-class _MySexierBoxState extends State<MySexierBox> {
-  Rect box = Rect.fromLTWH(0, 0, 100, 100);
-  Flip flip = Flip.none; // optional to handle flip behavior.
-
-  @override
-  Widget build(BuildContext context) {
-    return TransformableBox(
-      box: box,
-      flip: flip, // optional.
-      clampingRect: Rect.fromLTWH(0, 0, 200, 200), // optional.
-      constraints: BoxConstraints(minWidth: 50, minHeight: 50), // optional.
-      resolveResizeModeCallback: (ResizeMode mode) { /* ... */ }, // optional.
-      onChanged: (UIBoxTransformResult result) {
-        setState(() {
-          this.box = result.box;
-          this.flip = result.flip;
-        });
-      },
-      contentBuilder: (context, box) { /* ... */ },
-    );
-  }
-}
-```
-
-## ResolveResizeModeCallback
+## Controlling Resize Modes
 
 The `resolveResizeModeCallback` is a callback that is called whenever a resize operation is about to be performed on a
-given [Transformable Box](transformableBox) The reason this is a callback is because it allows you to define the
-resize behavior at the time of the resize operation. This is useful when you want to change the resize behavior
-based on the state of the application.
+given [Transformable Box](transformableBox). This allows you to define the resize behavior at the time of the resize 
+operation. This is useful when you want to change the resize behavior based on the state of the application.
 
-The most common use case for this is keyboard shortcuts. We provide a `defaultResolveResizeModeCallback`
-function that is used by default when resizing, and it's job is to listen to keyboard meta keys to change the
-`ResizeMode`. It sets the `ResizeMode` to `ResizeMode.scale` when the `Shift` key is pressed, `ResizeMode.symmetric`
-when the `Alt` key is pressed, and `ResizeMode.symmetricScale` when both the `Shift` and `Alt` keys are pressed.
-`ResizeMode.freeform` is used otherwise.
+The most common use case for this is **keyboard shortcuts**. A `defaultResolveResizeModeCallback` function is used by 
+default when resizing, and it's job is to listen to keyboard meta keys to change the `ResizeMode`.
 
-You can use this callback to change the `ResizeMode` of the resize operation however you like and can provide a
-fixed-behavior callback if desired.
+### Default Resize Mode:
 
-`resolveResizeModeCallback: (ResizeMode mode) => ResizeMode.symmetric,`
+1. ResizeMode.freeform: **Default** mode. When no keys are pressed.
+2. ResizeMode.scale: When `Shift` key is pressed.
+3. ResizeMode.symmetric: When `Alt` key is pressed.
+4. ResizeMode.symmetricScale: When both `Shift` and `Alt` keys are pressed.
 
-[boxTransform]  https://github.com/BirjuVachhani/box_transform/tree/main/packages/box_transform
-[transformableBox]  https://github.com/BirjuVachhani/box_transform/blob/main/packages/flutter_box_transform/lib/src/transformable_box.dart
+See [ResizeModes](/resize_modes) page for more information on the different resize modes.
+
+Override this default behavior by providing `resolveResizeModeCallback` in `TransformableBox` constructor to customize
+resizing to your liking. This can also be used to allow only certain resize modes.
+
+```dart title="Resizing with preseving aspect ratio"
+  TransformableBox(
+    rect: rect,
+    flip: flip,
+    resolveResizeModeCallback: () => ResizeMode.scale,
+    onChanged: (event) {...},
+    contentBuilder: (context, rect, flip) {...},
+  );
+```
+This will resize the box such that the **aspect ratio** is preserved.
+
+## Flipping
+
+By default, resizing allows flipping the rect horizontally and vertically. Flipping is done by using the
+`Transform.scale` widget with negative scale values internally. There are two kinds of flipping involved in resizing:
+
+### Flipping the rect while resizing
+While resizing, the rect can be flipped horizontally and vertically whenever the
+user drags a handle beyond the opposite side of the rect. This allows more flexibility in resizing the box. However,
+this is not responsible for flipping the content of the box.
+
+This behavior can be disabled by setting `flipRectWhileResizing` to `false`.
+
+```dart title="Disable flipping the rect while resizing"
+  TransformableBox(
+    rect: rect,
+    flip: flip,
+    flipRectWhileResizing: false,
+    onChanged: (event) {...},
+    contentBuilder: (context, rect, flip) {...},
+  );
+```
+
+### Flipping the content of the box
+This is done by using the `Transform.scale` widget with negative scale values. This
+is done to allow the content to be flipped horizontally and vertically. 
+
+This behavior can be disabled by setting `flipChild` to `false`.
+
+```dart title="Disable flipping the child/content of the box"
+  TransformableBox(
+    rect: rect,
+    flip: flip,
+    flipChild: false,
+    onChanged: (event) {...},
+    contentBuilder: (context, rect, flip) {...},
+  );
+```
+
+You can set both `flipRectWhileResizing` and `flipChild` to `false` to disable flipping completely.
+
+## Constraints
+
+Resizing can be constrained by providing `minSize` and `maxSize` using `constraints` property.
+
+```dart title="Resizable widget with constrained resizing"
+  TransformableBox(
+    rect: rect,
+    flip: flip,
+    constraints: BoxConstraints(
+      minWidth: 100,
+      minHeight: 100,
+      maxWidth: 500,
+      maxHeight: 500,
+    ),
+    onChanged: (event) {...},
+    contentBuilder: (context, rect, flip) {...},
+  );
+```
+This will allow resizing the box between 100x100 and 500x500 pixels.
+
+### Constraint callbacks
+
+You can register callbacks to listen to when the box reaches the minimum or maximum size. This is useful when you want
+to react to these events to show some UI indication like showing a message or changing border color.
+
+You can register `onTerminalSizeReached` callback to listen to when the box reaches the terminal size. This is useful
+when you want to show a message to the user that the box has reached the maximum size.
+
+<Info>A **terminal size** is a size that is either the **minimum** or **maximum** size of the box on either axis. 
+This can happen when the user tries to resize the box beyond the given **constraints** or the size reaches the 
+`clampingRect` size.</Info>
+
+```dart title="onTerminalSizeReached callback"
+  TransformableBox(
+    rect: rect,
+    flip: flip,
+    constraints: BoxConstraints(
+      minWidth: 100,
+      minHeight: 100,
+      maxWidth: 500,
+      maxHeight: 500,
+    ),
+    onTerminalSizeReached: (
+        bool reachedMinWidth,
+        bool reachedMaxWidth,
+        bool reachedMinHeight,
+        bool reachedMaxHeight,
+      ) {
+        // do something here.
+    },
+    onChanged: (event) {...},
+    contentBuilder: (context, rect, flip) {...},
+  );
+```
+
+You can also use `onMinWidthReached`, `onMaxWidthReached`, `onMinHeightReached` and `onMaxHeightReached` callbacks to 
+listen to the individual terminal size events. You can also use `onTerminalWidthReached` and `onTerminalHeightReached` to listen
+to combined terminal width and height events respectively.
+
+## Disable Resizing
+
+Resizing can be disabled by setting the `resizable` property to `false`.
+
+```dart title="Resizable widget without resizing"
+  TransformableBox(
+    rect: rect,
+    flip: flip,
+    resizable: false,
+    onChanged: (event) {...},
+    contentBuilder: (context, rect, flip) {...},
+  );
+```
+
+[boxTransform]: https://github.com/BirjuVachhani/box_transform/tree/main/packages/box_transform
+[transformableBox]: https://github.com/BirjuVachhani/box_transform/blob/main/packages/flutter_box_transform/lib/src/transformable_box.dart
