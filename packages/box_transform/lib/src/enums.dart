@@ -1,5 +1,17 @@
 /// Represents a resizing handle on corners.
 enum HandlePosition {
+  /// Represents the left side of the rect.
+  left,
+
+  /// Represents the top side of the rect.
+  top,
+
+  /// Represents the right side of the rect.
+  right,
+
+  /// Represents the bottom side of the rect.
+  bottom,
+
   /// Represents the top left corner of the rect.
   topLeft,
 
@@ -13,16 +25,52 @@ enum HandlePosition {
   bottomRight;
 
   /// Whether the handle is on the left side of the rect.
-  bool get influencesLeft => this == topLeft || this == bottomLeft;
+  bool get influencesLeft =>
+      this == topLeft || this == bottomLeft || this == left;
 
   /// Whether the handle is on the right side of the rect.
-  bool get influencesRight => this == topRight || this == bottomRight;
+  bool get influencesRight =>
+      this == topRight || this == bottomRight || this == right;
 
   /// Whether the handle is on the top side of the rect.
-  bool get influencesTop => this == topLeft || this == topRight;
+  bool get influencesTop => this == topLeft || this == topRight || this == top;
 
   /// Whether the handle is on the bottom side of the rect.
-  bool get influencesBottom => this == bottomLeft || this == bottomRight;
+  bool get influencesBottom =>
+      this == bottomLeft || this == bottomRight || this == bottom;
+
+  /// Whether the handle is either on the left or top side of the rect.
+  bool get influencesTopOrLeft =>
+      this == topLeft || this == top || this == left;
+
+  /// Whether the handle is either on the right or top side of the rect.
+  bool get influencesTopOrRight =>
+      this == topRight || this == top || this == right;
+
+  /// Whether the handle is either on the left or bottom side of the rect.
+  bool get influencesBottomOrLeft =>
+      this == bottomLeft || this == bottom || this == left;
+
+  /// Whether the handle is either on the right or bottom side of the rect.
+  bool get influencesBottomOrRight =>
+      this == bottomRight || this == bottom || this == right;
+
+  /// Whether the handle is on the corner of the rect.
+  bool get isDiagonal =>
+      this == topLeft ||
+      this == topRight ||
+      this == bottomLeft ||
+      this == bottomRight;
+
+  /// Whether the handle is on the cardinal side of the rect.
+  bool get isSide =>
+      this == top || this == bottom || this == left || this == right;
+
+  /// Whether the handle is horizontal or not.
+  bool get isHorizontal => this == left || this == right;
+
+  /// Whether the handle is vertical or not.
+  bool get isVertical => this == top || this == bottom;
 }
 
 /// Represents the flip state of a rectangle, or, in other words, if the

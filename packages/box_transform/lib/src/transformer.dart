@@ -197,6 +197,26 @@ class BoxTransformer {
           flip.isHorizontal ? -rect.width : 0,
           flip.isVertical ? -rect.height : 0,
         );
+      case HandlePosition.left:
+        return rect.translate(
+          flip.isHorizontal ? rect.width : 0,
+          0,
+        );
+      case HandlePosition.top:
+        return rect.translate(
+          0,
+          flip.isVertical ? rect.height : 0,
+        );
+      case HandlePosition.right:
+        return rect.translate(
+          flip.isHorizontal ? -rect.width : 0,
+          0,
+        );
+      case HandlePosition.bottom:
+        return rect.translate(
+          0,
+          flip.isVertical ? -rect.height : 0,
+        );
     }
   }
 
