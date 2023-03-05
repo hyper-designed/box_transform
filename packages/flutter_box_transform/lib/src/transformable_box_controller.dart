@@ -74,6 +74,15 @@ class TransformableBoxController extends ChangeNotifier {
   /// all resizing operations.
   bool resizable = true;
 
+  /// Whether to allow flipping of the box while resizing. If this is set to
+  /// true, the box will flip when the user drags the handles to opposite
+  /// corners of the rect.
+  bool flipWhileResizing = false;
+
+  /// Whether to flip the child of the box when the box is flipped. If this is
+  /// set to true, the child will be flipped when the box is flipped.
+  bool flipChild = false;
+
   /// The constraints that limits the resizing of the [TransformableBox] inside its
   /// bounds.
   BoxConstraints constraints = const BoxConstraints.expand();
@@ -118,6 +127,35 @@ class TransformableBoxController extends ChangeNotifier {
   void setConstraints(BoxConstraints constraints, {bool notify = true}) {
     this.constraints = constraints;
     if (notify) notifyListeners();
+  }
+
+  /// Whether the rect is movable or not. Setting this to false will disable
+  /// all moving operations.
+  void setMovable(bool movable) {
+    this.movable = movable;
+    notifyListeners();
+  }
+
+  /// Whether the rect is resizable or not. Setting this to false will disable
+  /// all resizing operations.
+  void setResizable(bool resizable) {
+    this.resizable = resizable;
+    notifyListeners();
+  }
+
+  /// Whether to allow flipping of the box while resizing. If this is set to
+  /// true, the box will flip when the user drags the handles to opposite
+  /// corners of the rect.
+  void setFlipWhileResizing(bool flipWhileResizing) {
+    this.flipWhileResizing = flipWhileResizing;
+    notifyListeners();
+  }
+
+  /// Whether to flip the child of the box when the box is flipped. If this is
+  /// set to true, the child will be flipped when the box is flipped.
+  void setFlipChild(bool flipChild) {
+    this.flipChild = flipChild;
+    notifyListeners();
   }
 
   /// Called when dragging of the [TransformableBox] starts.
@@ -202,6 +240,7 @@ class TransformableBoxController extends ChangeNotifier {
       initialFlip: initialFlip,
       clampingRect: clampingRect,
       constraints: constraints,
+      flipRect: flipWhileResizing,
     );
 
     rect = result.rect;
@@ -222,12 +261,32 @@ class TransformableBoxController extends ChangeNotifier {
 
   /// Recalculates the current state of this [rect] to ensure the position is
   /// correct in case of extreme jumps of the [TransformableBox].
-  void recalculateBox({bool notify = true}) {
+  void recalculatePosition({bool notify = true}) {
     final UIMoveResult result = UIBoxTransform.move(
       initialRect: rect,
       initialLocalPosition: initialLocalPosition,
       localPosition: initialLocalPosition,
       clampingRect: clampingRect,
+    );
+
+    rect = result.rect;
+
+    if (notify) notifyListeners();
+  }
+
+  /// Recalculates the current state of this [rect] to ensure the position is
+  /// correct in case of extreme jumps of the [TransformableBox].
+  void recalculateSize({bool notify = true}) {
+    final UIResizeResult result = UIBoxTransform.resize(
+      initialRect: rect,
+      initialLocalPosition: initialLocalPosition,
+      localPosition: initialLocalPosition,
+      clampingRect: clampingRect,
+      handle: HandlePosition.bottomRight,
+      resizeMode: ResizeMode.scale,
+      initialFlip: initialFlip,
+      constraints: constraints,
+      flipRect: flipWhileResizing,
     );
 
     rect = result.rect;

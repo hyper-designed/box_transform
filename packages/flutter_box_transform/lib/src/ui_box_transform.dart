@@ -1,7 +1,7 @@
 import 'dart:ui' as ui;
 
-import 'package:flutter/rendering.dart' as widgets;
 import 'package:box_transform/box_transform.dart' as transform;
+import 'package:flutter/rendering.dart' as widgets;
 
 import '../flutter_box_transform.dart';
 
@@ -20,6 +20,7 @@ class UIBoxTransform {
     required transform.Flip initialFlip,
     ui.Rect clampingRect = ui.Rect.largest,
     widgets.BoxConstraints constraints = const widgets.BoxConstraints(),
+    bool flipRect = true,
   }) =>
       transform.BoxTransformer.resize(
         initialBox: initialRect.toBox(),
@@ -30,6 +31,7 @@ class UIBoxTransform {
         initialFlip: initialFlip,
         clampingRect: clampingRect.toBox(),
         constraints: constraints.toConstraints(),
+        flipRect: flipRect,
       ).toUI();
 
   /// The Flutter wrapper for [transform.BoxTransformer.move].

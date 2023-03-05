@@ -63,11 +63,12 @@ class PlaygroundModel with ChangeNotifier {
   Rect clampingRect = Rect.largest;
   Rect? playgroundArea;
   late BoxConstraints constraints = const BoxConstraints(
-    minWidth: double.infinity,
-    minHeight: double.infinity,
+    minWidth: 0,
+    minHeight: 0,
   );
 
-  bool flipEnabled = true;
+  bool flipRectWhileResizing = true;
+  bool flipChild = true;
   bool clampingEnabled = false;
   bool constraintsEnabled = false;
   bool resizable = true;
@@ -92,8 +93,8 @@ class PlaygroundModel with ChangeNotifier {
     );
 
     constraints = const BoxConstraints(
-      minWidth: double.infinity,
-      minHeight: double.infinity,
+      minWidth: 0,
+      minHeight: 0,
     );
 
     resizable = true;
@@ -115,8 +116,13 @@ class PlaygroundModel with ChangeNotifier {
     notifyListeners();
   }
 
-  void onFlipEnabledChanged(bool enabled) {
-    flipEnabled = enabled;
+  void onFlipChildChanged(bool enabled) {
+    flipChild = enabled;
+    notifyListeners();
+  }
+
+  void onFlipWhileResizingChanged(bool enabled) {
+    flipRectWhileResizing = enabled;
     notifyListeners();
   }
 
@@ -198,12 +204,10 @@ class PlaygroundModel with ChangeNotifier {
     bool forceMaxHeight = false,
   }) {
     constraints = BoxConstraints(
-      minWidth: forceMinWidth
-          ? minWidth ?? double.infinity
-          : minWidth ?? constraints.minWidth,
-      minHeight: forceMinHeight
-          ? minHeight ?? double.infinity
-          : minHeight ?? constraints.minHeight,
+      minWidth:
+          forceMinWidth ? minWidth ?? 0 : minWidth ?? constraints.minWidth,
+      minHeight:
+          forceMinHeight ? minHeight ?? 0 : minHeight ?? constraints.minHeight,
       maxWidth: forceMaxWidth
           ? maxWidth ?? double.infinity
           : maxWidth ?? constraints.maxWidth,
@@ -211,6 +215,8 @@ class PlaygroundModel with ChangeNotifier {
           ? maxHeight ?? double.infinity
           : maxHeight ?? constraints.maxHeight,
     );
+    print(
+        'constraints: ${constraints.minWidth}, ${constraints.minHeight}, ${constraints.maxWidth}, ${constraints.maxHeight}');
     notifyListeners();
   }
 }
@@ -344,6 +350,8 @@ class _ImageBoxState extends State<ImageBox> {
       onChanged: model.onRectChanged,
       resizable: model.resizable,
       movable: model.movable,
+      flipChild: model.flipChild,
+      flipWhileResizing: model.flipRectWhileResizing,
       onTerminalSizeReached: (
         bool reachedMinWidth,
         bool reachedMaxWidth,
@@ -362,35 +370,31 @@ class _ImageBoxState extends State<ImageBox> {
           maxHeightReached = reachedMaxHeight;
         });
       },
-      contentBuilder: (context, rect, flip) => Transform.scale(
-        scaleX: model.flipEnabled && flip.isHorizontal ? -1 : 1,
-        scaleY: model.flipEnabled && flip.isVertical ? -1 : 1,
-        child: Container(
-          width: rect.width,
-          height: rect.height,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            image: const DecorationImage(
-              image: AssetImage('assets/images/landscape2.jpg'),
-              fit: BoxFit.fill,
+      childBuilder: (context, rect, flip) => Container(
+        width: rect.width,
+        height: rect.height,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          image: const DecorationImage(
+            image: AssetImage('assets/images/landscape2.jpg'),
+            fit: BoxFit.fill,
+          ),
+          border: Border.symmetric(
+            horizontal: BorderSide(
+              color: minHeightReached
+                  ? Colors.orange
+                  : maxHeightReached
+                      ? Colors.red
+                      : handleColor,
+              width: 2,
             ),
-            border: Border.symmetric(
-              horizontal: BorderSide(
-                color: minHeightReached
-                    ? Colors.orange
-                    : maxHeightReached
-                        ? Colors.red
-                        : handleColor,
-                width: 2,
-              ),
-              vertical: BorderSide(
-                color: minWidthReached
-                    ? Colors.orange
-                    : maxWidthReached
-                        ? Colors.red
-                        : handleColor,
-                width: 2,
-              ),
+            vertical: BorderSide(
+              color: minWidthReached
+                  ? Colors.orange
+                  : maxWidthReached
+                      ? Colors.red
+                      : handleColor,
+              width: 2,
             ),
           ),
         ),
@@ -483,7 +487,7 @@ class _ClampingRectState extends State<ClampingRect> {
       },
       handleGestureResponseDiameter: 32,
       handleBuilder: (context, handle) => const ColoredBox(color: mainColor),
-      contentBuilder: (context, _, flip) => Container(
+      childBuilder: (context, _, flip) => Container(
         width: model.clampingRect.width,
         height: model.clampingRect.height,
         alignment: Alignment.bottomRight,
@@ -742,17 +746,37 @@ class FlipControls extends StatelessWidget {
         children: [
           Container(
             // color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
-            height: 44,
-            padding: const EdgeInsets.fromLTRB(16, 0, 6, 0),
+            // height: 44,
+            padding: const EdgeInsets.fromLTRB(16, 16, 6, 16),
             alignment: Alignment.centerLeft,
             child: Row(
               children: [
                 Expanded(
-                  child: Text(
-                    'FLIP',
-                    style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                          color: Theme.of(context).colorScheme.secondary,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Flip rect while resizing',
+                        style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                              color: Theme.of(context).colorScheme.secondary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      const SizedBox(height: 4),
+                      FractionallySizedBox(
+                        widthFactor: 0.9,
+                        child: Text(
+                          'Allows to flip the rect while resizing. The actual child widget won\'t be flipped.',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall!
+                              .copyWith(
+                                color: Theme.of(context).colorScheme.secondary,
+                              ),
                         ),
+                      ),
+                    ],
                   ),
                 ),
                 SizedBox(
@@ -760,15 +784,64 @@ class FlipControls extends StatelessWidget {
                   child: Transform.scale(
                     scale: 0.7,
                     child: Switch(
-                      value: model.flipEnabled,
-                      onChanged: (value) => model.onFlipEnabledChanged(value),
+                      value: model.flipRectWhileResizing,
+                      onChanged: (value) =>
+                          model.onFlipWhileResizingChanged(value),
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          if (model.flipEnabled)
+          const Divider(height: 1),
+          Container(
+            // color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+            // height: 44,
+            padding: const EdgeInsets.fromLTRB(16, 16, 6, 16),
+            alignment: Alignment.centerLeft,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Flip Child',
+                        style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                              color: Theme.of(context).colorScheme.secondary,
+                            ),
+                      ),
+                      const SizedBox(height: 4),
+                      FractionallySizedBox(
+                        widthFactor: 0.9,
+                        child: Text(
+                          'Flip the actual child widget inside the rect.',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall!
+                              .copyWith(
+                                color: Theme.of(context).colorScheme.secondary,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  height: 20,
+                  child: Transform.scale(
+                    scale: 0.7,
+                    child: Switch(
+                      value: model.flipChild,
+                      onChanged: (value) => model.onFlipChildChanged(value),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (model.flipChild)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Row(
@@ -1088,9 +1161,9 @@ class _ConstraintsControlsState extends State<ConstraintsControls> {
   late final TextEditingController maxWidthController;
   late final TextEditingController maxHeightController;
 
-  double? get minWidth => double.tryParse(minWidthController.text);
+  double? get minWidth => double.tryParse(minWidthController.text) ?? 0;
 
-  double? get minHeight => double.tryParse(minHeightController.text);
+  double? get minHeight => double.tryParse(minHeightController.text) ?? 0;
 
   double? get maxWidth => double.tryParse(maxWidthController.text);
 

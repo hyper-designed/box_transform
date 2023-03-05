@@ -12,7 +12,7 @@ typedef HandleBuilder = Widget Function(
 /// A callback that expects a [Widget] that represents the content of the box.
 /// The [rect] is the current position and size of the box.
 /// The [flip] is the current flip state of the box.
-typedef BoxContentBuilder = Widget Function(
+typedef TransformableChildBuilder = Widget Function(
   BuildContext context,
   Rect rect,
   Flip flip,
@@ -82,7 +82,7 @@ class TransformableBox extends StatefulWidget {
   /// [TransformableBox]. This is the physical widget you wish to show resizable
   /// handles on. It's most commonly something like an image widget, but it
   /// could be anything you want to have resizable & draggable box handles on.
-  final BoxContentBuilder contentBuilder;
+  final TransformableChildBuilder childBuilder;
 
   /// A builder function that is used to build the handles of the
   /// [TransformableBox]. If you don't specify it, the default handles will be
@@ -222,10 +222,19 @@ class TransformableBox extends StatefulWidget {
   /// all moving operations.
   final bool movable;
 
+  /// Whether to allow flipping of the box while resizing. If this is set to
+  /// true, the box will flip when the user drags the handles to opposite
+  /// corners of the rect.
+  final bool flipWhileResizing;
+
+  /// Whether to flip the child of the box when the box is flipped. If this is
+  /// set to true, the child will be flipped when the box is flipped.
+  final bool flipChild;
+
   /// Creates a [TransformableBox] widget.
   const TransformableBox({
     super.key,
-    required this.contentBuilder,
+    required this.childBuilder,
     this.onChanged,
     this.onMoved,
     this.onResized,
@@ -249,6 +258,8 @@ class TransformableBox extends StatefulWidget {
     this.onTerminalSizeReached,
     this.resizable = true,
     this.movable = true,
+    this.flipWhileResizing = true,
+    this.flipChild = true,
   })  : assert(
           handleGestureResponseDiameter >= handleRenderedDiameter,
           'The handle gesture response diameter must be '
@@ -297,7 +308,9 @@ class _TransformableBoxState extends State<TransformableBox> {
         ..constraints = widget.constraints
         ..resolveResizeModeCallback = widget.resolveResizeModeCallback
         ..movable = widget.movable
-        ..resizable = widget.resizable;
+        ..resizable = widget.resizable
+        ..flipWhileResizing = widget.flipWhileResizing
+        ..flipChild = widget.flipChild;
     }
   }
 
@@ -321,7 +334,9 @@ class _TransformableBoxState extends State<TransformableBox> {
         ..constraints = widget.constraints
         ..resolveResizeModeCallback = widget.resolveResizeModeCallback
         ..resizable = widget.resizable
-        ..movable = widget.movable;
+        ..movable = widget.movable
+        ..flipWhileResizing = widget.flipWhileResizing
+        ..flipChild = widget.flipChild;
     }
 
     // Return if the controller is external.
@@ -341,12 +356,12 @@ class _TransformableBoxState extends State<TransformableBox> {
     }
     if (oldWidget.clampingRect != widget.clampingRect) {
       controller.clampingRect = widget.clampingRect;
-      controller.recalculateBox(notify: false);
+      controller.recalculatePosition(notify: false);
     }
 
     if (oldWidget.constraints != widget.constraints) {
       controller.constraints = widget.constraints;
-      controller.recalculateBox(notify: false);
+      controller.recalculateSize(notify: false);
     }
 
     if (oldWidget.resizable != widget.resizable) {
@@ -355,6 +370,14 @@ class _TransformableBoxState extends State<TransformableBox> {
 
     if (oldWidget.movable != widget.movable) {
       controller.movable = widget.movable;
+    }
+
+    if (oldWidget.flipChild != widget.flipChild) {
+      controller.flipChild = widget.flipChild;
+    }
+
+    if (oldWidget.flipWhileResizing != widget.flipWhileResizing) {
+      controller.flipWhileResizing = widget.flipWhileResizing;
     }
   }
 
@@ -450,7 +473,11 @@ class _TransformableBoxState extends State<TransformableBox> {
               },
               onPointerUp: (event) => controller.onDragEnd(),
               onPointerCancel: (event) => controller.onDragEnd(),
-              child: widget.contentBuilder(context, box, flip),
+              child: Transform.scale(
+                scaleX: controller.flipChild && flip.isHorizontal ? -1 : 1,
+                scaleY: controller.flipChild && flip.isVertical ? -1 : 1,
+                child: widget.childBuilder(context, box, flip),
+              ),
             ),
           ),
           HandleWidget(

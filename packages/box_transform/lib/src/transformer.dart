@@ -60,11 +60,37 @@ class BoxTransformer {
     required Flip initialFlip,
     Box clampingRect = Box.largest,
     Constraints constraints = const Constraints.unconstrained(),
+    bool flipRect = true,
   }) {
-    final Flip currentFlip =
-        getFlipForBox(initialBox, localPosition, handle, resizeMode);
-
     Vector2 delta = localPosition - initialLocalPosition;
+
+    /// getFlipForBox uses delta instead of localPosition to exactly when to
+    /// flip based on the current local position of the mouse cursor.
+    final Flip currentFlip = !flipRect
+        ? Flip.none
+        : getFlipForBox(initialBox, delta, handle, resizeMode);
+
+    // This sets the constraints such that it reflects flipRect state.
+    if (flipRect && (constraints.minWidth == 0 || constraints.minHeight == 0)) {
+      // Rect flipping is enabled, but minWidth or minHeight is 0 which
+      // means it won't be able to flip. So we update the constraints
+      // to allow flipping.
+      constraints = Constraints(
+        minWidth: -constraints.maxWidth,
+        minHeight: -constraints.maxHeight,
+        maxWidth: constraints.maxWidth,
+        maxHeight: constraints.maxHeight,
+      );
+    } else if (!flipRect && constraints.isUnconstrained) {
+      // Rect flipping is disabled, but the constraints are unconstrained.
+      // So we update the constraints to prevent flipping.
+      constraints = Constraints(
+        minWidth: 0,
+        minHeight: 0,
+        maxWidth: constraints.maxWidth,
+        maxHeight: constraints.maxHeight,
+      );
+    }
 
     if (resizeMode.hasSymmetry) delta = Vector2(delta.x * 2, delta.y * 2);
 
@@ -92,7 +118,8 @@ class BoxTransformer {
         newHeight,
       );
 
-      newRect = flipBox(rect, currentFlip, handle);
+      // Flip the rect only if flipRect is true.
+      newRect = flipRect ? flipBox(rect, currentFlip, handle) : rect;
     }
 
     newRect = clampingRect.containOther(newRect);
