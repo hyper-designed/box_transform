@@ -17,9 +17,9 @@ typedef RawResizeResult = ResizeResult<Box, Vector2, Dimension>;
 typedef RawTransformResult = TransformResult<Box, Vector2, Dimension>;
 
 /// An abstract class that represents the result of a transform operation.
-abstract class BoxResult {
-  /// Creates a [BoxResult].
-  const BoxResult();
+abstract class RectResult {
+  /// Creates a [RectResult].
+  const RectResult();
 
   @override
   operator ==(Object other);
@@ -33,8 +33,17 @@ abstract class BoxResult {
 
 /// An object that represents the result of a transform operation. Could be
 /// resize or move or both.
+///
+/// B is the type of the [Box] that is used by the [BoxTransformer]. This is
+/// usually [Box] or [Rect]. It represents the bounds of a rectangle.
+///
+/// V is the type of the [Vector2] that is used by the [BoxTransformer]. This is
+/// usually [Vector2] or [Offset]. It represents the delta of the transform.
+///
+/// D is the type of the [Dimension] that is used by the [BoxTransformer]. This
+/// is usually [Dimension] or [Size]. It represents the size of the box.
 class TransformResult<B extends Object, V extends Object, D extends Object>
-    extends BoxResult {
+    extends RectResult {
   /// The new [Box] of the node after the resize.
   final B rect;
 
