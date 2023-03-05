@@ -64,8 +64,8 @@ class BoxTransformer {
   }) {
     Vector2 delta = localPosition - initialLocalPosition;
 
-    /// getFlipForBox uses delta instead of localPosition to exactly when to
-    /// flip based on the current local position of the mouse cursor.
+    // getFlipForBox uses delta instead of localPosition to know exactly when
+    // to flip based on the current local position of the mouse cursor.
     final Flip currentFlip = !flipRect
         ? Flip.none
         : getFlipForBox(initialBox, delta, handle, resizeMode);
@@ -76,8 +76,12 @@ class BoxTransformer {
       // means it won't be able to flip. So we update the constraints
       // to allow flipping.
       constraints = Constraints(
-        minWidth: -constraints.maxWidth,
-        minHeight: -constraints.maxHeight,
+        minWidth: constraints.minWidth == 0
+            ? -constraints.maxWidth
+            : constraints.minWidth,
+        minHeight: constraints.minHeight == 0
+            ? -constraints.maxHeight
+            : constraints.minHeight,
         maxWidth: constraints.maxWidth,
         maxHeight: constraints.maxHeight,
       );
@@ -109,7 +113,10 @@ class BoxTransformer {
     Box newRect;
     if (resizeMode.hasSymmetry) {
       newRect = Box.fromCenter(
-          center: initialBox.center, width: newWidth, height: newHeight);
+        center: initialBox.center,
+        width: newWidth,
+        height: newHeight,
+      );
     } else {
       Box rect = Box.fromLTWH(
         handle.influencesLeft ? initialBox.right - newWidth : initialBox.left,
@@ -252,7 +259,22 @@ class BoxTransformer {
       resizeMode: resizeMode,
       aspectRatio: aspectRatio,
     );
-    rect = constraints.constrainBox(rect);
+
+    // When constraining this rect, it might have a negative width or height
+    // because it has not been normalized yet. If the minimum width or height
+    // is larger than zero, constraining will not work as expected because the
+    // negative width or height will be ignored. To fix this, we take the
+    // absolute value of the width and height before constraining and then
+    // multiply the result with the sign of the width and height.
+    final double wSign = rect.width.sign;
+    final double hSign = rect.height.sign;
+    rect = constraints.constrainBox(rect, absolute: true);
+    rect = Box.fromLTWH(
+      rect.left,
+      rect.top,
+      rect.width * wSign,
+      rect.height * hSign,
+    );
 
     final double newWidth;
     final double newHeight;

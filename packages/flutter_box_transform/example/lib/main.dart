@@ -215,8 +215,6 @@ class PlaygroundModel with ChangeNotifier {
           ? maxHeight ?? double.infinity
           : maxHeight ?? constraints.maxHeight,
     );
-    print(
-        'constraints: ${constraints.minWidth}, ${constraints.minHeight}, ${constraints.maxWidth}, ${constraints.maxHeight}');
     notifyListeners();
   }
 }
@@ -767,7 +765,7 @@ class FlipControls extends StatelessWidget {
                       FractionallySizedBox(
                         widthFactor: 0.9,
                         child: Text(
-                          'Allows to flip the rect while resizing. The actual child widget won\'t be flipped.',
+                          'Allows to flip the rect while resizing. The actual contents of the rect won\'t be flipped.',
                           style: Theme.of(context)
                               .textTheme
                               .bodySmall!
@@ -816,7 +814,7 @@ class FlipControls extends StatelessWidget {
                       FractionallySizedBox(
                         widthFactor: 0.9,
                         child: Text(
-                          'Flip the actual child widget inside the rect.',
+                          'Flip the contents of the rect when it is flipped.',
                           style: Theme.of(context)
                               .textTheme
                               .bodySmall!

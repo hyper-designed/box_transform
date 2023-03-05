@@ -60,13 +60,19 @@ class Constraints {
 
   /// Constrains a given [box] by the [minWidth], [maxWidth], [minHeight], and
   /// [maxHeight] values.
-  Box constrainBox(Box box) {
+  ///
+  /// If [absolute] is true, the [box] will be constrained by the absolute
+  /// values of its width and height.
+  Box constrainBox(Box box, {bool absolute = false}) {
     if (isUnconstrained) return box;
+
+    final double width = absolute ? box.width.abs() : box.width;
+    final double height = absolute ? box.height.abs() : box.height;
     return Box.fromLTWH(
       box.left,
       box.top,
-      _clamp(box.width, minWidth, maxWidth).toDouble(),
-      _clamp(box.height, minHeight, maxHeight).toDouble(),
+      _clamp(width, minWidth, maxWidth).toDouble(),
+      _clamp(height, minHeight, maxHeight).toDouble(),
     );
   }
 
