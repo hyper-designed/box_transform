@@ -49,18 +49,25 @@ typedef PointerDownCallback = void Function(Offset localPosition);
 
 /// A callback for pointer update events.
 typedef PointerUpdateCallback = void Function(
-    Offset localPosition, HandlePosition handlePosition);
+  Offset localPosition,
+  HandlePosition handlePosition,
+);
 
 /// A callback for pointer up events.
 typedef PointerUpCallback = VoidCallback;
 
 /// A default implementation of the corner [HandleBuilder] callback.
 Widget _defaultCornerHandleBuilder(
-        BuildContext context, HandlePosition handle) =>
+  BuildContext context,
+  HandlePosition handle,
+) =>
     CircularCornerHandle(handle: handle);
 
 /// A default implementation of the side [HandleBuilder] callback.
-Widget _defaultSideHandleBuilder(BuildContext context, HandlePosition handle) =>
+Widget _defaultSideHandleBuilder(
+  BuildContext context,
+  HandlePosition handle,
+) =>
     RoundedSideHandle(handle: handle);
 
 /// A circular handle in the corners of the box.
