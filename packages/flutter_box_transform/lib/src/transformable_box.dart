@@ -56,37 +56,108 @@ typedef PointerUpCallback = VoidCallback;
 
 /// A default implementation of the corner [HandleBuilder] callback.
 Widget _defaultCornerHandleBuilder(
-    BuildContext context, HandlePosition handle) {
-  return Container(
-    decoration: BoxDecoration(
-      color: Theme.of(context).scaffoldBackgroundColor,
-      shape: BoxShape.circle,
-      border: Border.all(
-        color: Theme.of(context).colorScheme.primary,
-        width: 1.5,
-      ),
-    ),
-  );
-}
+        BuildContext context, HandlePosition handle) =>
+    CircularCornerHandle(handle: handle);
 
 /// A default implementation of the side [HandleBuilder] callback.
-Widget _defaultSideHandleBuilder(BuildContext context, HandlePosition handle) {
-  return Center(
-    child: Container(
-      constraints: BoxConstraints(
-        maxWidth: handle.isHorizontal ? 12 : 32,
-        maxHeight: handle.isHorizontal ? 32 : 12,
-      ),
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        border: Border.all(
-          color: Theme.of(context).colorScheme.primary,
-          width: 1.5,
+Widget _defaultSideHandleBuilder(BuildContext context, HandlePosition handle) =>
+    RoundedSideHandle(handle: handle);
+
+/// A circular handle in the corners of the box.
+class CircularCornerHandle extends StatelessWidget {
+  /// The position of the corner handle.
+  final HandlePosition handle;
+
+  /// The color of the center of the circle.
+  /// [Theme.scaffoldBackgroundColor] by default.
+  final Color? centerColor;
+
+  /// The color of the border of the circle.
+  /// [Theme.colorScheme.primary] by default.
+  final Color? borderColor;
+
+  /// The width of the border of the circle.
+  /// 1.5 by default.
+  final double borderWidth;
+
+  /// Creates a new circular corner handle.
+  const CircularCornerHandle({
+    super.key,
+    required this.handle,
+    this.centerColor,
+    this.borderColor,
+    this.borderWidth = 1.5,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        width: 12,
+        height: 12,
+        decoration: BoxDecoration(
+          color: centerColor ?? Theme.of(context).scaffoldBackgroundColor,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: borderColor ?? Theme.of(context).colorScheme.primary,
+            width: borderWidth,
+          ),
         ),
-        borderRadius: BorderRadius.circular(8),
       ),
-    ),
-  );
+    );
+  }
+}
+
+/// A rounded handle in the sides of the box.
+class RoundedSideHandle extends StatelessWidget {
+  /// The position of the side handle.
+  final HandlePosition handle;
+
+  /// The color of the center of the circle.
+  /// [Theme.scaffoldBackgroundColor] by default.
+  final Color? centerColor;
+
+  /// The color of the border of the circle.
+  /// [Theme.colorScheme.primary] by default.
+  final Color? borderColor;
+
+  /// The width of the border of the circle.
+  /// 1.5 by default.
+  final double borderWidth;
+
+  /// The border radius of the rounded side handle.
+  /// 8 by default.
+  final double borderRadius;
+
+  /// Creates a new rounded side handle.
+  const RoundedSideHandle({
+    super.key,
+    required this.handle,
+    this.centerColor,
+    this.borderColor,
+    this.borderWidth = 1.5,
+    this.borderRadius = 8,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        constraints: BoxConstraints(
+          maxWidth: handle.isHorizontal ? 12 : 32,
+          maxHeight: handle.isHorizontal ? 32 : 12,
+        ),
+        decoration: BoxDecoration(
+          color: centerColor ?? Theme.of(context).scaffoldBackgroundColor,
+          border: Border.all(
+            color: borderColor ?? Theme.of(context).colorScheme.primary,
+            width: borderWidth,
+          ),
+          borderRadius: BorderRadius.circular(borderRadius),
+        ),
+      ),
+    );
+  }
 }
 
 /// A widget that allows you to resize and drag a box around a widget.
@@ -119,7 +190,7 @@ class TransformableBox extends StatefulWidget {
   /// Note that this will build for all four sides of the rectangle.
   final HandleBuilder sideHandleBuilder;
 
-  /// The radius of the gesture response area of the handles. If you don't
+  /// The size of the gesture response area of the handles. If you don't
   /// specify it, the default value will be used.
   ///
   /// This is similar to Flutter's [MaterialTapTargetSize] property, in which
@@ -130,26 +201,7 @@ class TransformableBox extends StatefulWidget {
   /// gesture response area to make it forgiving.
   ///
   /// The default value is 24 pixels in diameter.
-  final double cornerHandleGestureResponseDiameter;
-
-  /// The size of the handles that will be rendered on the screen. If you don't
-  /// specify it, the default value will be used.
-  ///
-  /// The default value is 12 pixels in diameter.
-  final double cornerHandleRenderedDiameter;
-
-  /// The thickness of the gesture response area of the side (or cardinal)
-  /// handles. If you don't specify it, the default value will be used.
-  ///
-  /// This is similar to Flutter's [MaterialTapTargetSize] property, in which
-  /// the actual handle size is smaller than the gesture response area. This is
-  /// done to improve accessibility and usability of the handles; users will not
-  /// need cursor precision over the handle's pixels to be able to perform
-  /// operations with them, they need only to be able to reach the handle's
-  /// gesture response area to make it forgiving.
-  ///
-  /// The default value is 24 pixels in thickness.
-  final double sideHandleGestureResponseThickness;
+  final double handleTapSize;
 
   /// The initial box that will be used to position set the initial size of
   /// the [TransformableBox] widget.
@@ -282,9 +334,7 @@ class TransformableBox extends StatefulWidget {
     this.controller,
     this.cornerHandleBuilder = _defaultCornerHandleBuilder,
     this.sideHandleBuilder = _defaultSideHandleBuilder,
-    this.cornerHandleGestureResponseDiameter = 24,
-    this.cornerHandleRenderedDiameter = 12,
-    this.sideHandleGestureResponseThickness = 24,
+    this.handleTapSize = 24,
     // raw
     Rect? rect,
     Flip? flip,
@@ -304,11 +354,6 @@ class TransformableBox extends StatefulWidget {
     this.flipWhileResizing = true,
     this.flipChild = true,
   })  : assert(
-          cornerHandleGestureResponseDiameter >= cornerHandleRenderedDiameter,
-          'The handle gesture response diameter must be '
-          'greater than or equal to the handle rendered diameter.',
-        ),
-        assert(
           controller == null ||
               (rect == null &&
                   flip == null &&
@@ -491,14 +536,14 @@ class _TransformableBoxState extends State<TransformableBox> {
     final Flip flip = controller.flip;
     final Rect box = controller.rect;
     return Positioned.fromRect(
-      rect: box.inflate(widget.cornerHandleGestureResponseDiameter / 2),
+      rect: box.inflate(widget.handleTapSize / 2),
       child: Stack(
         clipBehavior: Clip.none,
         fit: StackFit.expand,
         children: [
           Positioned(
-            left: widget.cornerHandleGestureResponseDiameter / 2,
-            top: widget.cornerHandleGestureResponseDiameter / 2,
+            left: widget.handleTapSize / 2,
+            top: widget.handleTapSize / 2,
             width: box.width,
             height: box.height,
             child: Listener(
@@ -526,9 +571,7 @@ class _TransformableBoxState extends State<TransformableBox> {
           ...HandlePosition.values.where((handle) => handle.isDiagonal).map(
                 (handle) => CornerHandleWidget(
                   handlePosition: handle,
-                  renderedDiameter: widget.cornerHandleRenderedDiameter,
-                  gestureResponseDiameter:
-                      widget.cornerHandleGestureResponseDiameter,
+                  handleTapSize: widget.handleTapSize,
                   builder: widget.cornerHandleBuilder,
                   onPointerDown: onHandlePanStart,
                   onPointerUpdate: onHandlePanUpdate,
@@ -538,10 +581,7 @@ class _TransformableBoxState extends State<TransformableBox> {
           ...HandlePosition.values.where((handle) => handle.isSide).map(
                 (handle) => SideHandleWidget(
                   handlePosition: handle,
-                  gestureResponseThickness:
-                      widget.sideHandleGestureResponseThickness,
-                  cornerHandleGestureResponseDiameter:
-                      widget.cornerHandleGestureResponseDiameter,
+                  handleTapSize: widget.handleTapSize,
                   builder: widget.sideHandleBuilder,
                   onPointerDown: onHandlePanStart,
                   onPointerUpdate: onHandlePanUpdate,
@@ -563,11 +603,8 @@ class CornerHandleWidget extends StatelessWidget {
   /// The builder that is used to build the handle widget.
   final HandleBuilder builder;
 
-  /// The diameter of the handle that is rendered.
-  final double renderedDiameter;
-
-  /// The diameter of the handle that is used for gesture detection.
-  final double gestureResponseDiameter;
+  /// The size of the handle's gesture response area.
+  final double handleTapSize;
 
   /// Called when the handle dragging starts.
   final PointerDownCallback onPointerDown;
@@ -582,8 +619,7 @@ class CornerHandleWidget extends StatelessWidget {
   CornerHandleWidget({
     super.key,
     required this.handlePosition,
-    required this.renderedDiameter,
-    required this.gestureResponseDiameter,
+    required this.handleTapSize,
     required this.builder,
     required this.onPointerDown,
     required this.onPointerUpdate,
@@ -597,8 +633,8 @@ class CornerHandleWidget extends StatelessWidget {
       right: handlePosition.influencesRight ? 0 : null,
       top: handlePosition.influencesTop ? 0 : null,
       bottom: handlePosition.influencesBottom ? 0 : null,
-      width: gestureResponseDiameter,
-      height: gestureResponseDiameter,
+      width: handleTapSize,
+      height: handleTapSize,
       child: Listener(
         behavior: HitTestBehavior.opaque,
         onPointerDown: (event) {
@@ -615,12 +651,7 @@ class CornerHandleWidget extends StatelessWidget {
         },
         child: MouseRegion(
           cursor: getCursorForHandle(handlePosition),
-          child: Center(
-            child: SizedBox.square(
-              dimension: renderedDiameter,
-              child: builder(context, handlePosition),
-            ),
-          ),
+          child: builder(context, handlePosition),
         ),
       ),
     );
@@ -650,13 +681,8 @@ class SideHandleWidget extends StatelessWidget {
   /// The builder that is used to build the handle widget.
   final HandleBuilder builder;
 
-  /// The diameter of the corner handle gesture area is used for the side handle
-  /// to offset the layout of the side gesture rectangle away from
-  /// the corner handle gesture area.
-  final double cornerHandleGestureResponseDiameter;
-
   /// The thickness of the handle that is used for gesture detection.
-  final double gestureResponseThickness;
+  final double handleTapSize;
 
   /// Called when the handle dragging starts.
   final PointerDownCallback onPointerDown;
@@ -671,8 +697,7 @@ class SideHandleWidget extends StatelessWidget {
   SideHandleWidget({
     super.key,
     required this.handlePosition,
-    required this.gestureResponseThickness,
-    required this.cornerHandleGestureResponseDiameter,
+    required this.handleTapSize,
     required this.builder,
     required this.onPointerDown,
     required this.onPointerUpdate,
@@ -681,30 +706,29 @@ class SideHandleWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final corner = cornerHandleGestureResponseDiameter;
     return Positioned(
       left: handlePosition.isVertical
-          ? corner
+          ? handleTapSize
           : handlePosition.influencesLeft
               ? 0
               : null,
       right: handlePosition.isVertical
-          ? corner
+          ? handleTapSize
           : handlePosition.influencesRight
               ? 0
               : null,
       top: handlePosition.isHorizontal
-          ? corner
+          ? handleTapSize
           : handlePosition.influencesTop
               ? 0
               : null,
       bottom: handlePosition.isHorizontal
-          ? corner
+          ? handleTapSize
           : handlePosition.influencesBottom
               ? 0
               : null,
-      width: handlePosition.isHorizontal ? gestureResponseThickness : null,
-      height: handlePosition.isVertical ? gestureResponseThickness : null,
+      width: handlePosition.isHorizontal ? handleTapSize : null,
+      height: handlePosition.isVertical ? handleTapSize : null,
       child: Listener(
         behavior: HitTestBehavior.opaque,
         onPointerDown: (event) {
@@ -721,9 +745,7 @@ class SideHandleWidget extends StatelessWidget {
         },
         child: MouseRegion(
           cursor: getCursorForHandle(handlePosition),
-          child: Center(
-            child: builder(context, handlePosition),
-          ),
+          child: builder(context, handlePosition),
         ),
       ),
     );

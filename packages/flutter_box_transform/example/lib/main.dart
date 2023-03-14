@@ -483,7 +483,7 @@ class _ClampingRectState extends State<ClampingRect> {
           maxHeightReached = reachedMaxHeight;
         });
       },
-      cornerHandleGestureResponseDiameter: 32,
+      handleTapSize: 32,
       cornerHandleBuilder: (context, handle) => const ColoredBox(color: mainColor),
       childBuilder: (context, _, flip) => Container(
         width: model.clampingRect.width,
