@@ -483,8 +483,23 @@ class _ClampingRectState extends State<ClampingRect> {
           maxHeightReached = reachedMaxHeight;
         });
       },
-      handleTapSize: 32,
-      cornerHandleBuilder: (context, handle) => const ColoredBox(color: mainColor),
+      cornerHandleBuilder: (context, handle) => DefaultCornerHandle(
+        size: 20,
+        handle: handle,
+        decoration: const BoxDecoration(color: mainColor),
+      ),
+      sideHandleBuilder: (context, handle) => DefaultSideHandle(
+        handle: handle,
+        decoration: const ShapeDecoration(
+          color: mainColor,
+          shape: RoundedRectangleBorder(
+            side: BorderSide(
+              width: 1.5,
+              color: mainColor,
+            ),
+          ),
+        ),
+      ),
       childBuilder: (context, _, flip) => Container(
         width: model.clampingRect.width,
         height: model.clampingRect.height,

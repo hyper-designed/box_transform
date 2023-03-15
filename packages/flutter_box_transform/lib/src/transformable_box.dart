@@ -61,111 +61,14 @@ Widget _defaultCornerHandleBuilder(
   BuildContext context,
   HandlePosition handle,
 ) =>
-    CircularCornerHandle(handle: handle);
+    DefaultCornerHandle(handle: handle);
 
 /// A default implementation of the side [HandleBuilder] callback.
 Widget _defaultSideHandleBuilder(
   BuildContext context,
   HandlePosition handle,
 ) =>
-    RoundedSideHandle(handle: handle);
-
-/// A circular handle in the corners of the box.
-class CircularCornerHandle extends StatelessWidget {
-  /// The position of the corner handle.
-  final HandlePosition handle;
-
-  /// The color of the center of the circle.
-  /// [Theme.scaffoldBackgroundColor] by default.
-  final Color? centerColor;
-
-  /// The color of the border of the circle.
-  /// [Theme.colorScheme.primary] by default.
-  final Color? borderColor;
-
-  /// The width of the border of the circle.
-  /// 1.5 by default.
-  final double borderWidth;
-
-  /// Creates a new circular corner handle.
-  const CircularCornerHandle({
-    super.key,
-    required this.handle,
-    this.centerColor,
-    this.borderColor,
-    this.borderWidth = 1.5,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        width: 12,
-        height: 12,
-        decoration: BoxDecoration(
-          color: centerColor ?? Theme.of(context).scaffoldBackgroundColor,
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: borderColor ?? Theme.of(context).colorScheme.primary,
-            width: borderWidth,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// A rounded handle in the sides of the box.
-class RoundedSideHandle extends StatelessWidget {
-  /// The position of the side handle.
-  final HandlePosition handle;
-
-  /// The color of the center of the circle.
-  /// [Theme.scaffoldBackgroundColor] by default.
-  final Color? centerColor;
-
-  /// The color of the border of the circle.
-  /// [Theme.colorScheme.primary] by default.
-  final Color? borderColor;
-
-  /// The width of the border of the circle.
-  /// 1.5 by default.
-  final double borderWidth;
-
-  /// The border radius of the rounded side handle.
-  /// 8 by default.
-  final double borderRadius;
-
-  /// Creates a new rounded side handle.
-  const RoundedSideHandle({
-    super.key,
-    required this.handle,
-    this.centerColor,
-    this.borderColor,
-    this.borderWidth = 1.5,
-    this.borderRadius = 8,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        constraints: BoxConstraints(
-          maxWidth: handle.isHorizontal ? 12 : 32,
-          maxHeight: handle.isHorizontal ? 32 : 12,
-        ),
-        decoration: BoxDecoration(
-          color: centerColor ?? Theme.of(context).scaffoldBackgroundColor,
-          border: Border.all(
-            color: borderColor ?? Theme.of(context).colorScheme.primary,
-            width: borderWidth,
-          ),
-          borderRadius: BorderRadius.circular(borderRadius),
-        ),
-      ),
-    );
-  }
-}
+    DefaultSideHandle(handle: handle);
 
 /// A widget that allows you to resize and drag a box around a widget.
 class TransformableBox extends StatefulWidget {
@@ -575,26 +478,26 @@ class _TransformableBoxState extends State<TransformableBox> {
               ),
             ),
           ),
-          ...HandlePosition.values.where((handle) => handle.isDiagonal).map(
-                (handle) => CornerHandleWidget(
-                  handlePosition: handle,
-                  handleTapSize: widget.handleTapSize,
-                  builder: widget.cornerHandleBuilder,
-                  onPointerDown: onHandlePanStart,
-                  onPointerUpdate: onHandlePanUpdate,
-                  onPointerUp: onHandlePanEnd,
-                ),
-              ),
-          ...HandlePosition.values.where((handle) => handle.isSide).map(
-                (handle) => SideHandleWidget(
-                  handlePosition: handle,
-                  handleTapSize: widget.handleTapSize,
-                  builder: widget.sideHandleBuilder,
-                  onPointerDown: onHandlePanStart,
-                  onPointerUpdate: onHandlePanUpdate,
-                  onPointerUp: onHandlePanEnd,
-                ),
-              ),
+          for (final handle in HandlePosition.corners)
+            _CornerHandleWidget(
+              key: ValueKey(handle),
+              handlePosition: handle,
+              handleTapSize: widget.handleTapSize,
+              builder: widget.cornerHandleBuilder,
+              onPointerDown: onHandlePanStart,
+              onPointerUpdate: onHandlePanUpdate,
+              onPointerUp: onHandlePanEnd,
+            ),
+          for (final handle in HandlePosition.sides)
+            _SideHandleWidget(
+              key: ValueKey(handle),
+              handlePosition: handle,
+              handleTapSize: widget.handleTapSize,
+              builder: widget.sideHandleBuilder,
+              onPointerDown: onHandlePanStart,
+              onPointerUpdate: onHandlePanUpdate,
+              onPointerUp: onHandlePanEnd,
+            ),
         ],
       ),
     );
@@ -603,7 +506,7 @@ class _TransformableBoxState extends State<TransformableBox> {
 
 /// Creates a new corner handle widget, with its appropriate gesture splash
 /// zone.
-class CornerHandleWidget extends StatelessWidget {
+class _CornerHandleWidget extends StatelessWidget {
   /// The position of the handle.
   final HandlePosition handlePosition;
 
@@ -623,7 +526,7 @@ class CornerHandleWidget extends StatelessWidget {
   final PointerUpCallback onPointerUp;
 
   /// Creates a new handle widget.
-  CornerHandleWidget({
+  _CornerHandleWidget({
     super.key,
     required this.handlePosition,
     required this.handleTapSize,
@@ -681,7 +584,7 @@ class CornerHandleWidget extends StatelessWidget {
 
 /// Creates a new cardinal handle widget, with its appropriate gesture splash
 /// zone.
-class SideHandleWidget extends StatelessWidget {
+class _SideHandleWidget extends StatelessWidget {
   /// The position of the handle.
   final HandlePosition handlePosition;
 
@@ -701,7 +604,7 @@ class SideHandleWidget extends StatelessWidget {
   final PointerUpCallback onPointerUp;
 
   /// Creates a new handle widget.
-  SideHandleWidget({
+  _SideHandleWidget({
     super.key,
     required this.handlePosition,
     required this.handleTapSize,

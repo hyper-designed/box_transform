@@ -71,6 +71,22 @@ enum HandlePosition {
 
   /// Whether the handle is vertical or not.
   bool get isVertical => this == top || this == bottom;
+
+  /// Returns a list of all the handles that are on the corners of the rect.
+  static const List<HandlePosition> corners = [
+    HandlePosition.topLeft,
+    HandlePosition.topRight,
+    HandlePosition.bottomLeft,
+    HandlePosition.bottomRight,
+  ];
+
+  /// Returns a list of all the handles that are on the sides of the rect.
+  static const List<HandlePosition> sides = [
+    HandlePosition.top,
+    HandlePosition.bottom,
+    HandlePosition.left,
+    HandlePosition.right,
+  ];
 }
 
 /// Represents the flip state of a rectangle, or, in other words, if the
