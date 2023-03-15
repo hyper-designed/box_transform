@@ -126,7 +126,7 @@ class PlaygroundModel with ChangeNotifier {
     notifyListeners();
   }
 
-  void setclampingRect(Rect rect,
+  void setClampingRect(Rect rect,
       {bool notify = true, bool insidePlayground = false}) {
     clampingRect = rect;
 
@@ -282,7 +282,7 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
     final Rect playgroundArea = model.playgroundArea!;
     if (model.clampingRect.width > playgroundArea.width ||
         model.clampingRect.height > playgroundArea.height) {
-      model.setclampingRect(
+      model.setClampingRect(
         model.clampingRect,
         notify: notify,
         insidePlayground: true,
@@ -464,7 +464,7 @@ class _ClampingRectState extends State<ClampingRect> {
         minWidth: model.rect.width,
         minHeight: model.rect.height,
       ),
-      onChanged: (result) => model.setclampingRect(result.rect),
+      onChanged: (result) => model.setClampingRect(result.rect),
       onTerminalSizeReached: (
         bool reachedMinWidth,
         bool reachedMaxWidth,
@@ -1135,7 +1135,7 @@ class _ClampingControlsState extends State<ClampingControls> {
                           const SizedBox(height: 16),
                           FilledButton.tonalIcon(
                             onPressed: () {
-                              model.setclampingRect(model.playgroundArea!);
+                              model.setClampingRect(model.playgroundArea!);
                             },
                             icon: const Icon(Icons.fullscreen_rounded),
                             label: const Text('Full screen'),
