@@ -3,7 +3,10 @@ description: A Flutter implementation of rect_resizer package.
 
 version: 0.1.0
 
-homepage: https://github.com/BirjuVachhani/rect_resizer
+repository: https://github.com/BirjuVachhani/box_transform
+homepage: https://github.com/BirjuVachhani/box_transform
+issue_tracker: https://github.com/BirjuVachhani/box_transform/issues
+documentation: https://docs.page/BirjuVachhani/box_transform
 
 environment:
   sdk: '>=2.18.0 <3.0.0'
