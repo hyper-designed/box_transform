@@ -234,6 +234,9 @@ class TransformableBox extends StatefulWidget {
   /// set to true, the child will be flipped when the box is flipped.
   final bool flipChild;
 
+  /// How to align the handles.
+  final HandleAlign handleAlign;
+
   /// Creates a [TransformableBox] widget.
   const TransformableBox({
     super.key,
@@ -263,6 +266,7 @@ class TransformableBox extends StatefulWidget {
     this.movable = true,
     this.flipWhileResizing = true,
     this.flipChild = true,
+    this.handleAlign = HandleAlign.center,
   })  : assert(
           controller == null ||
               (rect == null &&
@@ -446,14 +450,14 @@ class _TransformableBoxState extends State<TransformableBox> {
     final Flip flip = controller.flip;
     final Rect box = controller.rect;
     return Positioned.fromRect(
-      rect: box.inflate(widget.handleTapSize / 2),
+      rect: box.inflate(widget.handleAlign.offset(widget.handleTapSize)),
       child: Stack(
         clipBehavior: Clip.none,
         fit: StackFit.expand,
         children: [
           Positioned(
-            left: widget.handleTapSize / 2,
-            top: widget.handleTapSize / 2,
+            left: widget.handleAlign.offset(widget.handleTapSize),
+            top: widget.handleAlign.offset(widget.handleTapSize),
             width: box.width,
             height: box.height,
             child: Listener(
