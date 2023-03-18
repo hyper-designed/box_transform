@@ -4,3 +4,4 @@
 pubspec_overrides.yaml
 
 **/*.iml
+**/coverage

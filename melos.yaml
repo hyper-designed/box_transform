@@ -12,23 +12,54 @@ command:
     runPubGetInParallel: false
     usePubspecOverrides: true
 
+ide:
+  intellij: true
+
 scripts:
   deps:
-    run: melos exec dart pub get
+    run: |
+      melos exec dart pub get
     description: Run `pub get` for all packages.
-  analyze:
-    exec: dart analyze .
   format:
     run: melos exec dart format . --fix
     description: Run `dart format` for all packages.
+  format:check:
+    description: Check formatting of Dart code.
+    run: dart format --output none --set-exit-if-changed .
+  analyze:
+    description: Analyze Dart code.
+    run: dart analyze . --fatal-infos
   clean:
     run: melos exec flutter clean && melos exec dart pub get
   dry-run:
     run: melos exec flutter pub publish --dry-run
   build-web:
     run: cd packages/flutter_box_transform/example && flutter build web
+  test:
+    run: |
+      cd packages/box_transform
+      dart test .
+    env:
+      MELOS_TEST: true
   archive-web:
     run: |
       cd packages/flutter_box_transform/example
       flutter build web
       tar --directory build/web -cvf ../../../artifact.tar .
+  lcov:
+    run: |
+      cd packages/box_transform
+      dart pub run coverage:test_with_coverage
+      dart pub run coverage:format_coverage --packages=.dart_tool/package_config.json --lcov -i coverage/coverage.json -o coverage/lcov.info
+    env:
+      MELOS_TEST: true
+  cov:
+    run: |
+      cd packages/box_transform
+      dart pub global run coverage:test_with_coverage
+      dart pub global run coverage:format_coverage --packages=.dart_tool/package_config.json --lcov -i coverage/coverage.json -o coverage/lcov.info
+      genhtml coverage/lcov.info -o coverage/html
+    env:
+      MELOS_TEST: true
+  open_cov:
+    run: open packages/box_transform/coverage/html/index.html
