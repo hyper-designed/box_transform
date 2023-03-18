@@ -5,3 +5,4 @@ pubspec_overrides.yaml
 
 **/*.iml
 **/coverage
+.dart_tool
