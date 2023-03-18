@@ -1,0 +1,39 @@
+# Simple workflow for deploying static content to GitHub Pages
+name: Tests
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - '**.dart'
+      - '**.yaml'
+      - '**.yml'
+
+  workflow_dispatch:
+
+jobs:
+  tests_and_coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2.8.0
+        with:
+          channel: stable
+          cache: true
+      - name: Flutter version
+        run: flutter --version
+      - name: Install melos
+        run: dart pub global activate melos
+      - name: Setup melos
+        run:  melos bootstrap
+      - name: Install dependencies
+        run: melos deps
+      - name: Run tests with coverage
+        run: melos run lcov
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./packages/box_transform/coverage/lcov.info
+          name: codecov-box-transform
