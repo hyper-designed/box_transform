@@ -10,12 +10,13 @@ Dart project.
 
 ## Features
 
-* 📏 Dimension Constraining: Set maximum and minimum constraints to keep boxes within specific boundaries while resizing.
-* 🔁 Flipping Mechanics: Advanced positional-flipping when resizing hits extreme values with hard constraints.
-* 🔒 Drag Clamping: Clamp boxes inside a parent box to contain them within a specific area.
-* 🎨 Flexible Resizing Modes: Choose from four different resizing modes for more flexibility in how boxes are resized.
-* 📍 Customizable Anchor Points: Define resizing corner-handles to anchor different parts of the box when resizing.
-* 🚀 Easy Integration: Integrate Box Transform into your project with ease using stateless and static functions.
+* 📏 **Dimension Constraining:** Set maximum and minimum constraints to keep boxes within specific boundaries while resizing.
+* 🔁 **Flipping Mechanics:** Advanced positional-flipping when resizing hits extreme values with hard constraints.
+* 🔒 **Drag Clamping:** Clamp boxes inside a parent box to contain them within a specific area.
+* 🎨 **Flexible Resizing Modes:** Choose from four different resizing modes for more flexibility in how boxes are resized.
+* 📍 **Customizable Anchor Points:** Define resizing corner-handles to anchor different parts of the box when resizing.
+* 🎨 **Customizable Handles:** Use default resizing handles or define your own custom handles.
+* 🚀 **Easy Integration:** Integrate Box Transform into your Dart project with ease using stateless and static functions.
 
 ## Getting started
 
