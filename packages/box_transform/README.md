@@ -1,9 +1,12 @@
+![Banner](https://raw.githubusercontent.com/BirjuVachhani/box_transform/main/docs/assets/banner.png)
+
 # Box Transform
+
+[![melos](https://img.shields.io/badge/maintained%20with-melos-f700ff.svg?style=flat-square)](https://github.com/invertase/melos) [![Codemagic build status](https://api.codemagic.io/apps/63dd4d4ae6be1d561b8f45d2/63dd4d4ae6be1d561b8f45d1/status_badge.svg)](https://codemagic.io/apps/63dd4d4ae6be1d561b8f45d2/63dd4d4ae6be1d561b8f45d1/latest_build) [![Pub Version](https://img.shields.io/pub/v/box_transform?label=Pub)](https://pub.dev/packages/box_transform)
+
 Box Transform is a pure-Dart base package that allows you to programmatically handle box resizing and dragging without
 relying on Flutter. It provides highly flexible, programmatically resizable and draggable boxes that can be used in any
 Dart project.
-
-Detailed documentation: [https://docs.page/birjuvachhani/rect_resizer](https://docs.page/birjuvachhani/rect_resizer)
 
 ## Features
 
@@ -16,72 +19,60 @@ Detailed documentation: [https://docs.page/birjuvachhani/rect_resizer](https://d
 
 ## Getting started
 
-Box Transform offers a `resizer.dart` class that holds functions that take initial box states
-and returns new box states with the desired actions.
+Go to the [Getting Started](https://docs.page/BirjuVachhani/box_transform/get_started) page of the
+[documentation](docsite) to start using Box Transform.
 
-Since this is a pure-Dart package, it offers a `Box` (as opposed to a `Rect`) class that holds
-an x, y, width, and height. You will want to start by making a new `Box` as your initial point
-of reference.
+### Live Demo: [box-transform.codemagic.app](https://box-transform.codemagic.app)
 
-The `Box` class is very similar to Flutter's `Rect`, therefore you can easily reference the
-Flutter documentation for implementation details.
+## Documentation
 
-```dart
-import 'package:rect_resizer/rect_resizer.dart';
-
-void main() {
-  final box = Box.fromLTWH(0, 0, 100, 100);
-}
-```
-
-## Resizing a Box
-
-```dart
-import 'package:rect_resizer/rect_resizer.dart';
-
-void main() {
-  Box box = Box.fromLTWH(0, 0, 100, 100);
-
-  final ResizeResult result = RectResizer.resize(
-    handle: HandlePosition.bottomRight,
-    initialRect: box,
-    initialLocalPosition: Vector2(100, 100),
-    localPosition: Vector2(110, 120),
-    resizeMode: ResizeMode.freeform,
-    initialFlip: Flip.none,
-  );
-
-  // A new box instance is returned, but resized.
-  box = result.newRect;
-  flip = result.flip;
-
-}
-```
-
-## Moving a Box
-
-```dart
-import 'package:rect_resizer/rect_resizer.dart';
-
-void main() {
-  Box box = Box.fromLTWH(0, 0, 100, 100);
-
-  final MoveResult result = RectResizer.move(
-    initialRect: box,
-    initialLocalPosition: Vector2(50, 50),
-    localPosition: Vector2(60, 50),
-  );
-
-  // A new box instance is returned, but moved 10px to the right.
-  box = result.newRect;
-}
-```
-
-## Additional information
-
-For more detailed documentation, please visit the [documentation page](https://docs.page/birjuvachhani/rect_resizer) or
-check our tests for complete usage coverage.
+Documentation is available at https://docs.page/BirjuVachhani/box_transform.
 
 ## Contributing
 
-If you have any suggestions or find any bugs, please feel free to open an issue or a pull request.
+See [CONTRIBUTING.md](https://github.com/BirjuVachhani/adaptive_theme/blob/main/CONTRIBUTING.md) for details.
+
+See [DEVELOPMENT.md](https://github.com/BirjuVachhani/adaptive_theme/blob/main/development.md) for development setup.
+
+## Authors
+
+<table>
+  <tr>
+    <td align="center"><a href="https://github.com/birjuvachhani"><img src="https://avatars.githubusercontent.com/u/20423471?s=100" width="100px;" alt=""/><br /><sub><b>Birju Vachhani</b></sub></a></td>
+    <td align="center"><a href="https://github.com/SwissCheese5"><img src="https://avatars.githubusercontent.com/u/7407478?v=4" width="100px;" alt=""/><br /><sub><b>Saad Ardati</b></sub></a></td>
+  </tr>
+</table>
+
+## License
+
+```
+BSD 3-Clause License
+
+Copyright (c) 2023, Birju Vachhani
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+```
