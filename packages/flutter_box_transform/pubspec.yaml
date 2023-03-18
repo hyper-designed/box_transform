@@ -1,5 +1,5 @@
 name: flutter_box_transform
-description: A Flutter implementation of rect_resizer package.
+description: A Flutter implementation of box_transform package that provides easy 2D box transform operations with advanced resizing of rect in UI.
 
 version: 0.1.0
 
