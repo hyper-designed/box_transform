@@ -1,4 +1,4 @@
-`![Banner](https://raw.githubusercontent.com/BirjuVachhani/box_transform/main/docs/assets/banner.png)`
+![Banner](https://raw.githubusercontent.com/BirjuVachhani/box_transform/main/docs/assets/banner.png)
 
 # Box Transform
 
