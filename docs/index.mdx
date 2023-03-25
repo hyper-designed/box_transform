@@ -41,7 +41,7 @@ See [DEVELOPMENT.md](https://github.com/BirjuVachhani/adaptive_theme/blob/main/d
 <table>
   <tr>
     <td align="center"><a href="https://github.com/birjuvachhani"><img src="https://avatars.githubusercontent.com/u/20423471?s=100" width="100px;" alt=""/><br /><sub><b>Birju Vachhani</b></sub></a></td>
-    <td align="center"><a href="https://github.com/SwissCheese5"><img src="https://avatars.githubusercontent.com/u/7407478?v=4" width="100px;" alt=""/><br /><sub><b>Saad Ardati</b></sub></a></td>
+    <td align="center"><a href="https://github.com/SaadArdati"><img src="https://avatars.githubusercontent.com/u/7407478?v=4" width="100px;" alt=""/><br /><sub><b>Saad Ardati</b></sub></a></td>
   </tr>
 </table>
 
