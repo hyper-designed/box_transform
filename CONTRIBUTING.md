@@ -62,7 +62,7 @@ Even better you can submit a Pull Request with a fix.
 
 That's it! Thank you for your contribution!
 
-[coc]: https://github.com/BirjuVachhani/box_transform/blob/main/CODE_OF_CONDUCT.md
-[pulls]: https://github.com/BirjuVachhani/box_transform/pulls
-[license]: https://github.com/BirjuVachhani/box_transform/blob/main/LICENSE
-[issue]: https://github.com/BirjuVachhani/box_transform/blob/main/ISSUE_TEMPLATE.md
+[coc]: https://github.com/hyper-designed/box_transform/blob/main/CODE_OF_CONDUCT.md
+[pulls]: https://github.com/hyper-designed/box_transform/pulls
+[license]: https://github.com/hyper-designed/box_transform/blob/main/LICENSE
+[issue]: https://github.com/hyper-designed/box_transform/blob/main/ISSUE_TEMPLATE.md

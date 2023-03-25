@@ -1,4 +1,4 @@
-![Banner](https://raw.githubusercontent.com/BirjuVachhani/box_transform/main/docs/assets/banner.png)
+![Banner](https://raw.githubusercontent.com/hyper-designed/box_transform/main/docs/assets/banner.png)
 
 # Flutter Box Transform
 
@@ -21,14 +21,14 @@ to provide flexible and easy to use interface for Flutter projects.
 
 ## Getting started
 
-Go to the [Getting Started](https://docs.page/BirjuVachhani/box_transform/flutter_get_started) page of the
+Go to the [Getting Started](https://docs.page/hyper-designed/box_transform/flutter_get_started) page of the
 [documentation](docsite) to start using Box Transform.
 
 ### Live Demo: [box-transform.codemagic.app](https://box-transform.codemagic.app)
 
 ## Documentation
 
-Documentation is available at https://docs.page/BirjuVachhani/box_transform.
+Documentation is available at https://docs.page/hyper-designed/box_transform.
 
 ## Contributing
 
@@ -79,4 +79,4 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ```
 
-[github]: https://github.com/BirjuVachhani/box_transform
+[github]: https://github.com/hyper-designed/box_transform

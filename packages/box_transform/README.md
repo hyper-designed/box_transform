@@ -1,8 +1,8 @@
-![Banner](https://raw.githubusercontent.com/BirjuVachhani/box_transform/main/docs/assets/banner.png)
+![Banner](https://raw.githubusercontent.com/hyper-designed/box_transform/main/docs/assets/banner.png)
 
 # Box Transform
 
-[![melos](https://img.shields.io/badge/maintained%20with-melos-f700ff.svg?style=flat-square)](https://github.com/invertase/melos) [![Codemagic build status](https://api.codemagic.io/apps/63dd4d4ae6be1d561b8f45d2/63dd4d4ae6be1d561b8f45d1/status_badge.svg)](https://codemagic.io/apps/63dd4d4ae6be1d561b8f45d2/63dd4d4ae6be1d561b8f45d1/latest_build) [![Tests](https://github.com/BirjuVachhani/box_transform/workflows/Tests/badge.svg?branch=main)](https://github.com/BirjuVachhani/box_transform/actions) [![Pub Version](https://img.shields.io/pub/v/box_transform?label=Pub)](https://pub.dev/packages/box_transform) 
+[![melos](https://img.shields.io/badge/maintained%20with-melos-f700ff.svg?style=flat-square)](https://github.com/invertase/melos) [![Codemagic build status](https://api.codemagic.io/apps/63dd4d4ae6be1d561b8f45d2/63dd4d4ae6be1d561b8f45d1/status_badge.svg)](https://codemagic.io/apps/63dd4d4ae6be1d561b8f45d2/63dd4d4ae6be1d561b8f45d1/latest_build) [![Tests](https://github.com/hyper-designed/box_transform/workflows/Tests/badge.svg?branch=main)](https://github.com/hyper-designed/box_transform/actions) [![Pub Version](https://img.shields.io/pub/v/box_transform?label=Pub)](https://pub.dev/packages/box_transform) 
 
 Box Transform is a pure-Dart base package that allows you to programmatically handle box resizing and dragging without
 relying on Flutter. It provides highly flexible, programmatically resizable and draggable boxes that can be used in any
@@ -20,14 +20,14 @@ Dart project.
 
 ## Getting started
 
-Go to the [Getting Started](https://docs.page/BirjuVachhani/box_transform/get_started) page of the
+Go to the [Getting Started](https://docs.page/hyper-designed/box_transform/get_started) page of the
 [documentation](docsite) to start using Box Transform.
 
 ### Live Demo: [box-transform.codemagic.app](https://box-transform.codemagic.app)
 
 ## Documentation
 
-Documentation is available at https://docs.page/BirjuVachhani/box_transform.
+Documentation is available at https://docs.page/hyper-designed/box_transform.
 
 ## Contributing
 
