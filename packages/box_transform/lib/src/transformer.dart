@@ -118,12 +118,34 @@ class BoxTransformer {
         height: newHeight,
       );
     } else {
-      Box rect = Box.fromLTWH(
-        handle.influencesLeft ? initialBox.right - newWidth : initialBox.left,
-        handle.influencesTop ? initialBox.bottom - newHeight : initialBox.top,
-        newWidth,
-        newHeight,
-      );
+      double left;
+      double top;
+
+      /// If the handle is a side handle and its a scalable resizing, then
+      /// the resizing should be w.r.t. the opposite side of the handle.
+      /// This is needs to be handled separately because the anchor point in
+      /// this case is the center of the handle on the opposite side.
+      if (resizeMode.isScalable && handle.isSide) {
+        if (handle.isHorizontal) {
+          left = handle.influencesLeft
+              ? initialBox.right - newWidth
+              : initialBox.left;
+          top = initialBox.center.y - newHeight / 2;
+        } else {
+          top = handle.influencesTop
+              ? initialBox.bottom - newHeight
+              : initialBox.top;
+          left = initialBox.center.x - newWidth / 2;
+        }
+      } else {
+        left = handle.influencesLeft
+            ? initialBox.right - newWidth
+            : initialBox.left;
+        top = handle.influencesTop
+            ? initialBox.bottom - newHeight
+            : initialBox.top;
+      }
+      Box rect = Box.fromLTWH(left, top, newWidth, newHeight);
 
       // Flip the rect only if flipRect is true.
       newRect = flipRect ? flipBox(rect, currentFlip, handle) : rect;
@@ -257,12 +279,46 @@ class BoxTransformer {
 
     initialBox = flipBox(initialBox, flip, handle);
     Box rect;
-    rect = Box.fromLTRB(
-      initialBox.left + (handle.influencesLeft ? delta.x : 0),
-      initialBox.top + (handle.influencesTop ? delta.y : 0),
-      initialBox.right + (handle.influencesRight ? delta.x : 0),
-      initialBox.bottom + (handle.influencesBottom ? delta.y : 0),
-    );
+
+    /// If the handle is a side handle and its a scalable resizing, then
+    /// the resizing should be w.r.t. the opposite side of the handle.
+    /// This is needs to be handled separately because the anchor point in
+    /// this case is the center of the handle on the opposite side.
+    if (handle.isSide && resizeMode.isScalable) {
+      double left;
+      double top;
+      double right;
+      double bottom;
+
+      if (handle.isHorizontal) {
+        left =
+            handle.influencesLeft ? initialBox.left + delta.x : initialBox.left;
+        right = handle.influencesRight
+            ? initialBox.right + delta.x
+            : initialBox.right;
+        final width = right - left;
+        final height = width / aspectRatio;
+        top = initialBox.centerLeft.y - height / 2;
+        bottom = initialBox.centerLeft.y + height / 2;
+      } else {
+        top = handle.influencesTop ? initialBox.top + delta.y : initialBox.top;
+        bottom = handle.influencesBottom
+            ? initialBox.bottom + delta.y
+            : initialBox.bottom;
+        final height = bottom - top;
+        final width = height * aspectRatio;
+        left = initialBox.centerLeft.x - width / 2;
+        right = initialBox.centerLeft.x + width / 2;
+      }
+      rect = Box.fromLTRB(left, top, right, bottom);
+    } else {
+      rect = Box.fromLTRB(
+        initialBox.left + (handle.influencesLeft ? delta.x : 0),
+        initialBox.top + (handle.influencesTop ? delta.y : 0),
+        initialBox.right + (handle.influencesRight ? delta.x : 0),
+        initialBox.bottom + (handle.influencesBottom ? delta.y : 0),
+      );
+    }
     if (resizeMode.hasSymmetry) {
       final widthDelta = (initialBox.width - rect.width) / 2;
       final heightDelta = (initialBox.height - rect.height) / 2;
