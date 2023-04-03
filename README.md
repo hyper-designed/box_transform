@@ -39,15 +39,15 @@ Documentation is available at https://docs.page/hyper-designed/box_transform.
 
 ## Contributing
 
-See [CONTRIBUTING.md](https://github.com/BirjuVachhani/adaptive_theme/blob/main/CONTRIBUTING.md) for details.
+See [CONTRIBUTING.md](https://github.com/hyper-designed/box_transform/blob/main/CONTRIBUTING.md) for details.
 
-See [DEVELOPMENT.md](https://github.com/BirjuVachhani/adaptive_theme/blob/main/development.md) for development setup.
+See [DEVELOPMENT.md](https://github.com/hyper-designed/box_transform/blob/main/development.md) for development setup.
 
 ## Authors
 
 <table>
   <tr>
-    <td align="center"><a href="https://github.com/birjuvachhani"><img src="https://avatars.githubusercontent.com/u/20423471?s=100" width="100px;" alt=""/><br /><sub><b>Birju Vachhani</b></sub></a></td>
+    <td align="center"><a href="https://github.com/hyper-designed"><img src="https://avatars.githubusercontent.com/u/20423471?s=100" width="100px;" alt=""/><br /><sub><b>Birju Vachhani</b></sub></a></td>
     <td align="center"><a href="https://github.com/SaadArdati"><img src="https://avatars.githubusercontent.com/u/7407478?v=4" width="100px;" alt=""/><br /><sub><b>Saad Ardati</b></sub></a></td>
   </tr>
 </table>
