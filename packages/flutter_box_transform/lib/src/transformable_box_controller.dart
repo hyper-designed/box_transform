@@ -154,7 +154,6 @@ class TransformableBoxController extends ChangeNotifier {
     notifyListeners();
   }
 
-
   /// Whether to allow flipping of the box while resizing. If this is set to
   /// true, the box will flip when the user drags the handles to opposite
   /// corners of the rect.
