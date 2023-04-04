@@ -22,6 +22,9 @@ scripts:
   format:
     run: melos exec dart format . --fix
     description: Run `dart format` for all packages.
+  check-format:
+    run: melos exec dart format --output none --set-exit-if-changed .
+    description: Check formatting of Dart code.
   format:check:
     description: Check formatting of Dart code.
     run: dart format --output none --set-exit-if-changed .
