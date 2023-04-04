@@ -220,6 +220,10 @@ class TransformableBox extends StatefulWidget {
   /// Whether the box is resizable or not. Setting this to false will disable
   /// all resizing operations.
   final bool resizable;
+  
+  /// Whether the box should hide the corner/side resize controls when [resizable] is
+  /// false.
+  final bool hideHandlesWhenNotResizable;
 
   /// Whether the box is movable or not. Setting this to false will disable
   /// all moving operations.
@@ -263,6 +267,7 @@ class TransformableBox extends StatefulWidget {
     this.onTerminalHeightReached,
     this.onTerminalSizeReached,
     this.resizable = true,
+    this.hideHandlesWhenNotResizable = true,
     this.movable = true,
     this.flipWhileResizing = true,
     this.flipChild = true,
@@ -336,6 +341,7 @@ class _TransformableBoxState extends State<TransformableBox> {
         ..constraints = widget.constraints
         ..resolveResizeModeCallback = widget.resolveResizeModeCallback
         ..resizable = widget.resizable
+        ..hideHandlesWhenNotResizable = widget.hideHandlesWhenNotResizable
         ..movable = widget.movable
         ..flipWhileResizing = widget.flipWhileResizing
         ..flipChild = widget.flipChild;
@@ -368,6 +374,10 @@ class _TransformableBoxState extends State<TransformableBox> {
 
     if (oldWidget.resizable != widget.resizable) {
       controller.resizable = widget.resizable;
+    }
+
+    if(oldWidget.hideHandlesWhenNotResizable != widget.hideHandlesWhenNotResizable) {
+      controller.hideHandlesWhenNotResizable = widget.hideHandlesWhenNotResizable;
     }
 
     if (oldWidget.movable != widget.movable) {
@@ -482,7 +492,7 @@ class _TransformableBoxState extends State<TransformableBox> {
               ),
             ),
           ),
-          if(controller.resizable) for (final handle in HandlePosition.corners)
+          if(controller.resizable || !controller.hideHandlesWhenNotResizable) for (final handle in HandlePosition.corners)
             _CornerHandleWidget(
               key: ValueKey(handle),
               handlePosition: handle,
@@ -492,7 +502,7 @@ class _TransformableBoxState extends State<TransformableBox> {
               onPointerUpdate: onHandlePanUpdate,
               onPointerUp: onHandlePanEnd,
             ),
-          if(controller.resizable) for (final handle in HandlePosition.sides)
+          if(controller.resizable || !controller.hideHandlesWhenNotResizable) for (final handle in HandlePosition.sides)
             _SideHandleWidget(
               key: ValueKey(handle),
               handlePosition: handle,

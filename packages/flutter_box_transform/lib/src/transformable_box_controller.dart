@@ -74,6 +74,10 @@ class TransformableBoxController extends ChangeNotifier {
   /// all resizing operations.
   bool resizable = true;
 
+  /// Whether the box should hide the corner/side resize controls when [resizable] is
+  /// false.
+  bool hideHandlesWhenNotResizable = true;
+
   /// Whether to allow flipping of the box while resizing. If this is set to
   /// true, the box will flip when the user drags the handles to opposite
   /// corners of the rect.
@@ -142,6 +146,14 @@ class TransformableBoxController extends ChangeNotifier {
     this.resizable = resizable;
     notifyListeners();
   }
+
+  /// Whether the box should hide the corner/side resize controls when [resizable] is
+  /// false.
+  void setHideHandlesWhenNotResizable(bool hideHandlesWhenNotResizable) {
+    this.hideHandlesWhenNotResizable = hideHandlesWhenNotResizable;
+    notifyListeners();
+  }
+
 
   /// Whether to allow flipping of the box while resizing. If this is set to
   /// true, the box will flip when the user drags the handles to opposite
