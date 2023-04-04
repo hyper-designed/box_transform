@@ -15,7 +15,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
     return AdaptiveTheme(
       light: ThemeData(
         useMaterial3: true,
@@ -344,8 +343,17 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
                 ),
                 if (model.clampingEnabled && model.playgroundArea != null)
                   const ClampingRect(),
-                ImageBox(rect:model.rect, flip:model.flip, imageAsset:'assets/images/landscape2.jpg', onChanged:model.onRectChanged),
-                if(model.showSecondImageBox) ImageBox(rect:model.rect2, flip:model.flip2, imageAsset:'assets/images/landscape.jpg', onChanged:model.onRect2Changed),
+                ImageBox(
+                    rect: model.rect,
+                    flip: model.flip,
+                    imageAsset: 'assets/images/landscape2.jpg',
+                    onChanged: model.onRectChanged),
+                if (model.showSecondImageBox)
+                  ImageBox(
+                      rect: model.rect2,
+                      flip: model.flip2,
+                      imageAsset: 'assets/images/landscape.jpg',
+                      onChanged: model.onRect2Changed),
               ],
             ),
           ),
@@ -357,8 +365,12 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
 }
 
 class ImageBox extends StatefulWidget {
-  const ImageBox({super.key, required this.rect, required this.flip, required this.imageAsset,
-        required this.onChanged});
+  const ImageBox(
+      {super.key,
+      required this.rect,
+      required this.flip,
+      required this.imageAsset,
+      required this.onChanged});
 
   final Rect rect;
   final Flip flip;
@@ -707,7 +719,8 @@ class ControlPanel extends StatelessWidget {
                       scale: 0.7,
                       child: Switch(
                         value: model.hideHandlesWhenNotResizable,
-                        onChanged: (value) => model.toggleHideHandlesWhenNotResizable(value),
+                        onChanged: (value) =>
+                            model.toggleHideHandlesWhenNotResizable(value),
                       ),
                     ),
                   ),
@@ -741,7 +754,8 @@ class ControlPanel extends StatelessWidget {
                       scale: 0.7,
                       child: Switch(
                         value: model.showSecondImageBox,
-                        onChanged: (value) => model.toggleShowSecondImageBox(value),
+                        onChanged: (value) =>
+                            model.toggleShowSecondImageBox(value),
                       ),
                     ),
                   ),
@@ -1627,4 +1641,3 @@ class SectionHeader extends StatelessWidget {
     );
   }
 }
-

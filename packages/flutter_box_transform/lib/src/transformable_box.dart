@@ -220,7 +220,7 @@ class TransformableBox extends StatefulWidget {
   /// Whether the box is resizable or not. Setting this to false will disable
   /// all resizing operations.
   final bool resizable;
-  
+
   /// Whether the box should hide the corner/side resize controls when [resizable] is
   /// false.
   final bool hideHandlesWhenNotResizable;
@@ -376,8 +376,10 @@ class _TransformableBoxState extends State<TransformableBox> {
       controller.resizable = widget.resizable;
     }
 
-    if(oldWidget.hideHandlesWhenNotResizable != widget.hideHandlesWhenNotResizable) {
-      controller.hideHandlesWhenNotResizable = widget.hideHandlesWhenNotResizable;
+    if (oldWidget.hideHandlesWhenNotResizable !=
+        widget.hideHandlesWhenNotResizable) {
+      controller.hideHandlesWhenNotResizable =
+          widget.hideHandlesWhenNotResizable;
     }
 
     if (oldWidget.movable != widget.movable) {
@@ -492,26 +494,28 @@ class _TransformableBoxState extends State<TransformableBox> {
               ),
             ),
           ),
-          if(controller.resizable || !controller.hideHandlesWhenNotResizable) for (final handle in HandlePosition.corners)
-            _CornerHandleWidget(
-              key: ValueKey(handle),
-              handlePosition: handle,
-              handleTapSize: widget.handleTapSize,
-              builder: widget.cornerHandleBuilder,
-              onPointerDown: onHandlePanStart,
-              onPointerUpdate: onHandlePanUpdate,
-              onPointerUp: onHandlePanEnd,
-            ),
-          if(controller.resizable || !controller.hideHandlesWhenNotResizable) for (final handle in HandlePosition.sides)
-            _SideHandleWidget(
-              key: ValueKey(handle),
-              handlePosition: handle,
-              handleTapSize: widget.handleTapSize,
-              builder: widget.sideHandleBuilder,
-              onPointerDown: onHandlePanStart,
-              onPointerUpdate: onHandlePanUpdate,
-              onPointerUp: onHandlePanEnd,
-            ),
+          if (controller.resizable || !controller.hideHandlesWhenNotResizable)
+            for (final handle in HandlePosition.corners)
+              _CornerHandleWidget(
+                key: ValueKey(handle),
+                handlePosition: handle,
+                handleTapSize: widget.handleTapSize,
+                builder: widget.cornerHandleBuilder,
+                onPointerDown: onHandlePanStart,
+                onPointerUpdate: onHandlePanUpdate,
+                onPointerUp: onHandlePanEnd,
+              ),
+          if (controller.resizable || !controller.hideHandlesWhenNotResizable)
+            for (final handle in HandlePosition.sides)
+              _SideHandleWidget(
+                key: ValueKey(handle),
+                handlePosition: handle,
+                handleTapSize: widget.handleTapSize,
+                builder: widget.sideHandleBuilder,
+                onPointerDown: onHandlePanStart,
+                onPointerUpdate: onHandlePanUpdate,
+                onPointerUp: onHandlePanEnd,
+              ),
         ],
       ),
     );
