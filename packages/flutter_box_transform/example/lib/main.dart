@@ -15,6 +15,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    
     return AdaptiveTheme(
       light: ThemeData(
         useMaterial3: true,
@@ -60,6 +61,11 @@ class MyApp extends StatelessWidget {
 class PlaygroundModel with ChangeNotifier {
   Rect rect = Rect.zero;
   Flip flip = Flip.none;
+
+  bool showSecondImageBox = false;
+  Rect rect2 = Rect.zero;
+  Flip flip2 = Flip.none;
+
   Rect clampingRect = Rect.largest;
   Rect? playgroundArea;
   late BoxConstraints constraints = const BoxConstraints(
@@ -73,6 +79,7 @@ class PlaygroundModel with ChangeNotifier {
   bool constraintsEnabled = false;
   bool resizable = true;
   bool movable = true;
+  bool hideHandlesWhenNotResizable = true;
 
   void reset(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
@@ -85,6 +92,15 @@ class PlaygroundModel with ChangeNotifier {
       kInitialHeight,
     );
     flip = Flip.none;
+
+    rect2 = Rect.fromLTWH(
+      (width - kInitialWidth) / 3,
+      (height - kInitialHeight) / 3,
+      kInitialWidth,
+      kInitialHeight,
+    );
+    flip2 = Flip.none;
+
     clampingRect = Rect.fromLTWH(
       0,
       0,
@@ -101,6 +117,7 @@ class PlaygroundModel with ChangeNotifier {
     movable = true;
     clampingEnabled = false;
     constraintsEnabled = false;
+    hideHandlesWhenNotResizable = true;
 
     notifyListeners();
   }
@@ -108,6 +125,12 @@ class PlaygroundModel with ChangeNotifier {
   void onRectChanged(UITransformResult result) {
     rect = result.rect;
     flip = result is UIResizeResult ? result.flip : flip;
+    notifyListeners();
+  }
+
+  void onRect2Changed(UITransformResult result) {
+    rect2 = result.rect;
+    flip2 = result is UIResizeResult ? result.flip : flip;
     notifyListeners();
   }
 
@@ -178,6 +201,16 @@ class PlaygroundModel with ChangeNotifier {
     notifyListeners();
   }
 
+  void toggleHideHandlesWhenNotResizable(bool enabled) {
+    hideHandlesWhenNotResizable = enabled;
+    notifyListeners();
+  }
+
+  void toggleShowSecondImageBox(bool enabled) {
+    showSecondImageBox = enabled;
+    notifyListeners();
+  }
+
   void onClampingRectChanged({
     double? left,
     double? top,
@@ -230,7 +263,7 @@ const double kSidePanelWidth = 300;
 const double kInitialWidth = 400;
 const double kInitialHeight = 300;
 const double kStrokeWidth = 1.5;
-const Color kGridColor = Color(0x7FC3E8F3);
+const Color kGridColor = Color.fromARGB(126, 27, 181, 228);
 
 class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
   @override
@@ -311,7 +344,8 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
                 ),
                 if (model.clampingEnabled && model.playgroundArea != null)
                   const ClampingRect(),
-                const ImageBox(),
+                ImageBox(rect:model.rect, flip:model.flip, imageAsset:'assets/images/landscape2.jpg', onChanged:model.onRectChanged),
+                if(model.showSecondImageBox) ImageBox(rect:model.rect2, flip:model.flip2, imageAsset:'assets/images/landscape.jpg', onChanged:model.onRect2Changed),
               ],
             ),
           ),
@@ -323,7 +357,13 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
 }
 
 class ImageBox extends StatefulWidget {
-  const ImageBox({super.key});
+  const ImageBox({super.key, required this.rect, required this.flip, required this.imageAsset,
+        required this.onChanged});
+
+  final Rect rect;
+  final Flip flip;
+  final String imageAsset;
+  final Function(TransformResult<Rect, Offset, Size>)? onChanged;
 
   @override
   State<ImageBox> createState() => _ImageBoxState();
@@ -340,13 +380,14 @@ class _ImageBoxState extends State<ImageBox> {
     final PlaygroundModel model = context.watch<PlaygroundModel>();
     final Color handleColor = Theme.of(context).colorScheme.primary;
     return TransformableBox(
-      key: const ValueKey('image-box'),
-      rect: model.rect,
-      flip: model.flip,
+      key: ValueKey('image-box-${widget.imageAsset}'),
+      rect: widget.rect,
+      flip: widget.flip,
       clampingRect: model.clampingEnabled ? model.clampingRect : null,
       constraints: model.constraintsEnabled ? model.constraints : null,
-      onChanged: model.onRectChanged,
+      onChanged: widget.onChanged,
       resizable: model.resizable,
+      hideHandlesWhenNotResizable: model.hideHandlesWhenNotResizable,
       movable: model.movable,
       flipChild: model.flipChild,
       flipWhileResizing: model.flipRectWhileResizing,
@@ -373,8 +414,8 @@ class _ImageBoxState extends State<ImageBox> {
         height: rect.height,
         decoration: BoxDecoration(
           color: Colors.white,
-          image: const DecorationImage(
-            image: AssetImage('assets/images/landscape2.jpg'),
+          image: DecorationImage(
+            image: AssetImage(widget.imageAsset),
             fit: BoxFit.fill,
           ),
           border: Border.symmetric(
@@ -646,11 +687,67 @@ class ControlPanel extends StatelessWidget {
               ),
             ),
             const Divider(height: 1),
+            Container(
+              height: 44,
+              padding: const EdgeInsets.fromLTRB(16, 0, 6, 0),
+              alignment: Alignment.centerLeft,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Hide corner/side controls if not resizable',
+                      style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                            color: Theme.of(context).colorScheme.secondary,
+                          ),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 20,
+                    child: Transform.scale(
+                      scale: 0.7,
+                      child: Switch(
+                        value: model.hideHandlesWhenNotResizable,
+                        onChanged: (value) => model.toggleHideHandlesWhenNotResizable(value),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
             const FlipControls(),
             const Divider(height: 1),
             const ClampingControls(),
             const Divider(height: 1),
             const ConstraintsControls(),
+            const Divider(height: 1),
+            Container(
+              height: 44,
+              padding: const EdgeInsets.fromLTRB(16, 0, 6, 0),
+              alignment: Alignment.centerLeft,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Add second image',
+                      style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                            color: Theme.of(context).colorScheme.secondary,
+                          ),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 20,
+                    child: Transform.scale(
+                      scale: 0.7,
+                      child: Switch(
+                        value: model.showSecondImageBox,
+                        onChanged: (value) => model.toggleShowSecondImageBox(value),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const Divider(height: 1),
           ],
         ),
@@ -676,8 +773,8 @@ class PositionControls extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                children: const [
+              const Row(
+                children: [
                   Expanded(child: Label('X')),
                   SizedBox(width: 16),
                   Expanded(child: Label('Y')),
@@ -696,8 +793,8 @@ class PositionControls extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              Row(
-                children: const [
+              const Row(
+                children: [
                   Expanded(child: Label('WIDTH')),
                   SizedBox(width: 16),
                   Expanded(child: Label('HEIGHT')),
@@ -716,8 +813,8 @@ class PositionControls extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              Row(
-                children: const [
+              const Row(
+                children: [
                   Expanded(child: Label('ASPECT RATIO')),
                 ],
               ),
@@ -869,14 +966,14 @@ class FlipControls extends StatelessWidget {
                     ],
                     selectedColor: Theme.of(context).colorScheme.primary,
                     constraints: const BoxConstraints.tightFor(height: 32),
-                    children: [
+                    children: const [
                       Tooltip(
                         message: 'Flip Horizontally',
-                        waitDuration: const Duration(milliseconds: 500),
+                        waitDuration: Duration(milliseconds: 500),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          padding: EdgeInsets.symmetric(horizontal: 8),
                           child: Row(
-                            children: const [
+                            children: [
                               ImageIcon(
                                 AssetImage('assets/images/ic_flip.png'),
                                 size: 20,
@@ -889,11 +986,11 @@ class FlipControls extends StatelessWidget {
                       ),
                       Tooltip(
                         message: 'Flip Vertically',
-                        waitDuration: const Duration(milliseconds: 500),
+                        waitDuration: Duration(milliseconds: 500),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          padding: EdgeInsets.symmetric(horizontal: 8),
                           child: Row(
-                            children: const [
+                            children: [
                               RotatedBox(
                                 quarterTurns: 1,
                                 child: ImageIcon(
@@ -1033,8 +1130,8 @@ class _ClampingControlsState extends State<ClampingControls> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Row(
-                            children: const [
+                          const Row(
+                            children: [
                               Expanded(child: Label('LEFT')),
                               SizedBox(width: 16),
                               Expanded(child: Label('TOP')),
@@ -1081,8 +1178,8 @@ class _ClampingControlsState extends State<ClampingControls> {
                             ],
                           ),
                           const SizedBox(height: 16),
-                          Row(
-                            children: const [
+                          const Row(
+                            children: [
                               Expanded(child: Label('RIGHT')),
                               SizedBox(width: 16),
                               Expanded(child: Label('BOTTOM')),
@@ -1281,8 +1378,8 @@ class _ConstraintsControlsState extends State<ConstraintsControls> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Row(
-                            children: const [
+                          const Row(
+                            children: [
                               Expanded(child: Label('Min W')),
                               SizedBox(width: 16),
                               Expanded(child: Label('Min H')),
@@ -1337,8 +1434,8 @@ class _ConstraintsControlsState extends State<ConstraintsControls> {
                             ],
                           ),
                           const SizedBox(height: 16),
-                          Row(
-                            children: const [
+                          const Row(
+                            children: [
                               Expanded(child: Label('Max W')),
                               SizedBox(width: 16),
                               Expanded(child: Label('Max H')),
@@ -1530,3 +1627,4 @@ class SectionHeader extends StatelessWidget {
     );
   }
 }
+
