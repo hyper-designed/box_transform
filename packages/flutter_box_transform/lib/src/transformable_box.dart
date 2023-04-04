@@ -482,7 +482,7 @@ class _TransformableBoxState extends State<TransformableBox> {
               ),
             ),
           ),
-          for (final handle in HandlePosition.corners)
+          if(controller.resizable) for (final handle in HandlePosition.corners)
             _CornerHandleWidget(
               key: ValueKey(handle),
               handlePosition: handle,
@@ -492,7 +492,7 @@ class _TransformableBoxState extends State<TransformableBox> {
               onPointerUpdate: onHandlePanUpdate,
               onPointerUp: onHandlePanEnd,
             ),
-          for (final handle in HandlePosition.sides)
+          if(controller.resizable) for (final handle in HandlePosition.sides)
             _SideHandleWidget(
               key: ValueKey(handle),
               handlePosition: handle,
