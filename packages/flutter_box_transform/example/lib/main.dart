@@ -65,6 +65,8 @@ class PlaygroundModel with ChangeNotifier {
   Rect rect2 = Rect.zero;
   Flip flip2 = Flip.none;
 
+  int lastRectAdjusted = 1; // 1 or 2
+
   Rect clampingRect = Rect.largest;
   Rect? playgroundArea;
   late BoxConstraints constraints = const BoxConstraints(
@@ -100,6 +102,8 @@ class PlaygroundModel with ChangeNotifier {
     );
     flip2 = Flip.none;
 
+    lastRectAdjusted = 1;
+
     clampingRect = Rect.fromLTWH(
       0,
       0,
@@ -124,12 +128,14 @@ class PlaygroundModel with ChangeNotifier {
   void onRectChanged(UITransformResult result) {
     rect = result.rect;
     flip = result is UIResizeResult ? result.flip : flip;
+    lastRectAdjusted = 1;
     notifyListeners();
   }
 
   void onRect2Changed(UITransformResult result) {
     rect2 = result.rect;
     flip2 = result is UIResizeResult ? result.flip : flip;
+    lastRectAdjusted = 2;
     notifyListeners();
   }
 
@@ -172,11 +178,13 @@ class PlaygroundModel with ChangeNotifier {
 
   void flipHorizontally() {
     flip = Flip.fromValue(flip.horizontalValue * -1, flip.verticalValue);
+    flip2 = Flip.fromValue(flip2.horizontalValue * -1, flip2.verticalValue);
     notifyListeners();
   }
 
   void flipVertically() {
     flip = Flip.fromValue(flip.horizontalValue, flip.verticalValue * -1);
+    flip2 = Flip.fromValue(flip2.horizontalValue, flip2.verticalValue * -1);
     notifyListeners();
   }
 
@@ -776,12 +784,12 @@ class PositionControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PlaygroundModel model = context.watch<PlaygroundModel>();
-    final Rect rect = model.rect;
+    final Rect rect = model.lastRectAdjusted==1 ? model.rect : model.rect2;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        const SectionHeader('POSITION'),
+        SectionHeader('POSITION${model.lastRectAdjusted==2?" of SECOND IMAGE":""}'),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           child: Column(
