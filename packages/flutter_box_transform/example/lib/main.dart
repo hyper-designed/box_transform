@@ -784,12 +784,13 @@ class PositionControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PlaygroundModel model = context.watch<PlaygroundModel>();
-    final Rect rect = model.lastRectAdjusted==1 ? model.rect : model.rect2;
+    final Rect rect = model.lastRectAdjusted == 1 ? model.rect : model.rect2;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        SectionHeader('POSITION${model.lastRectAdjusted==2?" of SECOND IMAGE":""}'),
+        SectionHeader(
+            'POSITION${model.lastRectAdjusted == 2 ? " of SECOND IMAGE" : ""}'),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           child: Column(
