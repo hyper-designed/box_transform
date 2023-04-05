@@ -1,0 +1,10 @@
+{
+  "hosting": {
+    "public": "packages/flutter_box_transform/example/build/web/",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}

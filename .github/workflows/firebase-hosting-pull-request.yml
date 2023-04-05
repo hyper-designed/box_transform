@@ -1,0 +1,34 @@
+name: Deploy to Firebase Hosting on PR
+
+on:
+  pull_request:
+    types: [opened, reopened]
+    branches:
+      - main
+
+jobs:
+  build_and_preview:
+#    if: '${{ github.event.pull_request.head.repo.full_name == github.repository }}'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Install Melos
+        run: flutter pub global activate melos
+      - name: Setup Melos
+        run: melos bootstrap
+      - name: Get Dependencies
+        run: melos deps
+      - name: Build Example
+        run: |
+          cd packages/flutter_box_transform/example
+          flutter build web --release
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_BOX_TRANSFORM_EXAMPLE }}'
+          projectId: box-transform-example
