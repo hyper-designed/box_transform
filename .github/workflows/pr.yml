@@ -35,7 +35,7 @@ jobs:
       - name: Create new build
         run: mkdir -p clone_dir/pr/${{ steps.pr_number.outputs.number }}
       - name: Move build to deployment repo
-        run: mv build/web/* clone_dir/pr/${{ steps.pr_number.outputs.number }}
+        run: mv packages/flutter_box_transform/example/build/web/* clone_dir/pr/${{ steps.pr_number.outputs.number }}
       - name: Push build commit
         run: |
           cd clone_dir
