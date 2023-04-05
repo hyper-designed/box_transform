@@ -11,8 +11,6 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.PAT }}
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
