@@ -276,6 +276,7 @@ class BoxTransformer {
     Constraints constraints = const Constraints.unconstrained(),
   }) {
     final double aspectRatio = initialBox.width / initialBox.height;
+    print('aspectRatio:    $aspectRatio');
 
     initialBox = flipBox(initialBox, flip, handle);
     Box rect;
