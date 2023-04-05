@@ -30,7 +30,7 @@ scripts:
     run: dart format --output none --set-exit-if-changed .
   analyze:
     description: Analyze Dart code.
-    run: dart analyze . --fatal-infos
+    run: dart analyze . --fatal-infos --fatal-warnings
   clean:
     run: melos exec flutter clean && melos exec dart pub get
   dry-run:

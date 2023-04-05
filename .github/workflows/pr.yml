@@ -1,4 +1,4 @@
-name: Build PR
+name: Build PR Demo
 
 on:
   pull_request:
@@ -7,20 +7,19 @@ on:
       - main
 
 jobs:
-  build:
-    runs-on: macos-latest
+  build_and_preview:
+#    if: '${{ github.event.pull_request.head.repo.full_name == github.repository }}'
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: subosito/flutter-action@v2
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
-      - name: Get PR number
-        id: pr_number
-        run: echo "number=$(echo ${{ github.ref }} | cut -d '/' -f 3)" >> $GITHUB_OUTPUT
       - name: Install Melos
         run: flutter pub global activate melos
-      - name: Run melos
+      - name: Setup Melos
         run: melos bootstrap
       - name: Get Dependencies
         run: melos deps
@@ -28,25 +27,8 @@ jobs:
         run: |
           cd packages/flutter_box_transform/example
           flutter build web --release
-      - name: Clone deployment repo
-        run: git clone --single-branch "https://${{ secrets.PAT }}@github.com/hyper-designed/box_transform_deployments.git" "clone_dir"
-      - name: Remove old build
-        run: rm -rf clone_dir/pr/${{ steps.pr_number.outputs.number }}
-      - name: Create new build
-        run: mkdir -p clone_dir/pr/${{ steps.pr_number.outputs.number }}
-      - name: Move build to deployment repo
-        run: mv packages/flutter_box_transform/example/build/web/* clone_dir/pr/${{ steps.pr_number.outputs.number }}
-      - name: Push build commit
-        run: |
-          cd clone_dir
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add *
-          git commit -m "Build PR ${{ steps.pr_number.outputs.number }}"
-          git pull --rebase
-          git push
-      - name: Update PR with demo links
-        uses: thollander/actions-comment-pull-request@main
+      - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          message: "Demo: https://demo.boxtransform.hyperdesigned.com/pr/${{ steps.pr_number.outputs.number }}/"
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_BOX_TRANSFORM_EXAMPLE }}'
+          projectId: box-transform-example
