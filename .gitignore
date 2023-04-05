@@ -8,3 +8,5 @@ pubspec_overrides.yaml
 .dart_tool
 
 firebase-debug.log
+
+test
