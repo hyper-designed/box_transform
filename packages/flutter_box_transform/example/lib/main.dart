@@ -796,8 +796,8 @@ class PositionControls extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Row(
-                children: [
+              Row(
+                children: const [
                   Expanded(child: Label('X')),
                   SizedBox(width: 16),
                   Expanded(child: Label('Y')),
@@ -816,8 +816,8 @@ class PositionControls extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              const Row(
-                children: [
+              Row(
+                children: const [
                   Expanded(child: Label('WIDTH')),
                   SizedBox(width: 16),
                   Expanded(child: Label('HEIGHT')),
@@ -836,8 +836,8 @@ class PositionControls extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              const Row(
-                children: [
+              Row(
+                children: const [
                   Expanded(child: Label('ASPECT RATIO')),
                 ],
               ),
@@ -989,14 +989,14 @@ class FlipControls extends StatelessWidget {
                     ],
                     selectedColor: Theme.of(context).colorScheme.primary,
                     constraints: const BoxConstraints.tightFor(height: 32),
-                    children: const [
+                    children: [
                       Tooltip(
                         message: 'Flip Horizontally',
-                        waitDuration: Duration(milliseconds: 500),
+                        waitDuration: const Duration(milliseconds: 500),
                         child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
                           child: Row(
-                            children: [
+                            children: const [
                               ImageIcon(
                                 AssetImage('assets/images/ic_flip.png'),
                                 size: 20,
@@ -1009,11 +1009,11 @@ class FlipControls extends StatelessWidget {
                       ),
                       Tooltip(
                         message: 'Flip Vertically',
-                        waitDuration: Duration(milliseconds: 500),
+                        waitDuration: const Duration(milliseconds: 500),
                         child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
                           child: Row(
-                            children: [
+                            children: const [
                               RotatedBox(
                                 quarterTurns: 1,
                                 child: ImageIcon(
@@ -1153,8 +1153,8 @@ class _ClampingControlsState extends State<ClampingControls> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Row(
-                            children: [
+                          Row(
+                            children: const [
                               Expanded(child: Label('LEFT')),
                               SizedBox(width: 16),
                               Expanded(child: Label('TOP')),
@@ -1201,8 +1201,8 @@ class _ClampingControlsState extends State<ClampingControls> {
                             ],
                           ),
                           const SizedBox(height: 16),
-                          const Row(
-                            children: [
+                          Row(
+                            children: const [
                               Expanded(child: Label('RIGHT')),
                               SizedBox(width: 16),
                               Expanded(child: Label('BOTTOM')),
@@ -1401,8 +1401,8 @@ class _ConstraintsControlsState extends State<ConstraintsControls> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Row(
-                            children: [
+                          Row(
+                            children: const [
                               Expanded(child: Label('Min W')),
                               SizedBox(width: 16),
                               Expanded(child: Label('Min H')),
@@ -1457,8 +1457,8 @@ class _ConstraintsControlsState extends State<ConstraintsControls> {
                             ],
                           ),
                           const SizedBox(height: 16),
-                          const Row(
-                            children: [
+                          Row(
+                            children: const [
                               Expanded(child: Label('Max W')),
                               SizedBox(width: 16),
                               Expanded(child: Label('Max H')),
