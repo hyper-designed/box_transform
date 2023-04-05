@@ -60,7 +60,7 @@ class MyApp extends StatelessWidget {
 class PlaygroundModel with ChangeNotifier {
   Rect box = Rect.zero;
   Flip flip = Flip.none;
-  late Rect clampingBox;
+  Rect clampingBox = Rect.largest;
 
   bool flipEnabled = true;
   bool clampingEnabled = false;

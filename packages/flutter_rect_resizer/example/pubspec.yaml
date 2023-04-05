@@ -26,4 +26,6 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/
+    - assets/images/ic_flip.png
+    - assets/images/landscape.jpg
+    - assets/images/landscape2.jpg
