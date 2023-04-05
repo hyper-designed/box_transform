@@ -625,6 +625,9 @@ class Box {
   }
 
   /// Constrains the given [child] box instance within the bounds of this box.
+  /// This function will preserve the sign of the child's width and height.
+  /// It will also maintain the aspect ratio of the child if the [aspectRatio]
+  /// is specified.
   ///
   /// [child] the child box to clamp inside this box.
   /// [resizeMode] defines how to contain the child, whether it should keep its
@@ -646,16 +649,21 @@ class Box {
     final double clampedLeft = math.min(x, right - childWidth);
     final double clampedTop = math.min(y, bottom - childHeight);
 
-    double newLeft = math.max(left, clampedLeft);
-    double newTop = math.max(top, clampedTop);
+    final double newLeft = math.max(left, clampedLeft);
+    final double newTop = math.max(top, clampedTop);
     double newWidth = math.min(width, childWidth);
     double newHeight = math.min(height, childHeight);
+
     if (resizeMode.isScalable && aspectRatio != null) {
       final double newAspectRatio = newWidth / newHeight;
+      final double widthAdjustment = newHeight * aspectRatio;
+      final double heightAdjustment = newWidth / aspectRatio;
 
       if (aspectRatio < newAspectRatio) {
+        newHeight = math.min(height, heightAdjustment);
         newWidth = newHeight * aspectRatio;
-      } else {
+      } else if (aspectRatio > newAspectRatio) {
+        newWidth = math.min(width, widthAdjustment);
         newHeight = newWidth / aspectRatio;
       }
     }

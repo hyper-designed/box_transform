@@ -409,7 +409,7 @@ class _ImageBoxState extends State<ImageBox> {
       resizable: model.resizable,
       hideHandlesWhenNotResizable: model.hideHandlesWhenNotResizable,
       movable: model.movable,
-      flipChild: model.flipChild,
+      allowContentFlipping: model.flipChild,
       flipWhileResizing: model.flipRectWhileResizing,
       onTerminalSizeReached: (
         bool reachedMinWidth,
@@ -429,7 +429,7 @@ class _ImageBoxState extends State<ImageBox> {
           maxHeightReached = reachedMaxHeight;
         });
       },
-      childBuilder: (context, rect, flip) => Container(
+      contentBuilder: (context, rect, flip) => Container(
         width: rect.width,
         height: rect.height,
         decoration: BoxDecoration(
@@ -557,7 +557,7 @@ class _ClampingRectState extends State<ClampingRect> {
         hasShadow: false,
         handleAlign: HandleAlign.inside,
       ),
-      childBuilder: (context, _, flip) => Container(
+      contentBuilder: (context, _, flip) => Container(
         width: model.clampingRect.width,
         height: model.clampingRect.height,
         alignment: Alignment.bottomRight,

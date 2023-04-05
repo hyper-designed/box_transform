@@ -84,7 +84,7 @@ class TransformableBox extends StatefulWidget {
   /// [TransformableBox]. This is the physical widget you wish to show resizable
   /// handles on. It's most commonly something like an image widget, but it
   /// could be anything you want to have resizable & draggable box handles on.
-  final TransformableChildBuilder childBuilder;
+  final TransformableChildBuilder contentBuilder;
 
   /// A builder function that is used to build the corners handles of the
   /// [TransformableBox]. If you don't specify it, the default handles will be
@@ -234,9 +234,10 @@ class TransformableBox extends StatefulWidget {
   /// corners of the rect.
   final bool flipWhileResizing;
 
-  /// Whether to flip the child of the box when the box is flipped. If this is
-  /// set to true, the child will be flipped when the box is flipped.
-  final bool flipChild;
+  /// Decides whether to flip the contents of the box when the box is flipped.
+  /// If this is set to true, the contents will be flipped when the box is
+  /// flipped.
+  final bool allowContentFlipping;
 
   /// How to align the handles.
   final HandleAlign handleAlign;
@@ -244,7 +245,7 @@ class TransformableBox extends StatefulWidget {
   /// Creates a [TransformableBox] widget.
   const TransformableBox({
     super.key,
-    required this.childBuilder,
+    required this.contentBuilder,
     this.onChanged,
     this.onMoved,
     this.onResized,
@@ -252,13 +253,23 @@ class TransformableBox extends StatefulWidget {
     this.cornerHandleBuilder = _defaultCornerHandleBuilder,
     this.sideHandleBuilder = _defaultSideHandleBuilder,
     this.handleTapSize = 24,
-    // raw
+
+    // Additional controls.
+    this.resizable = true,
+    this.movable = true,
+    this.flipWhileResizing = true,
+    this.allowContentFlipping = true,
+    this.handleAlign = HandleAlign.center,
+    this.hideHandlesWhenNotResizable = true,
+
+    // Raw values.
     Rect? rect,
     Flip? flip,
     Rect? clampingRect,
     BoxConstraints? constraints,
     ResolveResizeModeCallback? resolveResizeModeCallback,
-    // terminal update events
+
+    // Terminal update events.
     this.onMinWidthReached,
     this.onMaxWidthReached,
     this.onMinHeightReached,
@@ -266,12 +277,6 @@ class TransformableBox extends StatefulWidget {
     this.onTerminalWidthReached,
     this.onTerminalHeightReached,
     this.onTerminalSizeReached,
-    this.resizable = true,
-    this.hideHandlesWhenNotResizable = true,
-    this.movable = true,
-    this.flipWhileResizing = true,
-    this.flipChild = true,
-    this.handleAlign = HandleAlign.center,
   })  : assert(
           controller == null ||
               (rect == null &&
@@ -281,8 +286,8 @@ class TransformableBox extends StatefulWidget {
                   resolveResizeModeCallback == null),
           'You can either provide a [controller] OR a [box], [flip], '
           '[clampingRect], [constraints], and [resolveResizeModeCallback]. '
-          'You cannot use any of those properties when providing a controller and'
-          'vice versa.',
+          'You cannot use any of those properties when providing a controller '
+          'and vice versa.',
         ),
         rect = rect ?? Rect.zero,
         flip = flip ?? Flip.none,
@@ -317,7 +322,7 @@ class _TransformableBoxState extends State<TransformableBox> {
         ..movable = widget.movable
         ..resizable = widget.resizable
         ..flipWhileResizing = widget.flipWhileResizing
-        ..flipChild = widget.flipChild;
+        ..flipChild = widget.allowContentFlipping;
     }
   }
 
@@ -344,7 +349,7 @@ class _TransformableBoxState extends State<TransformableBox> {
         ..hideHandlesWhenNotResizable = widget.hideHandlesWhenNotResizable
         ..movable = widget.movable
         ..flipWhileResizing = widget.flipWhileResizing
-        ..flipChild = widget.flipChild;
+        ..flipChild = widget.allowContentFlipping;
     }
 
     // Return if the controller is external.
@@ -355,19 +360,28 @@ class _TransformableBoxState extends State<TransformableBox> {
     if (oldWidget.rect != widget.rect) {
       controller.rect = widget.rect;
     }
+
     if (oldWidget.flip != widget.flip) {
       controller.flip = widget.flip;
     }
+
     if (oldWidget.resolveResizeModeCallback !=
         widget.resolveResizeModeCallback) {
       controller.resolveResizeModeCallback = widget.resolveResizeModeCallback;
     }
-    if (oldWidget.clampingRect != widget.clampingRect) {
+
+    if (oldWidget.clampingRect.left != widget.clampingRect.left ||
+        oldWidget.clampingRect.top != widget.clampingRect.top ||
+        oldWidget.clampingRect.right != widget.clampingRect.right ||
+        oldWidget.clampingRect.bottom != widget.clampingRect.bottom) {
       controller.clampingRect = widget.clampingRect;
       controller.recalculatePosition(notify: false);
     }
 
-    if (oldWidget.constraints != widget.constraints) {
+    if (oldWidget.constraints.minWidth != widget.constraints.minWidth ||
+        oldWidget.constraints.maxWidth != widget.constraints.maxWidth ||
+        oldWidget.constraints.minHeight != widget.constraints.minHeight ||
+        oldWidget.constraints.maxHeight != widget.constraints.maxHeight) {
       controller.constraints = widget.constraints;
       controller.recalculateSize(notify: false);
     }
@@ -386,8 +400,8 @@ class _TransformableBoxState extends State<TransformableBox> {
       controller.movable = widget.movable;
     }
 
-    if (oldWidget.flipChild != widget.flipChild) {
-      controller.flipChild = widget.flipChild;
+    if (oldWidget.allowContentFlipping != widget.allowContentFlipping) {
+      controller.flipChild = widget.allowContentFlipping;
     }
 
     if (oldWidget.flipWhileResizing != widget.flipWhileResizing) {
@@ -490,7 +504,7 @@ class _TransformableBoxState extends State<TransformableBox> {
               child: Transform.scale(
                 scaleX: controller.flipChild && flip.isHorizontal ? -1 : 1,
                 scaleY: controller.flipChild && flip.isVertical ? -1 : 1,
-                child: widget.childBuilder(context, box, flip),
+                child: widget.contentBuilder(context, box, flip),
               ),
             ),
           ),
