@@ -25,7 +25,9 @@ jobs:
       - name: Get Dependencies
         run: melos deps
       - name: Build Example
-        run: flutter build web --release
+        run: |
+          cd packages/flutter_box_transform/example
+          flutter build web --release
       - name: Clone deployment repo
         run: git clone --single-branch "https://${{ secrets.PAT }}@github.com/hyper-designed/box_transform_deployments.git" "clone_dir"
       - name: Remove old build
