@@ -1,22 +1,21 @@
 name: Build PR Demo
 
 on:
-  pull_request:
-    types: [opened, reopened]
-    branches:
-      - main
+  push:
 
 jobs:
   build_and_preview:
-#    if: '${{ github.event.pull_request.head.repo.full_name == github.repository }}'
+    needs: pr-info.pr-info-job
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          ref: ${{ needs.pr-info.pr-info-job.outputs.pr-branch }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
       - name: Install Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          cache: true
       - name: Install Melos
         run: flutter pub global activate melos
       - name: Setup Melos

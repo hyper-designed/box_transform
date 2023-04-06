@@ -1,0 +1,15 @@
+name: pr-info
+
+on:
+  pull_request:
+    types: [opened, reopened]
+    branches:
+      - main
+
+jobs:
+  pr-info-job:
+    runs-on: ubuntu-latest
+    outputs:
+      pr-number: ${{ github.event.number }}
+      pr-branch: ${{ github.event.pull_request.head.ref }}
+      repo-name: ${{ github.event.repository.name }}
