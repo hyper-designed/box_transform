@@ -1168,7 +1168,7 @@ class FlipControls extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Flip Child',
+                        'Flip Content',
                         style: Theme.of(context).textTheme.titleSmall!.copyWith(
                               color: Theme.of(context).colorScheme.secondary,
                             ),
