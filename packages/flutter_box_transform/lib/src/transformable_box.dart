@@ -370,18 +370,12 @@ class _TransformableBoxState extends State<TransformableBox> {
       controller.resolveResizeModeCallback = widget.resolveResizeModeCallback;
     }
 
-    if (oldWidget.clampingRect.left != widget.clampingRect.left ||
-        oldWidget.clampingRect.top != widget.clampingRect.top ||
-        oldWidget.clampingRect.right != widget.clampingRect.right ||
-        oldWidget.clampingRect.bottom != widget.clampingRect.bottom) {
+    if (oldWidget.clampingRect != widget.clampingRect) {
       controller.clampingRect = widget.clampingRect;
       controller.recalculatePosition(notify: false);
     }
 
-    if (oldWidget.constraints.minWidth != widget.constraints.minWidth ||
-        oldWidget.constraints.maxWidth != widget.constraints.maxWidth ||
-        oldWidget.constraints.minHeight != widget.constraints.minHeight ||
-        oldWidget.constraints.maxHeight != widget.constraints.maxHeight) {
+    if (oldWidget.constraints != widget.constraints) {
       controller.constraints = widget.constraints;
       controller.recalculateSize(notify: false);
     }
