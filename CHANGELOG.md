@@ -3,6 +3,33 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 2023-04-07
+
+### Changes
+
+---
+
+Packages with breaking changes:
+
+ - [`flutter_box_transform` - `v0.2.0`](#flutter_box_transform---v020)
+
+Packages with other changes:
+
+ - [`box_transform` - `v0.2.0`](#box_transform---v020)
+
+---
+
+#### `box_transform` - `v0.2.0`
+
+ - Fix scaling of rect not matching cursor position.
+
+#### `flutter_box_transform` - `v0.2.0`
+
+ - Add `hideHandlesWhenNotResizable` flag to hide handles when the box is not
+   resizable by @timmaffett.
+ - BREAKING CHANGE: `TransformableBox.childBuilder` is now `TransformableBox.contentBuilder`.
+ - More advanced example with multiple boxes.
+
 ## 2023-04-04
 
 ### Changes
