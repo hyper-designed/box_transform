@@ -1,14 +1,8 @@
-name: Code Quality
+name: Build
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - '**.dart'
-      - '**.yaml'
-      - '**.yml'
   pull_request:
+    types: [opened, reopened, synchronize]
     paths:
       - '**.dart'
       - '**.yaml'
@@ -25,12 +19,11 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          cache: true
       - name: Install Melos
         run: flutter pub global activate melos
       - name: Bootstrap
         run: melos bootstrap
-      - name: Check formatting
-        run: melos check-format
-      - name: Analyze
-        run: melos analyze
+      - name: Build example app
+        run: |
+          cd packages/flutter_box_transform/example
+          flutter build web --release

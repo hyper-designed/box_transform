@@ -1,0 +1,30 @@
+name: Code Quality
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    paths:
+      - '**.dart'
+      - '**.yaml'
+      - '**.yml'
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Install Melos
+        run: flutter pub global activate melos
+      - name: Bootstrap
+        run: melos bootstrap
+      - name: Check formatting
+        run: melos check-format
+      - name: Analyze
+        run: melos analyze
