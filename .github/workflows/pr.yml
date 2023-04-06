@@ -12,8 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: ${{ github.event.workflow_run.outputs.pr-branch }}
-          repository: ${{ github.event.workflow_run.outputs.repo-name }}
+          ref: ${{ 'refs/pull/' + github.event.workflow_run.outputs.pr-number + '/head' }}
       - name: Install Flutter
         uses: subosito/flutter-action@v2
         with:
