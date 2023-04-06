@@ -8,6 +8,9 @@ import 'package:flutter_box_transform/flutter_box_transform.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
+import 'resources/asset_icons.dart';
+import 'resources/images.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -71,14 +74,14 @@ class PlaygroundModel with ChangeNotifier {
 
   void reset(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
-    final double width = size.width - kSidePanelWidth - kLayersPanelWidth;
+    final double width = size.width - kSidePanelWidth - kBoxesPanelWidth;
     final double height = size.height;
 
     boxes.clear();
     boxes.add(
       BoxData(
         name: 'Box 1',
-        imageAsset: 'assets/images/landscape2.jpg',
+        imageAsset: Images.image1,
         rect: Rect.fromLTWH(
           (width - kInitialWidth) / 2,
           (height - kInitialHeight) / 2,
@@ -153,9 +156,7 @@ class PlaygroundModel with ChangeNotifier {
     boxes.add(
       BoxData(
         name: 'Box ${boxes.length + 1}',
-        imageAsset: boxes.length.isEven
-            ? 'assets/images/landscape2.jpg'
-            : 'assets/images/landscape.jpg',
+        imageAsset: Images.values[boxes.length % Images.values.length],
         rect: Rect.fromLTWH(
           playgroundArea!.center.dx - kInitialWidth / 2,
           playgroundArea!.center.dy - kInitialHeight / 2,
@@ -319,7 +320,7 @@ class Playground extends StatefulWidget {
 }
 
 const double kSidePanelWidth = 280;
-const double kLayersPanelWidth = 250;
+const double kBoxesPanelWidth = 250;
 const double kInitialWidth = 400;
 const double kInitialHeight = 300;
 const double kStrokeWidth = 1.5;
@@ -348,7 +349,7 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if(model.playgroundArea == null) resetPlayground();
+    if (model.playgroundArea == null) resetPlayground();
   }
 
   @override
@@ -373,7 +374,7 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
     model.playgroundArea = Rect.fromLTWH(
       0,
       0,
-      max(size.width - kSidePanelWidth - kLayersPanelWidth, 100),
+      max(size.width - kSidePanelWidth - kBoxesPanelWidth, 100),
       max(size.height,
           100), // safe size for when window is resized extremely small.
     );
@@ -906,87 +907,99 @@ class BoxesPanel extends StatelessWidget {
       margin: const EdgeInsets.only(left: 0),
       shape: const RoundedRectangleBorder(),
       child: SizedBox(
-        width: kLayersPanelWidth,
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.fromLTRB(16, 0, 4, 0),
-              child: Row(
-                children: [
-                  const SectionHeader(
-                    'Boxes',
-                    padding: EdgeInsets.zero,
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: model.selectedBox != null
-                        ? model.removeSelectedBox
-                        : null,
-                    tooltip: 'Delete selected box',
-                    iconSize: 18,
-                    splashRadius: 18,
-                    color: Theme.of(context).colorScheme.error,
-                    icon: const Icon(Icons.delete_outline_outlined),
-                  ),
-                  IconButton(
-                    onPressed: model.addNewBox,
-                    tooltip: 'Add new box',
-                    iconSize: 18,
-                    splashRadius: 18,
-                    icon: const Icon(Icons.add),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 1),
-            if (model.boxes.isEmpty) ...[
-              const SizedBox(height: 44),
-              Text(
-                'Add a box to see controls',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                      color: Theme.of(context).colorScheme.secondary,
+        width: kBoxesPanelWidth,
+        height: MediaQuery.of(context).size.height,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.fromLTRB(16, 0, 4, 0),
+                child: Row(
+                  children: [
+                    const SectionHeader(
+                      'Boxes',
+                      padding: EdgeInsets.zero,
                     ),
-              ),
-            ],
-            if (model.boxes.isNotEmpty)
-              ReorderableListView.builder(
-                itemCount: model.boxes.length,
-                onReorder: model.onReorder,
-                reverse: true,
-                shrinkWrap: true,
-                buildDefaultDragHandles: false,
-                primary: false,
-                itemBuilder: (context, index) {
-                  final box = model.boxes[index];
-                  return ReorderableDragStartListener(
-                    index: index,
-                    key: ValueKey(box.name),
-                    child: Container(
-                      color: box.name == model.selectedBox?.name
-                          ? Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withOpacity(0.2)
-                          : null,
-                      child: ListTile(
-                        title: Text(box.name),
-                        selected: box.name == model.selectedBox?.name,
-                        onTap: () => model.onBoxSelected(index),
-                        leading: const Icon(
-                          Icons.border_style_outlined,
-                          size: 18,
-                        ),
-                        minLeadingWidth: 20,
-                        dense: true,
-                        // selectedTileColor:
-                        //     Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                    Text(
+                      ' • ${model.boxes.length}',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.secondary,
+                        letterSpacing: 1,
+                        fontSize: 12,
                       ),
                     ),
-                  );
-                },
+                    const Spacer(),
+                    IconButton(
+                      onPressed: model.selectedBox != null
+                          ? model.removeSelectedBox
+                          : null,
+                      tooltip: 'Delete selected box',
+                      iconSize: 18,
+                      splashRadius: 18,
+                      color: Theme.of(context).colorScheme.error,
+                      icon: const Icon(Icons.delete_outline_outlined),
+                    ),
+                    IconButton(
+                      onPressed: model.addNewBox,
+                      tooltip: 'Add new box',
+                      iconSize: 18,
+                      splashRadius: 18,
+                      icon: const Icon(Icons.add),
+                    ),
+                  ],
+                ),
               ),
-          ],
+              const Divider(height: 1),
+              if (model.boxes.isEmpty) ...[
+                const SizedBox(height: 44),
+                Text(
+                  'Add a box to see controls',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
+                ),
+              ],
+              if (model.boxes.isNotEmpty)
+                ReorderableListView.builder(
+                  itemCount: model.boxes.length,
+                  onReorder: model.onReorder,
+                  reverse: true,
+                  shrinkWrap: true,
+                  buildDefaultDragHandles: false,
+                  primary: false,
+                  itemBuilder: (context, index) {
+                    final box = model.boxes[index];
+                    return ReorderableDragStartListener(
+                      index: index,
+                      key: ValueKey(box.name),
+                      child: Container(
+                        color: box.name == model.selectedBox?.name
+                            ? Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withOpacity(0.2)
+                            : null,
+                        child: ListTile(
+                          title: Text(box.name),
+                          selected: box.name == model.selectedBox?.name,
+                          onTap: () => model.onBoxSelected(index),
+                          leading: const Icon(
+                            Icons.border_style_outlined,
+                            size: 18,
+                          ),
+                          minLeadingWidth: 20,
+                          dense: true,
+                          // selectedTileColor:
+                          //     Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -1217,7 +1230,7 @@ class FlipControls extends StatelessWidget {
                           child: Row(
                             children: const [
                               ImageIcon(
-                                AssetImage('assets/images/ic_flip.png'),
+                                AssetImage(AssetIcons.icFlip),
                                 size: 20,
                               ),
                               SizedBox(width: 8),
@@ -1236,7 +1249,7 @@ class FlipControls extends StatelessWidget {
                               RotatedBox(
                                 quarterTurns: 1,
                                 child: ImageIcon(
-                                  AssetImage('assets/images/ic_flip.png'),
+                                  AssetImage(AssetIcons.icFlip),
                                   size: 20,
                                 ),
                               ),
