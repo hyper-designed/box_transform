@@ -330,6 +330,8 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
 
   late final FocusNode focusNode = FocusNode();
 
+  late final PlaygroundModel model = context.read<PlaygroundModel>();
+
   @override
   void initState() {
     super.initState();
@@ -337,7 +339,6 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
     // This is required to center the box based on screen size when the app
     // starts.
     SchedulerBinding.instance.addPostFrameCallback((_) {
-      final PlaygroundModel model = context.read<PlaygroundModel>();
       model.reset(context);
     });
 
@@ -347,7 +348,7 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // resetPlayground();
+    if(model.playgroundArea == null) resetPlayground();
   }
 
   @override
