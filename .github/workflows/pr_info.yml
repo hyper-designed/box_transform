@@ -2,7 +2,7 @@ name: pr-info
 
 on:
   pull_request:
-    types: [opened, reopened]
+    types: [opened, reopened, synchronize]
     branches:
       - main
 
@@ -13,3 +13,12 @@ jobs:
       pr-number: ${{ github.event.number }}
       pr-branch: ${{ github.event.pull_request.head.ref }}
       repo-name: ${{ github.event.repository.name }}
+    steps:
+      - name: Get PR Info
+        run: |
+          echo "PR Number: ${{ github.event.number }}"
+          echo "PR Branch: ${{ github.event.pull_request.head.ref }}"
+          echo "Repo Name: ${{ github.event.repository.name }}"
+          echo "PR Number: ${{ github.event.number }}" >> $GITHUB_ENV
+          echo "PR Branch: ${{ github.event.pull_request.head.ref }}" >> $GITHUB_ENV
+          echo "Repo Name: ${{ github.event.repository.name }}" >> $GITHUB_ENV

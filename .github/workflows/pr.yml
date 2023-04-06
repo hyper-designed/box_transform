@@ -1,11 +1,14 @@
 name: Build PR Demo
 
 on:
-  push:
+  workflow_run:
+    workflows: [ "pr-info" ]
+    types:
+      - completed
 
 jobs:
   build_and_preview:
-    needs: pr-info.pr-info-job
+    needs: pr-info
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
