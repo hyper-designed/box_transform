@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:adaptive_theme/adaptive_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -58,163 +60,184 @@ class MyApp extends StatelessWidget {
 }
 
 class PlaygroundModel with ChangeNotifier {
-  Rect rect = Rect.zero;
-  Flip flip = Flip.none;
-
-  bool showSecondImageBox = false;
-  Rect rect2 = Rect.zero;
-  Flip flip2 = Flip.none;
-
-  int lastRectAdjusted = 1; // 1 or 2
-
-  Rect clampingRect = Rect.largest;
   Rect? playgroundArea;
-  late BoxConstraints constraints = const BoxConstraints(
-    minWidth: 0,
-    minHeight: 0,
-  );
 
-  bool flipRectWhileResizing = true;
-  bool flipChild = true;
-  bool clampingEnabled = false;
-  bool constraintsEnabled = false;
-  bool resizable = true;
-  bool movable = true;
-  bool hideHandlesWhenNotResizable = true;
+  final List<BoxData> boxes = [];
+
+  int selectedBoxIndex = -1;
+
+  BoxData? get selectedBox =>
+      selectedBoxIndex != -1 ? boxes[selectedBoxIndex] : null;
 
   void reset(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
-    final double width = size.width - 300;
+    final double width = size.width - kSidePanelWidth - kLayersPanelWidth;
     final double height = size.height;
-    rect = Rect.fromLTWH(
-      (width - kInitialWidth) / 2,
-      (height - kInitialHeight) / 2,
-      kInitialWidth,
-      kInitialHeight,
+
+    boxes.clear();
+    boxes.add(
+      BoxData(
+        name: 'Box 1',
+        imageAsset: 'assets/images/landscape2.jpg',
+        rect: Rect.fromLTWH(
+          (width - kInitialWidth) / 2,
+          (height - kInitialHeight) / 2,
+          kInitialWidth,
+          kInitialHeight,
+        ),
+        clampingRect: Rect.fromLTWH(
+          0,
+          0,
+          width,
+          size.height,
+        ),
+        flip: Flip.none,
+      ),
     );
-    flip = Flip.none;
-
-    rect2 = Rect.fromLTWH(
-      (width - kInitialWidth) / 3,
-      (height - kInitialHeight) / 3,
-      kInitialWidth,
-      kInitialHeight,
-    );
-    flip2 = Flip.none;
-
-    lastRectAdjusted = 1;
-
-    clampingRect = Rect.fromLTWH(
-      0,
-      0,
-      size.width - kSidePanelWidth,
-      size.height,
-    );
-
-    constraints = const BoxConstraints(
-      minWidth: 0,
-      minHeight: 0,
-    );
-
-    resizable = true;
-    movable = true;
-    clampingEnabled = false;
-    constraintsEnabled = false;
-    hideHandlesWhenNotResizable = true;
+    selectedBoxIndex = 0;
 
     notifyListeners();
   }
 
   void onRectChanged(UITransformResult result) {
-    rect = result.rect;
-    flip = result is UIResizeResult ? result.flip : flip;
-    lastRectAdjusted = 1;
-    notifyListeners();
-  }
-
-  void onRect2Changed(UITransformResult result) {
-    rect2 = result.rect;
-    flip2 = result is UIResizeResult ? result.flip : flip;
-    lastRectAdjusted = 2;
+    if (selectedBox == null) return;
+    selectedBox!.rect = result.rect;
+    if (result is UIResizeResult) {
+      selectedBox!.flip = result.flip;
+    }
     notifyListeners();
   }
 
   void onFlipChanged(Flip flip) {
-    this.flip = flip;
+    if (selectedBoxIndex == -1) return;
+    selectedBox!.flip = flip;
     notifyListeners();
   }
 
   void onFlipChildChanged(bool enabled) {
-    flipChild = enabled;
+    if (selectedBoxIndex == -1) return;
+    selectedBox!.flipChild = enabled;
     notifyListeners();
   }
 
   void onFlipWhileResizingChanged(bool enabled) {
-    flipRectWhileResizing = enabled;
+    if (selectedBoxIndex == -1) return;
+    selectedBox!.flipRectWhileResizing = enabled;
     notifyListeners();
   }
 
-  void setClampingRect(Rect rect,
-      {bool notify = true, bool insidePlayground = false}) {
-    clampingRect = rect;
+  void setClampingRect(
+    Rect rect, {
+    bool notify = true,
+    bool insidePlayground = false,
+  }) {
+    if (selectedBox == null) return;
+    selectedBox!.clampingRect = rect;
 
     if (insidePlayground && playgroundArea != null) {
-      clampingRect = Rect.fromLTWH(
-        clampingRect.left.clamp(0.0, playgroundArea!.width),
-        clampingRect.top.clamp(0.0, playgroundArea!.height),
-        clampingRect.width.clamp(0.0, playgroundArea!.width),
-        clampingRect.height.clamp(0.0, playgroundArea!.height),
+      selectedBox!.clampingRect = Rect.fromLTWH(
+        selectedBox!.clampingRect.left.clamp(0.0, playgroundArea!.width),
+        selectedBox!.clampingRect.top.clamp(0.0, playgroundArea!.height),
+        selectedBox!.clampingRect.width.clamp(0.0, playgroundArea!.width),
+        selectedBox!.clampingRect.height.clamp(0.0, playgroundArea!.height),
       );
     }
 
     if (notify) notifyListeners();
   }
 
+  void addNewBox() {
+    final double width = playgroundArea!.width;
+    final double height = playgroundArea!.height;
+
+    boxes.add(
+      BoxData(
+        name: 'Box ${boxes.length + 1}',
+        imageAsset: boxes.length.isEven
+            ? 'assets/images/landscape2.jpg'
+            : 'assets/images/landscape.jpg',
+        rect: Rect.fromLTWH(
+          playgroundArea!.center.dx - kInitialWidth / 2,
+          playgroundArea!.center.dy - kInitialHeight / 2,
+          kInitialWidth,
+          kInitialHeight,
+        ),
+        clampingRect: Rect.fromLTWH(0, 0, width, height),
+        flip: Flip.none,
+      ),
+    );
+
+    notifyListeners();
+  }
+
+  void removeSelectedBox() {
+    if (selectedBoxIndex == -1) return;
+    boxes.removeAt(selectedBoxIndex);
+    selectedBoxIndex = -1;
+    notifyListeners();
+  }
+
+  void removeBox(int index) {
+    if (index == -1) return;
+    boxes.removeAt(index);
+    if (index == selectedBoxIndex) {
+      selectedBoxIndex = -1;
+    }
+    notifyListeners();
+  }
+
   void setConstraints(BoxConstraints constraints, {bool notify = true}) {
-    this.constraints = constraints;
+    if (selectedBoxIndex == -1) return;
+    selectedBox!.constraints = constraints;
 
     if (notify) notifyListeners();
   }
 
   void flipHorizontally() {
-    flip = Flip.fromValue(flip.horizontalValue * -1, flip.verticalValue);
-    flip2 = Flip.fromValue(flip2.horizontalValue * -1, flip2.verticalValue);
+    if (selectedBoxIndex == -1) return;
+    selectedBox!.flip = Flip.fromValue(
+      selectedBox!.flip.horizontalValue * -1,
+      selectedBox!.flip.verticalValue,
+    );
     notifyListeners();
   }
 
   void flipVertically() {
-    flip = Flip.fromValue(flip.horizontalValue, flip.verticalValue * -1);
-    flip2 = Flip.fromValue(flip2.horizontalValue, flip2.verticalValue * -1);
+    if (selectedBoxIndex == -1) return;
+    selectedBox!.flip = Flip.fromValue(
+      selectedBox!.flip.horizontalValue,
+      selectedBox!.flip.verticalValue * -1,
+    );
     notifyListeners();
   }
 
   void toggleClamping(bool enabled) {
-    clampingEnabled = enabled;
+    if (selectedBoxIndex == -1) return;
+    selectedBox!.clampingEnabled = enabled;
     notifyListeners();
   }
 
   void toggleResizing(bool enabled) {
-    resizable = enabled;
+    if (selectedBoxIndex == -1) return;
+    selectedBox!.resizable = enabled;
     notifyListeners();
   }
 
   void toggleMoving(bool enabled) {
-    movable = enabled;
+    if (selectedBoxIndex == -1) return;
+    selectedBox!.movable = enabled;
     notifyListeners();
   }
 
   void toggleConstraints(bool enabled) {
-    constraintsEnabled = enabled;
+    if (selectedBoxIndex == -1) return;
+    selectedBox!.constraintsEnabled = enabled;
     notifyListeners();
   }
 
   void toggleHideHandlesWhenNotResizable(bool enabled) {
-    hideHandlesWhenNotResizable = enabled;
-    notifyListeners();
-  }
-
-  void toggleShowSecondImageBox(bool enabled) {
-    showSecondImageBox = enabled;
+    if (selectedBoxIndex == -1) return;
+    selectedBox!.hideHandlesWhenNotResizable = enabled;
     notifyListeners();
   }
 
@@ -224,11 +247,12 @@ class PlaygroundModel with ChangeNotifier {
     double? right,
     double? bottom,
   }) {
-    clampingRect = Rect.fromLTRB(
-      left ?? clampingRect.left,
-      top ?? clampingRect.top,
-      right ?? clampingRect.right,
-      bottom ?? clampingRect.bottom,
+    if (selectedBox == null) return;
+    selectedBox!.clampingRect = Rect.fromLTRB(
+      left ?? selectedBox!.clampingRect.left,
+      top ?? selectedBox!.clampingRect.top,
+      right ?? selectedBox!.clampingRect.right,
+      bottom ?? selectedBox!.clampingRect.bottom,
     );
     notifyListeners();
   }
@@ -243,18 +267,46 @@ class PlaygroundModel with ChangeNotifier {
     bool forceMaxWidth = false,
     bool forceMaxHeight = false,
   }) {
-    constraints = BoxConstraints(
-      minWidth:
-          forceMinWidth ? minWidth ?? 0 : minWidth ?? constraints.minWidth,
-      minHeight:
-          forceMinHeight ? minHeight ?? 0 : minHeight ?? constraints.minHeight,
+    if (selectedBox == null) return;
+    selectedBox!.constraints = BoxConstraints(
+      minWidth: forceMinWidth
+          ? minWidth ?? 0
+          : minWidth ?? selectedBox!.constraints.minWidth,
+      minHeight: forceMinHeight
+          ? minHeight ?? 0
+          : minHeight ?? selectedBox!.constraints.minHeight,
       maxWidth: forceMaxWidth
           ? maxWidth ?? double.infinity
-          : maxWidth ?? constraints.maxWidth,
+          : maxWidth ?? selectedBox!.constraints.maxWidth,
       maxHeight: forceMaxHeight
           ? maxHeight ?? double.infinity
-          : maxHeight ?? constraints.maxHeight,
+          : maxHeight ?? selectedBox!.constraints.maxHeight,
     );
+    notifyListeners();
+  }
+
+  void onBoxSelected(int index) {
+    selectedBoxIndex = index;
+    notifyListeners();
+  }
+
+  void clearSelection() {
+    selectedBoxIndex = -1;
+    notifyListeners();
+  }
+
+  void onReorder(int oldIndex, int newIndex) {
+    if (oldIndex < newIndex) {
+      newIndex -= 1;
+    }
+    final selectedBox = this.selectedBox;
+    final BoxData box = boxes.removeAt(oldIndex);
+    boxes.insert(newIndex, box);
+    if (selectedBox != null) {
+      selectedBoxIndex =
+          boxes.indexWhere((box) => box.name == selectedBox.name);
+    }
+
     notifyListeners();
   }
 }
@@ -266,13 +318,18 @@ class Playground extends StatefulWidget {
   State<Playground> createState() => _PlaygroundState();
 }
 
-const double kSidePanelWidth = 300;
+const double kSidePanelWidth = 280;
+const double kLayersPanelWidth = 250;
 const double kInitialWidth = 400;
 const double kInitialHeight = 300;
 const double kStrokeWidth = 1.5;
 const Color kGridColor = Color.fromARGB(126, 27, 181, 228);
 
 class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
+  Set<LogicalKeyboardKey> pressedKeys = {};
+
+  late final FocusNode focusNode = FocusNode();
+
   @override
   void initState() {
     super.initState();
@@ -290,7 +347,7 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    resetPlayground();
+    // resetPlayground();
   }
 
   @override
@@ -315,18 +372,31 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
     model.playgroundArea = Rect.fromLTWH(
       0,
       0,
-      size.width - kSidePanelWidth,
-      size.height,
+      max(size.width - kSidePanelWidth - kLayersPanelWidth, 100),
+      max(size.height,
+          100), // safe size for when window is resized extremely small.
     );
 
     final Rect playgroundArea = model.playgroundArea!;
-    if (model.clampingRect.width > playgroundArea.width ||
-        model.clampingRect.height > playgroundArea.height) {
-      model.setClampingRect(
-        model.clampingRect,
-        notify: notify,
-        insidePlayground: true,
-      );
+
+    for (final box in model.boxes) {
+      if (box.clampingRect.width > playgroundArea.width ||
+          box.clampingRect.height > playgroundArea.height) {
+        if (model.selectedBox?.name == box.name) {
+          model.setClampingRect(
+            box.clampingRect,
+            notify: notify,
+            insidePlayground: true,
+          );
+        } else {
+          box.clampingRect = Rect.fromLTWH(
+            box.clampingRect.left.clamp(0.0, playgroundArea.width),
+            box.clampingRect.top.clamp(0.0, playgroundArea.height),
+            box.clampingRect.width.clamp(0.0, playgroundArea.width),
+            box.clampingRect.height.clamp(0.0, playgroundArea.height),
+          );
+        }
+      }
     }
   }
 
@@ -338,31 +408,65 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Row(
         children: [
+          const BoxesPanel(),
           Expanded(
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                Positioned.fill(
-                  child: GridPaper(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? kGridColor.withOpacity(0.1)
-                        : kGridColor,
+            child: CallbackShortcuts(
+              bindings: {
+                const SingleActivator(LogicalKeyboardKey.delete):
+                    model.removeSelectedBox,
+              },
+              child: RawKeyboardListener(
+                focusNode: focusNode,
+                autofocus: true,
+                onKey: (key) {
+                  if (key is RawKeyDownEvent) {
+                    pressedKeys.add(key.logicalKey);
+                    setState(() {});
+                  } else if (key is RawKeyUpEvent) {
+                    pressedKeys.remove(key.logicalKey);
+                    setState(() {});
+                  }
+                },
+                child: GestureDetector(
+                  onTap: () {
+                    focusNode.requestFocus();
+                    model.clearSelection();
+                  },
+                  behavior: HitTestBehavior.opaque,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Positioned.fill(
+                        child: GridPaper(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? kGridColor.withOpacity(0.05)
+                              : kGridColor.withOpacity(0.1),
+                        ),
+                      ),
+                      if (model.selectedBox != null &&
+                          model.selectedBox!.clampingEnabled &&
+                          model.playgroundArea != null)
+                        const ClampingRect(),
+                      for (int index = 0; index < model.boxes.length; index++)
+                        ImageBox(
+                          key: ValueKey(model.boxes[index].name),
+                          box: model.boxes[index],
+                          selected: index == model.selectedBoxIndex,
+                          onChanged: model.onRectChanged,
+                          onSelected: () => model.onBoxSelected(index),
+                        ),
+                      Positioned(
+                        left: 16,
+                        bottom: 16,
+                        child: KeyboardListenerIndicator(
+                          pressedKeys: pressedKeys.toList(),
+                          onClear: () => setState(() => pressedKeys = {}),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                if (model.clampingEnabled && model.playgroundArea != null)
-                  const ClampingRect(),
-                ImageBox(
-                    rect: model.rect,
-                    flip: model.flip,
-                    imageAsset: 'assets/images/landscape2.jpg',
-                    onChanged: model.onRectChanged),
-                if (model.showSecondImageBox)
-                  ImageBox(
-                      rect: model.rect2,
-                      flip: model.flip2,
-                      imageAsset: 'assets/images/landscape.jpg',
-                      onChanged: model.onRect2Changed),
-              ],
+              ),
             ),
           ),
           const ControlPanel(),
@@ -373,16 +477,17 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
 }
 
 class ImageBox extends StatefulWidget {
-  const ImageBox(
-      {super.key,
-      required this.rect,
-      required this.flip,
-      required this.imageAsset,
-      required this.onChanged});
+  const ImageBox({
+    super.key,
+    required this.box,
+    required this.onChanged,
+    required this.onSelected,
+    required this.selected,
+  });
 
-  final Rect rect;
-  final Flip flip;
-  final String imageAsset;
+  final BoxData box;
+  final bool selected;
+  final VoidCallback onSelected;
   final Function(TransformResult<Rect, Offset, Size>)? onChanged;
 
   @override
@@ -395,22 +500,25 @@ class _ImageBoxState extends State<ImageBox> {
   bool maxWidthReached = false;
   bool maxHeightReached = false;
 
+  BoxData get box => widget.box;
+
   @override
   Widget build(BuildContext context) {
-    final PlaygroundModel model = context.watch<PlaygroundModel>();
+    // final PlaygroundModel model = context.watch<PlaygroundModel>();
     final Color handleColor = Theme.of(context).colorScheme.primary;
     return TransformableBox(
-      key: ValueKey('image-box-${widget.imageAsset}'),
-      rect: widget.rect,
-      flip: widget.flip,
-      clampingRect: model.clampingEnabled ? model.clampingRect : null,
-      constraints: model.constraintsEnabled ? model.constraints : null,
+      key: ValueKey('image-box-${box.name}'),
+      rect: box.rect,
+      flip: box.flip,
+      clampingRect: box.clampingEnabled ? box.clampingRect : null,
+      constraints: box.constraintsEnabled ? box.constraints : null,
       onChanged: widget.onChanged,
-      resizable: model.resizable,
-      hideHandlesWhenNotResizable: model.hideHandlesWhenNotResizable,
-      movable: model.movable,
-      allowContentFlipping: model.flipChild,
-      flipWhileResizing: model.flipRectWhileResizing,
+      resizable: widget.selected && box.resizable,
+      hideHandlesWhenNotResizable:
+          !widget.selected || box.hideHandlesWhenNotResizable,
+      movable: widget.selected && box.movable,
+      allowContentFlipping: box.flipChild,
+      flipWhileResizing: box.flipRectWhileResizing,
       onTerminalSizeReached: (
         bool reachedMinWidth,
         bool reachedMaxWidth,
@@ -429,32 +537,53 @@ class _ImageBoxState extends State<ImageBox> {
           maxHeightReached = reachedMaxHeight;
         });
       },
-      contentBuilder: (context, rect, flip) => Container(
-        width: rect.width,
-        height: rect.height,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          image: DecorationImage(
-            image: AssetImage(widget.imageAsset),
-            fit: BoxFit.fill,
+      contentBuilder: (context, rect, flip) => GestureDetector(
+        onTap: () {
+          if (widget.selected) return;
+          widget.onSelected();
+        },
+        onPanStart: (_) {
+          if (widget.selected) return;
+          widget.onSelected();
+        },
+        // onTapDown: (_) {
+        //   if(widget.selected) return;
+        //   widget.onSelected();
+        // },
+        child: Container(
+          key: ValueKey('image-box-${box.name}-content'),
+          width: rect.width,
+          height: rect.height,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            image: DecorationImage(
+              image: AssetImage(box.imageAsset),
+              fit: BoxFit.fill,
+            ),
           ),
-          border: Border.symmetric(
-            horizontal: BorderSide(
-              color: minHeightReached
-                  ? Colors.orange
-                  : maxHeightReached
-                      ? Colors.red
-                      : handleColor,
-              width: 2,
-            ),
-            vertical: BorderSide(
-              color: minWidthReached
-                  ? Colors.orange
-                  : maxWidthReached
-                      ? Colors.red
-                      : handleColor,
-              width: 2,
-            ),
+          foregroundDecoration: BoxDecoration(
+            border: widget.selected
+                ? Border.symmetric(
+                    horizontal: BorderSide(
+                      color: minHeightReached
+                          ? Colors.orange
+                          : maxHeightReached
+                              ? Colors.red
+                              : handleColor,
+                      width: 2,
+                      strokeAlign: BorderSide.strokeAlignCenter,
+                    ),
+                    vertical: BorderSide(
+                      color: minWidthReached
+                          ? Colors.orange
+                          : maxWidthReached
+                              ? Colors.red
+                              : handleColor,
+                      width: 2,
+                      strokeAlign: BorderSide.strokeAlignCenter,
+                    ),
+                  )
+                : null,
           ),
         ),
       ),
@@ -516,14 +645,16 @@ class _ClampingRectState extends State<ClampingRect> {
       label = 'Clamping Box';
     }
 
+    final BoxData box = model.selectedBox!;
+
     return TransformableBox(
-      key: const ValueKey('clamping-box'),
-      rect: model.clampingRect,
+      key: ValueKey('clamping-box-${box.name}'),
+      rect: box.clampingRect,
       flip: Flip.none,
       clampingRect: model.playgroundArea!,
       constraints: BoxConstraints(
-        minWidth: model.rect.width,
-        minHeight: model.rect.height,
+        minWidth: box.rect.width,
+        minHeight: box.rect.height,
       ),
       onChanged: (result) => model.setClampingRect(result.rect),
       onTerminalSizeReached: (
@@ -558,8 +689,8 @@ class _ClampingRectState extends State<ClampingRect> {
         handleAlign: HandleAlign.inside,
       ),
       contentBuilder: (context, _, flip) => Container(
-        width: model.clampingRect.width,
-        height: model.clampingRect.height,
+        width: box.clampingRect.width,
+        height: box.clampingRect.height,
         alignment: Alignment.bottomRight,
         decoration: BoxDecoration(
           border: Border.symmetric(
@@ -603,6 +734,9 @@ class ControlPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PlaygroundModel model = context.watch<PlaygroundModel>();
+
+    final BoxData? box = model.selectedBox;
+
     return Card(
       margin: const EdgeInsets.only(left: 0),
       shape: const RoundedRectangleBorder(),
@@ -649,128 +783,208 @@ class ControlPanel extends StatelessWidget {
               ),
             ),
             const Divider(height: 1),
-            const PositionControls(),
-            const Divider(height: 1),
-            Container(
-              height: 44,
-              padding: const EdgeInsets.fromLTRB(16, 0, 6, 0),
-              alignment: Alignment.centerLeft,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Resizable',
-                      style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                            color: Theme.of(context).colorScheme.secondary,
-                          ),
-                    ),
-                  ),
-                  SizedBox(
-                    height: 20,
-                    child: Transform.scale(
-                      scale: 0.7,
-                      child: Switch(
-                        value: model.resizable,
-                        onChanged: (value) => model.toggleResizing(value),
+            if (box != null) ...[
+              const PositionControls(),
+              const Divider(height: 1),
+              Container(
+                height: 44,
+                padding: const EdgeInsets.fromLTRB(16, 0, 6, 0),
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Resizable',
+                        style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                              color: Theme.of(context).colorScheme.secondary,
+                            ),
                       ),
                     ),
+                    SizedBox(
+                      height: 20,
+                      child: Transform.scale(
+                        scale: 0.7,
+                        child: Switch(
+                          value: box.resizable,
+                          onChanged: (value) => model.toggleResizing(value),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              Container(
+                height: 44,
+                padding: const EdgeInsets.fromLTRB(16, 0, 6, 0),
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Movable',
+                        style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                              color: Theme.of(context).colorScheme.secondary,
+                            ),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 20,
+                      child: Transform.scale(
+                        scale: 0.7,
+                        child: Switch(
+                          value: box.movable,
+                          onChanged: (value) => model.toggleMoving(value),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              Container(
+                height: 44,
+                padding: const EdgeInsets.fromLTRB(16, 0, 6, 0),
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Hide handles if not resizable',
+                        style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                              color: Theme.of(context).colorScheme.secondary,
+                            ),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 20,
+                      child: Transform.scale(
+                        scale: 0.7,
+                        child: Switch(
+                          value: box.hideHandlesWhenNotResizable,
+                          onChanged: (value) =>
+                              model.toggleHideHandlesWhenNotResizable(value),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              const FlipControls(),
+              const Divider(height: 1),
+              const ClampingControls(),
+              const Divider(height: 1),
+              const ConstraintsControls(),
+              const Divider(height: 1),
+            ] else ...[
+              const SizedBox(height: 44),
+              Text(
+                'Select a box to see controls',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class BoxesPanel extends StatelessWidget {
+  const BoxesPanel({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final PlaygroundModel model = context.watch<PlaygroundModel>();
+
+    return Card(
+      margin: const EdgeInsets.only(left: 0),
+      shape: const RoundedRectangleBorder(),
+      child: SizedBox(
+        width: kLayersPanelWidth,
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 0, 4, 0),
+              child: Row(
+                children: [
+                  const SectionHeader(
+                    'Boxes',
+                    padding: EdgeInsets.zero,
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: model.selectedBox != null
+                        ? model.removeSelectedBox
+                        : null,
+                    tooltip: 'Delete selected box',
+                    iconSize: 18,
+                    splashRadius: 18,
+                    color: Theme.of(context).colorScheme.error,
+                    icon: const Icon(Icons.delete_outline_outlined),
+                  ),
+                  IconButton(
+                    onPressed: model.addNewBox,
+                    tooltip: 'Add new box',
+                    iconSize: 18,
+                    splashRadius: 18,
+                    icon: const Icon(Icons.add),
                   ),
                 ],
               ),
             ),
             const Divider(height: 1),
-            Container(
-              height: 44,
-              padding: const EdgeInsets.fromLTRB(16, 0, 6, 0),
-              alignment: Alignment.centerLeft,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Movable',
-                      style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                            color: Theme.of(context).colorScheme.secondary,
-                          ),
+            if (model.boxes.isEmpty) ...[
+              const SizedBox(height: 44),
+              Text(
+                'Add a box to see controls',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                      color: Theme.of(context).colorScheme.secondary,
                     ),
-                  ),
-                  SizedBox(
-                    height: 20,
-                    child: Transform.scale(
-                      scale: 0.7,
-                      child: Switch(
-                        value: model.movable,
-                        onChanged: (value) => model.toggleMoving(value),
+              ),
+            ],
+            if (model.boxes.isNotEmpty)
+              ReorderableListView.builder(
+                itemCount: model.boxes.length,
+                onReorder: model.onReorder,
+                reverse: true,
+                shrinkWrap: true,
+                buildDefaultDragHandles: false,
+                primary: false,
+                itemBuilder: (context, index) {
+                  final box = model.boxes[index];
+                  return ReorderableDragStartListener(
+                    index: index,
+                    key: ValueKey(box.name),
+                    child: Container(
+                      color: box.name == model.selectedBox?.name
+                          ? Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.2)
+                          : null,
+                      child: ListTile(
+                        title: Text(box.name),
+                        selected: box.name == model.selectedBox?.name,
+                        onTap: () => model.onBoxSelected(index),
+                        leading: const Icon(
+                          Icons.border_style_outlined,
+                          size: 18,
+                        ),
+                        minLeadingWidth: 20,
+                        dense: true,
+                        // selectedTileColor:
+                        //     Theme.of(context).colorScheme.primary.withOpacity(0.2),
                       ),
                     ),
-                  ),
-                ],
+                  );
+                },
               ),
-            ),
-            const Divider(height: 1),
-            Container(
-              height: 44,
-              padding: const EdgeInsets.fromLTRB(16, 0, 6, 0),
-              alignment: Alignment.centerLeft,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Hide corner/side controls if not resizable',
-                      style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                            color: Theme.of(context).colorScheme.secondary,
-                          ),
-                    ),
-                  ),
-                  SizedBox(
-                    height: 20,
-                    child: Transform.scale(
-                      scale: 0.7,
-                      child: Switch(
-                        value: model.hideHandlesWhenNotResizable,
-                        onChanged: (value) =>
-                            model.toggleHideHandlesWhenNotResizable(value),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 1),
-            const FlipControls(),
-            const Divider(height: 1),
-            const ClampingControls(),
-            const Divider(height: 1),
-            const ConstraintsControls(),
-            const Divider(height: 1),
-            Container(
-              height: 44,
-              padding: const EdgeInsets.fromLTRB(16, 0, 6, 0),
-              alignment: Alignment.centerLeft,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Add second image',
-                      style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                            color: Theme.of(context).colorScheme.secondary,
-                          ),
-                    ),
-                  ),
-                  SizedBox(
-                    height: 20,
-                    child: Transform.scale(
-                      scale: 0.7,
-                      child: Switch(
-                        value: model.showSecondImageBox,
-                        onChanged: (value) =>
-                            model.toggleShowSecondImageBox(value),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 1),
           ],
         ),
       ),
@@ -784,13 +998,14 @@ class PositionControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PlaygroundModel model = context.watch<PlaygroundModel>();
-    final Rect rect = model.lastRectAdjusted == 1 ? model.rect : model.rect2;
+
+    final BoxData box = model.selectedBox!;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        SectionHeader(
-            'POSITION${model.lastRectAdjusted == 2 ? " of SECOND IMAGE" : ""}'),
+        const SectionHeader('POSITION'),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           child: Column(
@@ -807,11 +1022,11 @@ class PositionControls extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: ValueText(rect.left.toStringAsFixed(0)),
+                    child: ValueText(box.rect.left.toStringAsFixed(0)),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: ValueText(rect.top.toStringAsFixed(0)),
+                    child: ValueText(box.rect.top.toStringAsFixed(0)),
                   ),
                 ],
               ),
@@ -827,11 +1042,11 @@ class PositionControls extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: ValueText(rect.width.toStringAsFixed(0)),
+                    child: ValueText(box.rect.width.toStringAsFixed(0)),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: ValueText(rect.height.toStringAsFixed(0)),
+                    child: ValueText(box.rect.height.toStringAsFixed(0)),
                   ),
                 ],
               ),
@@ -846,7 +1061,7 @@ class PositionControls extends StatelessWidget {
                 children: [
                   Expanded(
                     child: ValueText(
-                      (rect.width / rect.height).toStringAsFixed(2),
+                      (box.rect.width / box.rect.height).toStringAsFixed(2),
                     ),
                   ),
                 ],
@@ -865,6 +1080,9 @@ class FlipControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PlaygroundModel model = context.watch<PlaygroundModel>();
+
+    final BoxData box = model.selectedBox!;
+
     return AnimatedSize(
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeInOut,
@@ -913,7 +1131,7 @@ class FlipControls extends StatelessWidget {
                   child: Transform.scale(
                     scale: 0.7,
                     child: Switch(
-                      value: model.flipRectWhileResizing,
+                      value: box.flipRectWhileResizing,
                       onChanged: (value) =>
                           model.onFlipWhileResizingChanged(value),
                     ),
@@ -962,7 +1180,7 @@ class FlipControls extends StatelessWidget {
                   child: Transform.scale(
                     scale: 0.7,
                     child: Switch(
-                      value: model.flipChild,
+                      value: box.flipChild,
                       onChanged: (value) => model.onFlipChildChanged(value),
                     ),
                   ),
@@ -970,7 +1188,7 @@ class FlipControls extends StatelessWidget {
               ],
             ),
           ),
-          if (model.flipChild)
+          if (box.flipChild)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Row(
@@ -984,8 +1202,8 @@ class FlipControls extends StatelessWidget {
                       }
                     },
                     isSelected: [
-                      model.flip.isHorizontal,
-                      model.flip.isVertical,
+                      box.flip.isHorizontal,
+                      box.flip.isVertical,
                     ],
                     selectedColor: Theme.of(context).colorScheme.primary,
                     constraints: const BoxConstraints.tightFor(height: 32),
@@ -1061,39 +1279,45 @@ class _ClampingControlsState extends State<ClampingControls> {
 
   double get right => double.tryParse(rightController.text) ?? 0;
 
+  BoxData get box => model.selectedBox!;
+
   @override
   void initState() {
     super.initState();
     leftController =
-        TextEditingController(text: model.clampingRect.left.toStringAsFixed(0));
+        TextEditingController(text: box.clampingRect.left.toStringAsFixed(0));
     topController =
-        TextEditingController(text: model.clampingRect.top.toStringAsFixed(0));
-    bottomController = TextEditingController(
-        text: model.clampingRect.bottom.toStringAsFixed(0));
-    rightController = TextEditingController(
-        text: model.clampingRect.right.toStringAsFixed(0));
+        TextEditingController(text: box.clampingRect.top.toStringAsFixed(0));
+    bottomController =
+        TextEditingController(text: box.clampingRect.bottom.toStringAsFixed(0));
+    rightController =
+        TextEditingController(text: box.clampingRect.right.toStringAsFixed(0));
 
     model.addListener(onModelChanged);
   }
 
   void onModelChanged() {
-    if (model.clampingRect.left != left) {
-      leftController.text = model.clampingRect.left.toStringAsFixed(0);
+    if (model.selectedBox == null) return;
+    if (box.clampingRect.left != left) {
+      leftController.text = box.clampingRect.left.toStringAsFixed(0);
     }
-    if (model.clampingRect.top != top) {
-      topController.text = model.clampingRect.top.toStringAsFixed(0);
+    if (box.clampingRect.top != top) {
+      topController.text = box.clampingRect.top.toStringAsFixed(0);
     }
-    if (model.clampingRect.bottom != bottom) {
-      bottomController.text = model.clampingRect.bottom.toStringAsFixed(0);
+    if (box.clampingRect.bottom != bottom) {
+      bottomController.text = box.clampingRect.bottom.toStringAsFixed(0);
     }
-    if (model.clampingRect.right != right) {
-      rightController.text = model.clampingRect.right.toStringAsFixed(0);
+    if (box.clampingRect.right != right) {
+      rightController.text = box.clampingRect.right.toStringAsFixed(0);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final PlaygroundModel model = context.watch<PlaygroundModel>();
+
+    final BoxData box = model.selectedBox!;
+
     return FocusScope(
       child: Builder(
         builder: (context) {
@@ -1138,7 +1362,7 @@ class _ClampingControlsState extends State<ClampingControls> {
                           child: Transform.scale(
                             scale: 0.7,
                             child: Switch(
-                              value: model.clampingEnabled,
+                              value: box.clampingEnabled,
                               onChanged: (value) => model.toggleClamping(value),
                             ),
                           ),
@@ -1146,7 +1370,7 @@ class _ClampingControlsState extends State<ClampingControls> {
                       ],
                     ),
                   ),
-                  if (model.clampingEnabled)
+                  if (box.clampingEnabled)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                       child: Column(
@@ -1165,7 +1389,7 @@ class _ClampingControlsState extends State<ClampingControls> {
                             children: [
                               Expanded(
                                 child: TextField(
-                                  enabled: model.clampingEnabled,
+                                  enabled: box.clampingEnabled,
                                   controller: leftController,
                                   onSubmitted: (value) {
                                     model.onClampingRectChanged(left: left);
@@ -1183,7 +1407,7 @@ class _ClampingControlsState extends State<ClampingControls> {
                               const SizedBox(width: 16),
                               Expanded(
                                 child: TextField(
-                                  enabled: model.clampingEnabled,
+                                  enabled: box.clampingEnabled,
                                   controller: topController,
                                   onSubmitted: (value) {
                                     model.onClampingRectChanged(top: top);
@@ -1213,7 +1437,7 @@ class _ClampingControlsState extends State<ClampingControls> {
                             children: [
                               Expanded(
                                 child: TextFormField(
-                                  enabled: model.clampingEnabled,
+                                  enabled: box.clampingEnabled,
                                   controller: rightController,
                                   onFieldSubmitted: (value) {
                                     model.onClampingRectChanged(right: right);
@@ -1231,7 +1455,7 @@ class _ClampingControlsState extends State<ClampingControls> {
                               const SizedBox(width: 16),
                               Expanded(
                                 child: TextField(
-                                  enabled: model.clampingEnabled,
+                                  enabled: box.clampingEnabled,
                                   controller: bottomController,
                                   onSubmitted: (value) {
                                     model.onClampingRectChanged(bottom: bottom);
@@ -1298,33 +1522,36 @@ class _ConstraintsControlsState extends State<ConstraintsControls> {
 
   double? get maxHeight => double.tryParse(maxHeightController.text);
 
+  BoxData get box => model.selectedBox!;
+
   @override
   void initState() {
     super.initState();
     minWidthController =
-        TextEditingController(text: formatted(model.constraints.minWidth));
+        TextEditingController(text: formatted(box.constraints.minWidth));
     minHeightController =
-        TextEditingController(text: formatted(model.constraints.minHeight));
+        TextEditingController(text: formatted(box.constraints.minHeight));
     maxHeightController =
-        TextEditingController(text: formatted(model.constraints.maxHeight));
+        TextEditingController(text: formatted(box.constraints.maxHeight));
     maxWidthController =
-        TextEditingController(text: formatted(model.constraints.maxWidth));
+        TextEditingController(text: formatted(box.constraints.maxWidth));
 
     model.addListener(onModelChanged);
   }
 
   void onModelChanged() {
-    if (model.constraints.minWidth != minWidth) {
-      minWidthController.text = formatted(model.constraints.minWidth);
+    if (model.selectedBox == null) return;
+    if (box.constraints.minWidth != minWidth) {
+      minWidthController.text = formatted(box.constraints.minWidth);
     }
-    if (model.constraints.minHeight != minHeight) {
-      minHeightController.text = formatted(model.constraints.minHeight);
+    if (box.constraints.minHeight != minHeight) {
+      minHeightController.text = formatted(box.constraints.minHeight);
     }
-    if (model.constraints.maxHeight != maxHeight) {
-      maxHeightController.text = formatted(model.constraints.maxHeight);
+    if (box.constraints.maxHeight != maxHeight) {
+      maxHeightController.text = formatted(box.constraints.maxHeight);
     }
-    if (model.constraints.maxWidth != maxWidth) {
-      maxWidthController.text = formatted(model.constraints.maxWidth);
+    if (box.constraints.maxWidth != maxWidth) {
+      maxWidthController.text = formatted(box.constraints.maxWidth);
     }
   }
 
@@ -1385,7 +1612,7 @@ class _ConstraintsControlsState extends State<ConstraintsControls> {
                           child: Transform.scale(
                             scale: 0.7,
                             child: Switch(
-                              value: model.constraintsEnabled,
+                              value: box.constraintsEnabled,
                               onChanged: (value) =>
                                   model.toggleConstraints(value),
                             ),
@@ -1394,7 +1621,7 @@ class _ConstraintsControlsState extends State<ConstraintsControls> {
                       ],
                     ),
                   ),
-                  if (model.constraintsEnabled)
+                  if (box.constraintsEnabled)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                       child: Column(
@@ -1413,7 +1640,7 @@ class _ConstraintsControlsState extends State<ConstraintsControls> {
                             children: [
                               Expanded(
                                 child: TextField(
-                                  enabled: model.constraintsEnabled,
+                                  enabled: box.constraintsEnabled,
                                   controller: minWidthController,
                                   onSubmitted: (value) {
                                     model.onConstraintsChanged(
@@ -1435,7 +1662,7 @@ class _ConstraintsControlsState extends State<ConstraintsControls> {
                               const SizedBox(width: 16),
                               Expanded(
                                 child: TextField(
-                                  enabled: model.constraintsEnabled,
+                                  enabled: box.constraintsEnabled,
                                   controller: minHeightController,
                                   onSubmitted: (value) {
                                     model.onConstraintsChanged(
@@ -1469,7 +1696,7 @@ class _ConstraintsControlsState extends State<ConstraintsControls> {
                             children: [
                               Expanded(
                                 child: TextFormField(
-                                  enabled: model.constraintsEnabled,
+                                  enabled: box.constraintsEnabled,
                                   controller: maxWidthController,
                                   onFieldSubmitted: (value) {
                                     model.onConstraintsChanged(
@@ -1491,7 +1718,7 @@ class _ConstraintsControlsState extends State<ConstraintsControls> {
                               const SizedBox(width: 16),
                               Expanded(
                                 child: TextField(
-                                  enabled: model.constraintsEnabled,
+                                  enabled: box.constraintsEnabled,
                                   controller: maxHeightController,
                                   onSubmitted: (value) {
                                     model.onConstraintsChanged(
@@ -1543,7 +1770,7 @@ class _ConstraintsControlsState extends State<ConstraintsControls> {
 }
 
 class KeyboardListenerIndicator extends StatelessWidget {
-  final List<String> pressedKeys;
+  final List<LogicalKeyboardKey> pressedKeys;
   final VoidCallback onClear;
 
   const KeyboardListenerIndicator({
@@ -1578,7 +1805,7 @@ class KeyboardListenerIndicator extends StatelessWidget {
               ],
             ),
             child: Text(
-              key,
+              prettifyKey(key),
               style: TextStyle(
                 color: Theme.of(context).colorScheme.primary,
                 fontWeight: FontWeight.bold,
@@ -1597,6 +1824,20 @@ class KeyboardListenerIndicator extends StatelessWidget {
           ),
       ],
     );
+  }
+
+  String prettifyKey(LogicalKeyboardKey key) {
+    final keyLabel = key.keyLabel;
+    if (key == LogicalKeyboardKey.arrowLeft) return '←';
+    if (key == LogicalKeyboardKey.arrowRight) return '→';
+    if (key == LogicalKeyboardKey.arrowUp) return '↑';
+    if (key == LogicalKeyboardKey.arrowDown) return '↓';
+    if (key == LogicalKeyboardKey.escape) return 'ESC';
+    if (key == LogicalKeyboardKey.shiftLeft) return 'SHIFT';
+    if (key == LogicalKeyboardKey.altLeft) return 'ALT';
+    if (key == LogicalKeyboardKey.controlLeft) return 'CTRL';
+    if (key == LogicalKeyboardKey.metaLeft) return 'CMD';
+    return keyLabel;
   }
 }
 
@@ -1632,14 +1873,21 @@ class ValueText extends StatelessWidget {
 
 class SectionHeader extends StatelessWidget {
   final String title;
+  final EdgeInsets? padding;
+  final double? height;
 
-  const SectionHeader(this.title, {super.key});
+  const SectionHeader(
+    this.title, {
+    super.key,
+    this.padding,
+    this.height,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 44,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      height: height ?? 44,
+      padding: padding ?? const EdgeInsets.symmetric(horizontal: 16),
       alignment: Alignment.centerLeft,
       child: Text(
         title,
@@ -1649,4 +1897,42 @@ class SectionHeader extends StatelessWidget {
       ),
     );
   }
+}
+
+class BoxData {
+  final String name;
+  Rect rect = Rect.zero;
+  Flip flip = Flip.none;
+  Rect rect2 = Rect.zero;
+  Flip flip2 = Flip.none;
+  Rect clampingRect = Rect.largest;
+  BoxConstraints constraints;
+
+  bool flipRectWhileResizing = true;
+  bool flipChild = true;
+  bool clampingEnabled = false;
+  bool constraintsEnabled = false;
+  bool resizable = true;
+  bool movable = true;
+  bool hideHandlesWhenNotResizable = true;
+
+  final String imageAsset;
+
+  BoxData({
+    required this.name,
+    required this.rect,
+    required this.imageAsset,
+    this.flip = Flip.none,
+    this.rect2 = Rect.zero,
+    this.flip2 = Flip.none,
+    this.clampingRect = Rect.largest,
+    this.constraints = const BoxConstraints(minWidth: 0, minHeight: 0),
+    this.flipRectWhileResizing = true,
+    this.flipChild = true,
+    this.clampingEnabled = false,
+    this.constraintsEnabled = false,
+    this.resizable = true,
+    this.movable = true,
+    this.hideHandlesWhenNotResizable = true,
+  });
 }
