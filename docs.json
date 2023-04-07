@@ -4,6 +4,7 @@
   "logo": "/assets/logo.png",
   "logoDark": "/assets/logo-dark.png",
   "favicon": "/assets/logo-dark.png",
+  "googleTagManager": "G-YKTHJCXDGC",
   "anchors": [
     {
       "title": "Live Demo",
