@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_box_transform/flutter_box_transform.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'package:vector_math/vector_math.dart' hide Colors;
 
 import 'resources/asset_icons.dart';
 import 'resources/images.dart';
@@ -489,93 +490,274 @@ class _ImageBoxState extends State<ImageBox> {
 
   BoxData get box => widget.box;
 
+  Rect largestClampingBox = Rect.zero;
+
   @override
   Widget build(BuildContext context) {
     final PlaygroundModel model = context.read<PlaygroundModel>();
     final Color handleColor = Theme.of(context).colorScheme.primary;
-    return TransformableBox(
-      key: ValueKey('image-box-${box.name}'),
-      rect: box.rect,
-      flip: box.flip,
-      clampingRect: model.clampingEnabled ? model.clampingRect : null,
-      constraints: box.constraintsEnabled ? box.constraints : null,
-      onChanged: widget.onChanged,
-      resizable: widget.selected && box.resizable,
-      hideHandlesWhenNotResizable:
-          !widget.selected || box.hideHandlesWhenNotResizable,
-      movable: widget.selected && box.movable,
-      allowContentFlipping: box.flipChild,
-      flipWhileResizing: box.flipRectWhileResizing,
-      onTerminalSizeReached: (
-        bool reachedMinWidth,
-        bool reachedMaxWidth,
-        bool reachedMinHeight,
-        bool reachedMaxHeight,
-      ) {
-        if (minWidthReached == reachedMinWidth &&
-            minHeightReached == reachedMinHeight &&
-            maxWidthReached == reachedMaxWidth &&
-            maxHeightReached == reachedMaxHeight) return;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // TODO: Remove
+        if (model.clampingEnabled)
+          Builder(
+            builder: (context) {
+              final rect = largestClampingBox;
+              final line1 = extendLineToRect(
+                model.clampingRect,
+                rect.center.toVector2(),
+                rect.bottomRight.toVector2(),
+              );
 
-        setState(() {
-          minWidthReached = reachedMinWidth;
-          minHeightReached = reachedMinHeight;
-          maxWidthReached = reachedMaxWidth;
-          maxHeightReached = reachedMaxHeight;
-        });
-      },
-      contentBuilder: (context, rect, flip) => GestureDetector(
-        onTap: () {
-          if (widget.selected) return;
-          widget.onSelected();
-        },
-        onPanStart: (_) {
-          if (widget.selected) return;
-          widget.onSelected();
-        },
-        // onTapDown: (_) {
-        //   if(widget.selected) return;
-        //   widget.onSelected();
-        // },
-        child: Container(
-          key: ValueKey('image-box-${box.name}-content'),
-          width: rect.width,
-          height: rect.height,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            image: DecorationImage(
-              image: AssetImage(box.imageAsset),
-              fit: BoxFit.fill,
+              final line2 = extendLineToRect(
+                model.clampingRect,
+                rect.center.toVector2(),
+                rect.topRight.toVector2(),
+              );
+
+              return IgnorePointer(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Positioned.fromRect(
+                      rect: rect,
+                      child: IgnorePointer(
+                        child: Container(
+                          color: Colors.yellow.withOpacity(0.2),
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              const Placeholder(),
+                              Align(
+                                alignment: Alignment.center,
+                                child: Container(
+                                  width: 15,
+                                  height: 15,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.blue,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ),
+                              Align(
+                                alignment: Alignment.topLeft,
+                                child: FractionalTranslation(
+                                  translation: const Offset(-0.5, -0.5),
+                                  child: Container(
+                                    width: 20,
+                                    height: 20,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.blue,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Align(
+                                alignment: Alignment.topRight,
+                                child: FractionalTranslation(
+                                  translation: const Offset(0.5, -0.5),
+                                  child: Container(
+                                    width: 20,
+                                    height: 20,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.blue,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Align(
+                                alignment: Alignment.bottomRight,
+                                child: FractionalTranslation(
+                                  translation: const Offset(0.5, 0.5),
+                                  child: Container(
+                                    width: 20,
+                                    height: 20,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.blue,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Align(
+                                alignment: Alignment.bottomLeft,
+                                child: FractionalTranslation(
+                                  translation: const Offset(-0.5, 0.5),
+                                  child: Container(
+                                    width: 20,
+                                    height: 20,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.blue,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: line1![0].x,
+                      top: line1[0].y,
+                      child: FractionalTranslation(
+                        translation: const Offset(-0.5, -0.5),
+                        child: Container(
+                          width: 15,
+                          height: 15,
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(1),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: line2![0].x,
+                      top: line2[0].y,
+                      child: FractionalTranslation(
+                        translation: const Offset(-0.5, -0.5),
+                        child: Container(
+                          width: 15,
+                          height: 15,
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(1),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: line2[1].x,
+                      top: line2[1].y,
+                      child: FractionalTranslation(
+                        translation: const Offset(-0.5, -0.5),
+                        child: Container(
+                          width: 15,
+                          height: 15,
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(1),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: line1[1].x,
+                      top: line1[1].y,
+                      child: FractionalTranslation(
+                        translation: const Offset(-0.5, -0.5),
+                        child: Container(
+                          width: 15,
+                          height: 15,
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(1),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        TransformableBox(
+          key: ValueKey('image-box-${box.name}'),
+          rect: box.rect,
+          flip: box.flip,
+          clampingRect: model.clampingEnabled ? model.clampingRect : null,
+          constraints: box.constraintsEnabled ? box.constraints : null,
+          onChanged: (result) {
+            widget.onChanged?.call(result);
+            largestClampingBox = result.largestRect;
+            setState(() {});
+          },
+          resizable: widget.selected && box.resizable,
+          hideHandlesWhenNotResizable:
+              !widget.selected || box.hideHandlesWhenNotResizable,
+          movable: widget.selected && box.movable,
+          allowContentFlipping: box.flipChild,
+          flipWhileResizing: box.flipRectWhileResizing,
+          allowResizeOverflow: false,
+          onTerminalSizeReached: (
+            bool reachedMinWidth,
+            bool reachedMaxWidth,
+            bool reachedMinHeight,
+            bool reachedMaxHeight,
+          ) {
+            if (minWidthReached == reachedMinWidth &&
+                minHeightReached == reachedMinHeight &&
+                maxWidthReached == reachedMaxWidth &&
+                maxHeightReached == reachedMaxHeight) return;
+
+            setState(() {
+              minWidthReached = reachedMinWidth;
+              minHeightReached = reachedMinHeight;
+              maxWidthReached = reachedMaxWidth;
+              maxHeightReached = reachedMaxHeight;
+            });
+          },
+          contentBuilder: (context, rect, flip) => GestureDetector(
+            onTap: () {
+              setState(() {});
+              if (widget.selected) return;
+              widget.onSelected();
+            },
+            onPanStart: (_) {
+              if (widget.selected) return;
+              widget.onSelected();
+            },
+            onPanUpdate: (_) => setState(() {}),
+            // onTapDown: (_) {
+            //   if(widget.selected) return;
+            //   widget.onSelected();
+            // },
+            child: Container(
+              key: ValueKey('image-box-${box.name}-content'),
+              width: rect.width,
+              height: rect.height,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                image: DecorationImage(
+                  image: AssetImage(box.imageAsset),
+                  fit: BoxFit.fill,
+                ),
+              ),
+              foregroundDecoration: BoxDecoration(
+                border: widget.selected
+                    ? Border.symmetric(
+                        horizontal: BorderSide(
+                          color: minHeightReached
+                              ? Colors.orange
+                              : maxHeightReached
+                                  ? Colors.red
+                                  : handleColor,
+                          width: 2,
+                          // TODO: Due to flutter issue in 3.7.10, this doesn't work in debug mode.
+                          // strokeAlign: BorderSide.strokeAlignCenter,
+                        ),
+                        vertical: BorderSide(
+                          color: minWidthReached
+                              ? Colors.orange
+                              : maxWidthReached
+                                  ? Colors.red
+                                  : handleColor,
+                          width: 2,
+                          // TODO: Due to flutter issue in 3.7.10, this doesn't work in debug mode.
+                          // strokeAlign: BorderSide.strokeAlignCenter,
+                        ),
+                      )
+                    : null,
+              ),
             ),
           ),
-          foregroundDecoration: BoxDecoration(
-            border: widget.selected
-                ? Border.symmetric(
-                    horizontal: BorderSide(
-                      color: minHeightReached
-                          ? Colors.orange
-                          : maxHeightReached
-                              ? Colors.red
-                              : handleColor,
-                      width: 2,
-                      // TODO: Due to flutter issue in 3.7.10, this doesn't work in debug mode.
-                      // strokeAlign: BorderSide.strokeAlignCenter,
-                    ),
-                    vertical: BorderSide(
-                      color: minWidthReached
-                          ? Colors.orange
-                          : maxWidthReached
-                              ? Colors.red
-                              : handleColor,
-                      width: 2,
-                      // TODO: Due to flutter issue in 3.7.10, this doesn't work in debug mode.
-                      // strokeAlign: BorderSide.strokeAlignCenter,
-                    ),
-                  )
-                : null,
-          ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -644,10 +826,11 @@ class _ClampingRectState extends State<ClampingRect> {
       rect: model.clampingRect,
       flip: Flip.none,
       clampingRect: model.playgroundArea!,
-      constraints: BoxConstraints(
-        minWidth: minWidth,
-        minHeight: minHeight,
-      ),
+      // TODO: enable again
+      // constraints: BoxConstraints(
+      //   minWidth: minWidth,
+      //   minHeight: minHeight,
+      // ),
       onChanged: (result) => model.setClampingRect(result.rect),
       onTerminalSizeReached: (
         bool reachedMinWidth,
@@ -1017,9 +1200,9 @@ class PositionControls extends StatelessWidget {
             children: [
               Row(
                 children: const [
-                  Expanded(child: Label('X')),
+                  Expanded(child: Label('LEFT')),
                   SizedBox(width: 16),
-                  Expanded(child: Label('Y')),
+                  Expanded(child: Label('TOP')),
                 ],
               ),
               const SizedBox(height: 8),
@@ -1031,6 +1214,26 @@ class PositionControls extends StatelessWidget {
                   const SizedBox(width: 16),
                   Expanded(
                     child: ValueText(box.rect.top.toStringAsFixed(0)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: const [
+                  Expanded(child: Label('RIGHT')),
+                  SizedBox(width: 16),
+                  Expanded(child: Label('BOTTOM')),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: ValueText(box.rect.right.toStringAsFixed(0)),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ValueText(box.rect.bottom.toStringAsFixed(0)),
                   ),
                 ],
               ),
@@ -1058,6 +1261,7 @@ class PositionControls extends StatelessWidget {
               Row(
                 children: const [
                   Expanded(child: Label('ASPECT RATIO')),
+                  Expanded(child: Label('CENTER')),
                 ],
               ),
               const SizedBox(height: 8),
@@ -1066,6 +1270,11 @@ class PositionControls extends StatelessWidget {
                   Expanded(
                     child: ValueText(
                       (box.rect.width / box.rect.height).toStringAsFixed(2),
+                    ),
+                  ),
+                  Expanded(
+                    child: ValueText(
+                      '${box.rect.center.dx.toInt()} x ${box.rect.center.dy.toStringAsFixed(0)}',
                     ),
                   ),
                 ],
@@ -1932,4 +2141,63 @@ class BoxData {
     this.movable = true,
     this.hideHandlesWhenNotResizable = true,
   });
+}
+
+List<Vector2>? extendLineToRect(Rect rect, Vector2 p1, Vector2 p2) {
+  final result = extendLinePointsToRectPoints(
+      rect.left, rect.top, rect.right, rect.bottom, p1.x, p1.y, p2.x, p2.y);
+
+  if (result == null) return null;
+
+  return [Vector2(result[0], result[1]), Vector2(result[2], result[3])];
+}
+
+List<double>? extendLinePointsToRectPoints(
+  double left,
+  double top,
+  double right,
+  double bottom,
+  double x1,
+  double y1,
+  double x2,
+  double y2,
+) {
+  if (y1 == y2) {
+    return [left, y1, right, y1];
+  }
+  if (x1 == x2) {
+    return [x1, top, x1, bottom];
+  }
+
+  double yForLeft = y1 + (y2 - y1) * (left - x1) / (x2 - x1);
+  double yForRight = y1 + (y2 - y1) * (right - x1) / (x2 - x1);
+
+  double xForTop = x1 + (x2 - x1) * (top - y1) / (y2 - y1);
+  double xForBottom = x1 + (x2 - x1) * (bottom - y1) / (y2 - y1);
+
+  if (top <= yForLeft &&
+      yForLeft <= bottom &&
+      top <= yForRight &&
+      yForRight <= bottom) {
+    return [left, yForLeft, right, yForRight];
+  } else if (top <= yForLeft && yForLeft <= bottom) {
+    if (left <= xForBottom && xForBottom <= right) {
+      return [left, yForLeft, xForBottom, bottom];
+    } else if (left <= xForTop && xForTop <= right) {
+      return [left, yForLeft, xForTop, top];
+    }
+  } else if (top <= yForRight && yForRight <= bottom) {
+    if (left <= xForTop && xForTop <= right) {
+      return [xForTop, top, right, yForRight];
+    }
+    if (left <= xForBottom && xForBottom <= right) {
+      return [xForBottom, bottom, right, yForRight];
+    }
+  } else if (left <= xForTop &&
+      xForTop <= right &&
+      left <= xForBottom &&
+      xForBottom <= right) {
+    return [xForTop, top, xForBottom, bottom];
+  }
+  return null;
 }

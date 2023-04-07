@@ -87,6 +87,16 @@ class TransformableBoxController extends ChangeNotifier {
   /// set to true, the child will be flipped when the box is flipped.
   bool flipChild = false;
 
+  /// Whether to allow the box to overflow the resize operation to its opposite
+  /// side to continue the resize operation until its constrained on both sides.
+  ///
+  /// If this is set to false, the box will cease the resize operation the
+  /// instant it hits an edge of the [clampingRect].
+  ///
+  /// If this is set to true, the box will continue the resize operation until
+  /// it is constrained to both sides of the [clampingRect].
+  bool allowResizeOverflow = true;
+
   /// The constraints that limits the resizing of the [TransformableBox] inside its
   /// bounds.
   BoxConstraints constraints = const BoxConstraints.expand();
@@ -252,6 +262,7 @@ class TransformableBoxController extends ChangeNotifier {
       clampingRect: clampingRect,
       constraints: constraints,
       flipRect: flipWhileResizing,
+      allowResizeOverflow: allowResizeOverflow,
     );
 
     rect = result.rect;
@@ -293,11 +304,12 @@ class TransformableBoxController extends ChangeNotifier {
       initialLocalPosition: initialLocalPosition,
       localPosition: initialLocalPosition,
       clampingRect: clampingRect,
-      handle: HandlePosition.bottomRight,
+      handle: HandlePosition.none,
       resizeMode: ResizeMode.scale,
       initialFlip: initialFlip,
       constraints: constraints,
       flipRect: flipWhileResizing,
+      allowResizeOverflow: allowResizeOverflow,
     );
 
     rect = result.rect;

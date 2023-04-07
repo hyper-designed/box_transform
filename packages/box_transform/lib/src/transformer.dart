@@ -1,8 +1,10 @@
+import 'dart:math';
+
+import 'package:meta/meta.dart';
 import 'package:vector_math/vector_math.dart';
 
-import 'enums.dart';
-import 'geometry.dart';
-import 'result.dart';
+import '../box_transform.dart';
+import 'helpers.dart';
 
 /// A class that transforms a [Box] in several different supported forms.
 class BoxTransformer {
@@ -34,6 +36,7 @@ class BoxTransformer {
       oldRect: initialBox,
       delta: delta,
       rawSize: newRect.size,
+      largestRect: clampingRect,
     );
   }
 
@@ -51,6 +54,16 @@ class BoxTransformer {
   ///
   /// The [constraints] is the constraints that the [initialBox] is not allowed
   /// to shrink or grow beyond.
+  ///
+  /// [allowResizeOverflow] decides whether to allow the box to overflow the
+  /// resize operation to its opposite side to continue the resize operation
+  /// until its constrained on both sides.
+  ///
+  /// If this is set to false, the box will cease the resize operation the
+  /// instant it hits an edge of the [clampingRect].
+  ///
+  /// If this is set to true, the box will continue the resize operation until
+  /// it is constrained to both sides of the [clampingRect].
   static RawResizeResult resize({
     required Box initialBox,
     required Vector2 initialLocalPosition,
@@ -61,6 +74,7 @@ class BoxTransformer {
     Box clampingRect = Box.largest,
     Constraints constraints = const Constraints.unconstrained(),
     bool flipRect = true,
+    bool allowResizeOverflow = false,
   }) {
     Vector2 delta = localPosition - initialLocalPosition;
 
@@ -98,7 +112,7 @@ class BoxTransformer {
 
     if (resizeMode.hasSymmetry) delta = Vector2(delta.x * 2, delta.y * 2);
 
-    final Dimension newSize = _calculateNewSize(
+    InternalResizeResult result = _calculateNewBox(
       initialBox: initialBox,
       handle: handle,
       delta: delta,
@@ -106,52 +120,20 @@ class BoxTransformer {
       resizeMode: resizeMode,
       clampingRect: clampingRect,
       constraints: constraints,
+      allowResizeOverflow: allowResizeOverflow,
+      localPosition: localPosition,
     );
-    final double newWidth = newSize.width.abs();
-    final double newHeight = newSize.height.abs();
 
-    Box newRect;
-    if (resizeMode.hasSymmetry) {
-      newRect = Box.fromCenter(
-        center: initialBox.center,
-        width: newWidth,
-        height: newHeight,
-      );
-    } else {
-      double left;
-      double top;
+    final Box newRect = result.rect;
+    final Box largestRect = result.largest;
 
-      /// If the handle is a side handle and its a scalable resizing, then
-      /// the resizing should be w.r.t. the opposite side of the handle.
-      /// This is needs to be handled separately because the anchor point in
-      /// this case is the center of the handle on the opposite side.
-      if (resizeMode.isScalable && handle.isSide) {
-        if (handle.isHorizontal) {
-          left = handle.influencesLeft
-              ? initialBox.right - newWidth
-              : initialBox.left;
-          top = initialBox.center.y - newHeight / 2;
-        } else {
-          top = handle.influencesTop
-              ? initialBox.bottom - newHeight
-              : initialBox.top;
-          left = initialBox.center.x - newWidth / 2;
-        }
-      } else {
-        left = handle.influencesLeft
-            ? initialBox.right - newWidth
-            : initialBox.left;
-        top = handle.influencesTop
-            ? initialBox.bottom - newHeight
-            : initialBox.top;
-      }
-      Box rect = Box.fromLTWH(left, top, newWidth, newHeight);
+    // final newSize = newRect.size;
 
-      // Flip the rect only if flipRect is true.
-      newRect = flipRect ? flipBox(rect, currentFlip, handle) : rect;
-    }
-
-    newRect = clampingRect.containOther(newRect);
+    // newRect = clampingRect.containOther(
+    //   newRect,
+    //   handle: handle,
+    //   currentFlip: currentFlip,
+    // );
 
     // Detect terminal resizing, where the resizing reached a hard limit.
     bool minWidthReached = false;
@@ -187,86 +169,53 @@ class BoxTransformer {
       flip: currentFlip * initialFlip,
       resizeMode: resizeMode,
       delta: delta,
-      rawSize: newSize,
+      rawSize: newRect.size,
       minWidthReached: minWidthReached,
       maxWidthReached: maxWidthReached,
       minHeightReached: minHeightReached,
       maxHeightReached: maxHeightReached,
+      largestRect: largestRect,
+      handle: handle,
     );
   }
 
-  /// Flips the given [rect] with given [flip] with [handle] being the
-  /// pivot point.
-  static Box flipBox(Box rect, Flip flip, HandlePosition handle) {
-    switch (handle) {
-      case HandlePosition.topLeft:
-        return rect.translate(
-          flip.isHorizontal ? rect.width : 0,
-          flip.isVertical ? rect.height : 0,
-        );
-      case HandlePosition.topRight:
-        return rect.translate(
-          flip.isHorizontal ? -rect.width : 0,
-          flip.isVertical ? rect.height : 0,
-        );
-      case HandlePosition.bottomLeft:
-        return rect.translate(
-          flip.isHorizontal ? rect.width : 0,
-          flip.isVertical ? -rect.height : 0,
-        );
-      case HandlePosition.bottomRight:
-        return rect.translate(
-          flip.isHorizontal ? -rect.width : 0,
-          flip.isVertical ? -rect.height : 0,
-        );
-      case HandlePosition.left:
-        return rect.translate(
-          flip.isHorizontal ? rect.width : 0,
-          0,
-        );
-      case HandlePosition.top:
-        return rect.translate(
-          0,
-          flip.isVertical ? rect.height : 0,
-        );
-      case HandlePosition.right:
-        return rect.translate(
-          flip.isHorizontal ? -rect.width : 0,
-          0,
-        );
-      case HandlePosition.bottom:
-        return rect.translate(
-          0,
-          flip.isVertical ? -rect.height : 0,
-        );
+  static Box _applyDelta({
+    required Box initialBox,
+    required HandlePosition handle,
+    required Vector2 delta,
+    required ResizeMode resizeMode,
+  }) {
+    double left;
+    double top;
+    double right;
+    double bottom;
+
+    left = initialBox.left + (handle.influencesLeft ? delta.x : 0);
+    top = initialBox.top + (handle.influencesTop ? delta.y : 0);
+    right = initialBox.right + (handle.influencesRight ? delta.x : 0);
+    bottom = initialBox.bottom + (handle.influencesBottom ? delta.y : 0);
+
+    final double width = (right - left).abs();
+    final double height = (bottom - top).abs();
+
+    if (resizeMode.hasSymmetry) {
+      final widthDelta = (initialBox.width - width) / 2;
+      final heightDelta = (initialBox.height - height) / 2;
+      left = initialBox.left + widthDelta;
+      top = initialBox.top + heightDelta;
+      right = initialBox.right - widthDelta;
+      bottom = initialBox.bottom - heightDelta;
     }
+
+    return Box.fromLTRB(
+      min(left, right),
+      min(top, bottom),
+      max(left, right),
+      max(top, bottom),
+    );
   }
 
-  /// Calculates flip state of the given [rect] w.r.t [localPosition] and
-  /// [handle]. It uses [handle] and [localPosition] to determine the quadrant
-  /// of the [rect] and then checks if the [rect] is flipped in that quadrant.
-  static Flip getFlipForBox(
-    Box rect,
-    Vector2 localPosition,
-    HandlePosition handle,
-    ResizeMode resizeMode,
-  ) {
-    final double widthFactor = resizeMode.hasSymmetry ? 0.5 : 1;
-    final double heightFactor = resizeMode.hasSymmetry ? 0.5 : 1;
-
-    final double effectiveWidth = rect.width * widthFactor;
-    final double effectiveHeight = rect.height * heightFactor;
-
-    final double handleXFactor = handle.influencesLeft ? -1 : 1;
-    final double handleYFactor = handle.influencesTop ? -1 : 1;
-
-    final double posX = effectiveWidth + localPosition.x * handleXFactor;
-    final double posY = effectiveHeight + localPosition.y * handleYFactor;
-
-    return Flip.fromValue(posX, posY);
-  }
-
-  static Dimension _calculateNewSize({
+  static InternalResizeResult _calculateNewBox({
     required Box initialBox,
     required HandlePosition handle,
     required Vector2 delta,
@@ -274,67 +223,65 @@ class BoxTransformer {
     required ResizeMode resizeMode,
     Box clampingRect = Box.largest,
     Constraints constraints = const Constraints.unconstrained(),
+    bool allowResizeOverflow = true,
+    required Vector2 localPosition,
   }) {
-    final double aspectRatio = initialBox.width / initialBox.height;
-
-    initialBox = flipBox(initialBox, flip, handle);
-    Box rect;
-
-    /// If the handle is a side handle and its a scalable resizing, then
-    /// the resizing should be w.r.t. the opposite side of the handle.
-    /// This is needs to be handled separately because the anchor point in
-    /// this case is the center of the handle on the opposite side.
-    if (handle.isSide && resizeMode.isScalable) {
-      double left;
-      double top;
-      double right;
-      double bottom;
-
-      if (handle.isHorizontal) {
-        left =
-            handle.influencesLeft ? initialBox.left + delta.x : initialBox.left;
-        right = handle.influencesRight
-            ? initialBox.right + delta.x
-            : initialBox.right;
-        final width = right - left;
-        final height = width / aspectRatio;
-        top = initialBox.centerLeft.y - height / 2;
-        bottom = initialBox.centerLeft.y + height / 2;
-      } else {
-        top = handle.influencesTop ? initialBox.top + delta.y : initialBox.top;
-        bottom = handle.influencesBottom
-            ? initialBox.bottom + delta.y
-            : initialBox.bottom;
-        final height = bottom - top;
-        final width = height * aspectRatio;
-        left = initialBox.centerLeft.x - width / 2;
-        right = initialBox.centerLeft.x + width / 2;
-      }
-      rect = Box.fromLTRB(left, top, right, bottom);
-    } else {
-      rect = Box.fromLTRB(
-        initialBox.left + (handle.influencesLeft ? delta.x : 0),
-        initialBox.top + (handle.influencesTop ? delta.y : 0),
-        initialBox.right + (handle.influencesRight ? delta.x : 0),
-        initialBox.bottom + (handle.influencesBottom ? delta.y : 0),
-      );
-    }
-    if (resizeMode.hasSymmetry) {
-      final widthDelta = (initialBox.width - rect.width) / 2;
-      final heightDelta = (initialBox.height - rect.height) / 2;
-      rect = Box.fromLTRB(
-        initialBox.left + widthDelta,
-        initialBox.top + heightDelta,
-        initialBox.right - widthDelta,
-        initialBox.bottom - heightDelta,
-      );
-    }
-
-    rect = clampingRect.containOther(
-      rect,
+    // No constraints or clamping is done. Only delta is applied to the
+    // initial box.
+    Box rect = _applyDelta(
+      initialBox: initialBox,
+      handle: handle,
+      delta: delta,
       resizeMode: resizeMode,
-      aspectRatio: aspectRatio,
     );
+
+    InternalResizeResult result;
+    switch (resizeMode) {
+      case ResizeMode.freeform:
+        result = handleFreeformResizing(
+          rect: rect,
+          clampingRect: clampingRect,
+          handle: handle,
+        );
+        break;
+      case ResizeMode.symmetric:
+        result = handleSymmetricResizing(
+          rect: rect,
+          clampingRect: clampingRect,
+          handle: handle,
+        );
+        break;
+      case ResizeMode.scale:
+        result = handleScaleResizing(
+          rect: rect,
+          initialBox: initialBox,
+          clampingRect: clampingRect,
+          handle: handle,
+          flip: flip,
+        );
+        break;
+      case ResizeMode.symmetricScale:
+        result = handleSymmetricScaleResizing(
+          rect: rect,
+          initialBox: initialBox,
+          clampingRect: clampingRect,
+          handle: handle,
+          flip: flip,
+        );
+        break;
+    }
+
+    return result;
+    // initialBox = flipBox(initialBox, flip, handle);
+
+    // rect = clampingRect.containOther(
+    //   rect,
+    //   resizeMode: resizeMode,
+    //   aspectRatio: aspectRatio,
+    //   handle: handle,
+    //   allowResizeOverflow: allowResizeOverflow,
+    //   currentFlip: flip,
+    // );
 
     // When constraining this rect, it might have a negative width or height
     // because it has not been normalized yet. If the minimum width or height
@@ -342,36 +289,658 @@ class BoxTransformer {
     // negative width or height will be ignored. To fix this, we take the
     // absolute value of the width and height before constraining and then
     // multiply the result with the sign of the width and height.
-    final double wSign = rect.width.sign;
-    final double hSign = rect.height.sign;
-    rect = constraints.constrainBox(rect, absolute: true);
-    rect = Box.fromLTWH(
-      rect.left,
-      rect.top,
-      rect.width * wSign,
-      rect.height * hSign,
+    // final double wSign = rect.width.sign;
+    // final double hSign = rect.height.sign;
+    // rect = constraints.constrainBox(rect, absolute: true);
+    // rect = Box.fromLTWH(
+    //   rect.left,
+    //   rect.top,
+    //   rect.width * wSign,
+    //   rect.height * hSign,
+    // );
+    //
+    // final double newWidth;
+    // final double newHeight;
+    // final newAspectRatio = rect.width / rect.height;
+    //
+    // if (resizeMode.isScalable) {
+    //   if (newAspectRatio.abs() < aspectRatio.abs()) {
+    //     newHeight = rect.height;
+    //     newWidth = newHeight * aspectRatio;
+    //   } else {
+    //     newWidth = rect.width;
+    //     newHeight = newWidth / aspectRatio;
+    //   }
+    // } else {
+    //   newWidth = rect.width;
+    //   newHeight = rect.height;
+    // }
+
+    // return Dimension(
+    //   newWidth.abs() * (flip.isHorizontal ? -1 : 1),
+    //   newHeight.abs() * (flip.isVertical ? -1 : 1),
+    // );
+  }
+
+  /// Handles resizing for [ResizeMode.freeform].
+  static InternalResizeResult handleFreeformResizing({
+    required Box rect,
+    required Box clampingRect,
+    required HandlePosition handle,
+  }) {
+    return InternalResizeResult(
+      rect: Box.fromLTRB(
+        max(rect.left, clampingRect.left),
+        max(rect.top, clampingRect.top),
+        min(rect.right, clampingRect.right),
+        min(rect.bottom, clampingRect.bottom),
+      ),
+      largest: clampingRect,
+    );
+  }
+
+  /// Handle resizing for [HandlePosition.bottomRight] handle
+  /// for [ResizeMode.scale].
+  static InternalResizeResult handleBottomRight(
+    Box rect,
+    Box initialRect,
+    Box clampingRect,
+    HandlePosition handle,
+  ) {
+    final area = getAvailableAreaForHandle(
+      rect: rect,
+      clampingRect: clampingRect,
+      handle: handle,
     );
 
-    final double newWidth;
-    final double newHeight;
-    final newAspectRatio = rect.width / rect.height;
+    final initialAspectRatio = initialRect.width / initialRect.height;
 
-    if (resizeMode.isScalable) {
-      if (newAspectRatio.abs() < aspectRatio.abs()) {
-        newHeight = rect.height;
-        newWidth = newHeight * aspectRatio;
-      } else {
-        newWidth = rect.width;
-        newHeight = newWidth / aspectRatio;
-      }
+    double rectWidth = rect.width;
+    double rectHeight = rect.height;
+
+    final cursorRect = rect;
+
+    if (cursorRect.aspectRatio.abs() < initialAspectRatio.abs()) {
+      rectWidth = rectHeight * initialAspectRatio;
     } else {
-      newWidth = rect.width;
-      newHeight = rect.height;
+      rectHeight = rectWidth / initialAspectRatio;
     }
 
-    return Dimension(
-      newWidth.abs() * (flip.isHorizontal ? -1 : 1),
-      newHeight.abs() * (flip.isVertical ? -1 : 1),
+    final effectiveArea = getClampingRectForHandle(
+      initialRect: initialRect,
+      availableArea: area,
+      handle: handle,
     );
+
+    rect = Box.fromHandle(
+      handle.anchor(initialRect),
+      handle,
+      rectWidth,
+      rectHeight,
+    );
+
+    if (rect.width > effectiveArea.width ||
+        rect.height > effectiveArea.height) {
+      return InternalResizeResult(rect: effectiveArea, largest: effectiveArea);
+    }
+
+    return InternalResizeResult(rect: rect, largest: effectiveArea);
+  }
+
+  /// Handle resizing for the right handle.
+  static InternalResizeResult handleRight(
+    Box rect,
+    Box initialRect,
+    Box clampingRect,
+    HandlePosition handle,
+  ) {
+    final initialAspectRatio = initialRect.width / initialRect.height;
+
+    final availableArea = getAvailableAreaForHandle(
+      rect: initialRect,
+      clampingRect: clampingRect,
+      handle: handle,
+    );
+
+    if (availableArea.width < initialRect.width) {
+      // initial box needs shrinking
+      final maxWidth = availableArea.width;
+      final maxHeight = maxWidth / initialAspectRatio;
+
+      initialRect = Box.fromHandle(
+        handle.anchor(initialRect),
+        handle,
+        maxWidth,
+        maxHeight,
+      );
+    }
+
+    final area = getClampingRectForHandle(
+      initialRect: initialRect,
+      availableArea: clampingRect,
+      handle: handle,
+    );
+
+    double rectWidth = rect.width;
+    double rectHeight = rect.height;
+
+    rectHeight = rectWidth / initialAspectRatio;
+
+    rect = Box.fromHandle(
+      handle.anchor(initialRect),
+      handle,
+      rectWidth,
+      rectHeight,
+    );
+
+    if (rect.width > area.width || rect.height > area.height) {
+      rect = area;
+      return InternalResizeResult(rect: area, largest: area);
+    }
+
+    return InternalResizeResult(rect: rect, largest: area);
+  }
+
+  /// handle resizing for the left handle
+  static InternalResizeResult handleLeft(
+    Box rect,
+    Box initialRect,
+    Box clampingRect,
+    HandlePosition handle,
+  ) {
+    final initialAspectRatio = initialRect.width / initialRect.height;
+
+    final availableArea = getAvailableAreaForHandle(
+      rect: initialRect,
+      clampingRect: clampingRect,
+      handle: handle,
+    );
+
+    if (availableArea.width < initialRect.width) {
+      // initial box needs shrinking
+      final maxWidth = availableArea.width;
+      final maxHeight = maxWidth / initialAspectRatio;
+
+      initialRect = Box.fromHandle(
+        handle.anchor(initialRect),
+        handle,
+        maxWidth,
+        maxHeight,
+      );
+    }
+
+    final area = getClampingRectForHandle(
+      initialRect: initialRect,
+      availableArea: clampingRect,
+      handle: handle,
+    );
+
+    double rectWidth = rect.width;
+    double rectHeight = rect.height;
+
+    rectHeight = rectWidth / initialAspectRatio;
+
+    rect = Box.fromHandle(
+      handle.anchor(initialRect),
+      handle,
+      rectWidth,
+      rectHeight,
+    );
+
+    if (rect.width > area.width || rect.height > area.height) {
+      rect = area;
+      return InternalResizeResult(rect: area, largest: area);
+    }
+
+    return InternalResizeResult(rect: rect, largest: area);
+  }
+
+  /// handle resizing for the bottom handle.
+  static InternalResizeResult handleBottom(
+    Box rect,
+    Box initialRect,
+    Box clampingRect,
+    HandlePosition handle,
+  ) {
+    final initialAspectRatio = initialRect.width / initialRect.height;
+
+    final availableArea = getAvailableAreaForHandle(
+      rect: initialRect,
+      clampingRect: clampingRect,
+      handle: handle,
+    );
+
+    if (availableArea.height < initialRect.height) {
+      // initial box needs shrinking
+      final maxHeight = availableArea.height;
+      final maxWidth = maxHeight * initialAspectRatio;
+
+      initialRect = Box.fromHandle(
+        handle.anchor(initialRect),
+        handle.opposite,
+        maxWidth,
+        maxHeight,
+      );
+    }
+
+    final effectiveArea = getClampingRectForHandle(
+      initialRect: initialRect,
+      availableArea: clampingRect,
+      handle: handle,
+    );
+
+    double rectWidth = rect.width;
+    double rectHeight = rect.height;
+
+    rectWidth = rectHeight * initialAspectRatio;
+
+    rect = Box.fromHandle(
+      handle.anchor(initialRect),
+      handle,
+      rectWidth,
+      rectHeight,
+    );
+
+    if (rect.width > effectiveArea.width ||
+        rect.height > effectiveArea.height) {
+      rect = effectiveArea;
+      return InternalResizeResult(rect: effectiveArea, largest: effectiveArea);
+    }
+
+    return InternalResizeResult(rect: rect, largest: effectiveArea);
+  }
+
+  /// handle resizing for the top handle.
+  static InternalResizeResult handleTop(
+    Box rect,
+    Box initialRect,
+    Box clampingRect,
+    HandlePosition handle,
+  ) {
+    final initialAspectRatio = initialRect.width / initialRect.height;
+
+    final availableArea = getAvailableAreaForHandle(
+      rect: initialRect,
+      clampingRect: clampingRect,
+      handle: handle,
+    );
+
+    if (availableArea.height < initialRect.height) {
+      // initial box needs shrinking
+      final maxHeight = availableArea.height;
+      final maxWidth = maxHeight * initialAspectRatio;
+
+      initialRect = Box.fromHandle(
+        handle.anchor(initialRect),
+        handle,
+        maxWidth,
+        maxHeight,
+      );
+    }
+
+    final area = getClampingRectForHandle(
+      initialRect: initialRect,
+      availableArea: clampingRect,
+      handle: handle,
+    );
+
+    double rectWidth = rect.width;
+    double rectHeight = rect.height;
+
+    rectWidth = rectHeight * initialAspectRatio;
+
+    rect = Box.fromHandle(
+      handle.anchor(initialRect),
+      handle,
+      rectWidth,
+      rectHeight,
+    );
+
+    if (rect.width > area.width || rect.height > area.height) {
+      rect = area;
+      return InternalResizeResult(rect: area, largest: area);
+    }
+
+    return InternalResizeResult(rect: rect, largest: area);
+  }
+
+  /// Handles the symmetric resize mode for corner handles.
+  static InternalResizeResult handleScaleSymmetricCorner(
+    Box rect,
+    Box initialRect,
+    Box clampingRect,
+    HandlePosition handle,
+  ) {
+    final initialAspectRatio = initialRect.width / initialRect.height;
+    final area = scaledSymmetricClampingBox(initialRect, clampingRect);
+
+    double rectWidth = rect.width;
+    double rectHeight = rect.height;
+
+    final cursorRect = rect;
+
+    if (cursorRect.aspectRatio.abs() < initialAspectRatio.abs()) {
+      rectWidth = rectHeight * initialAspectRatio;
+    } else {
+      rectHeight = rectWidth / initialAspectRatio;
+    }
+
+    rect = Box.fromCenter(
+      center: initialRect.center,
+      width: rectWidth,
+      height: rectHeight,
+    );
+
+    if (rect.width > area.width || rect.height > area.height) {
+      rect = area;
+      return InternalResizeResult(rect: area, largest: area);
+    }
+
+    return InternalResizeResult(rect: rect, largest: area);
+  }
+
+  /// Handles the symmetric resize mode for side handles.
+  static InternalResizeResult handleScaleSymmetricSide(
+    Box rect,
+    Box initialRect,
+    Box clampingRect,
+    HandlePosition handle,
+  ) {
+    final initialAspectRatio = initialRect.width / initialRect.height;
+    final area = scaledSymmetricClampingBox(initialRect, clampingRect);
+
+    double rectWidth = rect.width.abs();
+    double rectHeight = rect.height.abs();
+
+    if (handle.isHorizontal) {
+      rectHeight = rectWidth / initialAspectRatio;
+    } else {
+      rectWidth = rectHeight * initialAspectRatio;
+    }
+
+    rect = Box.fromCenter(
+      center: initialRect.center,
+      width: rectWidth,
+      height: rectHeight,
+    );
+
+    if (rect.width > area.width || rect.height > area.height) {
+      rect = area;
+      return InternalResizeResult(rect: area, largest: area);
+    }
+
+    return InternalResizeResult(rect: rect, largest: area);
+  }
+
+  /// Handle resizing for [HandlePosition.topLeft] handle
+  /// for [ResizeMode.scale].
+  static InternalResizeResult handleTopLeft(
+    Box rect,
+    Box initialRect,
+    Box clampingRect,
+    HandlePosition handle,
+  ) {
+    final area = getAvailableAreaForHandle(
+      rect: rect,
+      clampingRect: clampingRect,
+      handle: handle,
+    );
+
+    final initialAspectRatio = initialRect.width / initialRect.height;
+
+    double rectWidth = rect.width;
+    double rectHeight = rect.height;
+
+    final cursorRect = rect;
+
+    if (cursorRect.aspectRatio.abs() < initialAspectRatio.abs()) {
+      rectWidth = rectHeight * initialAspectRatio;
+    } else {
+      rectHeight = rectWidth / initialAspectRatio;
+    }
+
+    final effectiveArea = getClampingRectForHandle(
+      initialRect: initialRect,
+      availableArea: area,
+      handle: handle,
+    );
+
+    rect = Box.fromHandle(
+      handle.anchor(initialRect),
+      handle,
+      rectWidth,
+      rectHeight,
+    );
+
+    if (rect.width > effectiveArea.width ||
+        rect.height > effectiveArea.height) {
+      return InternalResizeResult(rect: effectiveArea, largest: effectiveArea);
+    }
+
+    return InternalResizeResult(rect: rect, largest: effectiveArea);
+  }
+
+  /// Handle resizing for [HandlePosition.bottomLeft] handle
+  /// for [ResizeMode.scale].
+  static InternalResizeResult handleBottomLeft(
+    Box rect,
+    Box initialRect,
+    Box clampingRect,
+    HandlePosition handle,
+  ) {
+    final area = getAvailableAreaForHandle(
+      rect: rect,
+      clampingRect: clampingRect,
+      handle: handle,
+    );
+
+    final initialAspectRatio = initialRect.width / initialRect.height;
+
+    double rectWidth = rect.width;
+    double rectHeight = rect.height;
+
+    final cursorRect = rect;
+
+    if (cursorRect.aspectRatio.abs() < initialAspectRatio.abs()) {
+      rectWidth = rectHeight * initialAspectRatio;
+    } else {
+      rectHeight = rectWidth / initialAspectRatio;
+    }
+
+    final effectiveArea = getClampingRectForHandle(
+      initialRect: initialRect,
+      availableArea: area,
+      handle: handle,
+    );
+
+    rect = Box.fromHandle(
+      handle.anchor(initialRect),
+      handle,
+      rectWidth,
+      rectHeight,
+    );
+
+    if (rect.width > effectiveArea.width ||
+        rect.height > effectiveArea.height) {
+      return InternalResizeResult(rect: effectiveArea, largest: effectiveArea);
+    }
+
+    return InternalResizeResult(rect: rect, largest: effectiveArea);
+  }
+
+  /// Handle resizing for [HandlePosition.topRight] handle
+  /// for [ResizeMode.scale].
+  static InternalResizeResult handleTopRight(
+    Box rect,
+    Box initialRect,
+    Box clampingRect,
+    HandlePosition handle,
+  ) {
+    final area = getAvailableAreaForHandle(
+      rect: rect,
+      clampingRect: clampingRect,
+      handle: handle,
+    );
+
+    final initialAspectRatio = initialRect.width / initialRect.height;
+
+    double rectWidth = rect.width;
+    double rectHeight = rect.height;
+
+    final cursorRect = rect;
+
+    if (cursorRect.aspectRatio.abs() < initialAspectRatio.abs()) {
+      rectWidth = rectHeight * initialAspectRatio;
+    } else {
+      rectHeight = rectWidth / initialAspectRatio;
+    }
+
+    final effectiveArea = getClampingRectForHandle(
+      initialRect: initialRect,
+      availableArea: area,
+      handle: handle,
+    );
+
+    rect = Box.fromHandle(
+      handle.anchor(initialRect),
+      handle,
+      rectWidth,
+      rectHeight,
+    );
+
+    if (rect.width > effectiveArea.width ||
+        rect.height > effectiveArea.height) {
+      return InternalResizeResult(rect: effectiveArea, largest: effectiveArea);
+    }
+
+    return InternalResizeResult(rect: rect, largest: effectiveArea);
+  }
+
+  /// Handle resizing for [ResizeMode.symmetric].
+  static InternalResizeResult handleSymmetricResizing({
+    required Box rect,
+    required Box clampingRect,
+    required HandlePosition handle,
+  }) {
+    final double horizontalMirrorRight = clampingRect.right - rect.center.x;
+    final double horizontalMirrorLeft = rect.center.x - clampingRect.left;
+    final double verticalMirrorTop = rect.center.y - clampingRect.top;
+    final double verticalMirrorBottom = clampingRect.bottom - rect.center.y;
+    return InternalResizeResult(
+      rect: Box.fromCenter(
+        center: rect.center,
+        width: min(
+          min(horizontalMirrorLeft, horizontalMirrorRight) * 2,
+          rect.width,
+        ),
+        height: min(
+          min(verticalMirrorTop, verticalMirrorBottom) * 2,
+          rect.height,
+        ),
+      ),
+      largest: clampingRect,
+    );
+  }
+
+  /// Handle resizing for [ResizeMode.scale].
+  static InternalResizeResult handleScaleResizing({
+    required Box rect,
+    required Box initialBox,
+    required Box clampingRect,
+    required HandlePosition handle,
+    required Flip flip,
+  }) {
+    final flippedHandle = handle.flip(flip);
+    final initialRect = flipBox(initialBox, flip, handle);
+
+    InternalResizeResult result;
+
+    switch (flippedHandle) {
+      case HandlePosition.topLeft:
+        result = handleTopLeft(rect, initialRect, clampingRect, flippedHandle);
+        break;
+      case HandlePosition.topRight:
+        result = handleTopRight(rect, initialRect, clampingRect, flippedHandle);
+        break;
+      case HandlePosition.bottomLeft:
+        result =
+            handleBottomLeft(rect, initialRect, clampingRect, flippedHandle);
+        break;
+      case HandlePosition.none:
+      case HandlePosition.bottomRight:
+        result =
+            handleBottomRight(rect, initialRect, clampingRect, flippedHandle);
+        break;
+      case HandlePosition.left:
+        result = handleLeft(rect, initialRect, clampingRect, flippedHandle);
+        break;
+      case HandlePosition.top:
+        result = handleTop(rect, initialRect, clampingRect, flippedHandle);
+        break;
+      case HandlePosition.right:
+        result = handleRight(rect, initialRect, clampingRect, flippedHandle);
+        break;
+      case HandlePosition.bottom:
+        result = handleBottom(rect, initialRect, clampingRect, flippedHandle);
+        break;
+    }
+    return result;
+  }
+
+  /// Handle resizing for [ResizeMode.scaledSymmetric].
+  static InternalResizeResult handleSymmetricScaleResizing({
+    required Box rect,
+    required Box initialBox,
+    required Box clampingRect,
+    required HandlePosition handle,
+    required Flip flip,
+  }) {
+    switch (handle) {
+      case HandlePosition.none:
+      case HandlePosition.topLeft:
+      case HandlePosition.topRight:
+      case HandlePosition.bottomLeft:
+      case HandlePosition.bottomRight:
+        return handleScaleSymmetricCorner(
+            rect, initialBox, clampingRect, handle);
+      case HandlePosition.left:
+      case HandlePosition.top:
+      case HandlePosition.right:
+      case HandlePosition.bottom:
+        return handleScaleSymmetricSide(rect, initialBox, clampingRect, handle);
+    }
+  }
+}
+
+/// The result of a resize operation.
+@visibleForTesting
+class InternalResizeResult {
+  /// The resulting rect after the resize operation.
+  final Box rect;
+
+  /// The largest rect that was used as clamping rect during
+  /// the resize operation.
+  final Box largest;
+
+  /// The result of a resize operation.
+  InternalResizeResult({
+    required this.rect,
+    required this.largest,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is InternalResizeResult &&
+          runtimeType == other.runtimeType &&
+          rect == other.rect &&
+          largest == other.largest;
+
+  @override
+  int get hashCode => Object.hash(rect, largest);
+
+  @override
+  String toString() {
+    return 'InternalResizeResult(rect: $rect, largest: $largest)';
   }
 }

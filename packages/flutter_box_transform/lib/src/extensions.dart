@@ -37,6 +37,8 @@ extension ResizeResultExt on RawResizeResult {
       minHeightReached: minHeightReached,
       maxWidthReached: maxWidthReached,
       maxHeightReached: maxHeightReached,
+      largestRect: largestRect.toRect(),
+      handle: handle,
     );
   }
 }
@@ -51,6 +53,7 @@ extension MoveResultExt on RawMoveResult {
       oldRect: oldRect.toRect(),
       delta: delta.toOffset(),
       rawSize: rawSize.toSize(),
+      largestRect: largestRect.toRect(),
     );
   }
 }
