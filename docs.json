@@ -4,7 +4,9 @@
   "logo": "/assets/logo.png",
   "logoDark": "/assets/logo-dark.png",
   "favicon": "/assets/logo-dark.png",
+  "theme": "#4B9EF4",
   "googleTagManager": "G-YKTHJCXDGC",
+  "zoomImagesDefault": true,
   "anchors": [
     {
       "title": "Live Demo",
