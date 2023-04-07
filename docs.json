@@ -36,7 +36,7 @@
       ["Resizing", "/flutter_resizing"],
       ["Handles", "/handles"],
       ["Using a controller", "/flutter_controller"],
-      ["API Reference\uD83D\uDD17", "https://pub.dev/documentation/flutter_box_transform/latest/"]
+      ["API Reference \uD83D\uDD17", "https://pub.dev/documentation/flutter_box_transform/latest/"]
     ]
     ],
     [
@@ -44,7 +44,7 @@
       ["Getting Started", "/get_started"],
       ["Moving", "/moving"],
       ["Resizing", "/resizing"],
-      ["API Reference\uD83D\uDD17", "https://pub.dev/documentation/box_transform/latest/"]
+      ["API Reference \uD83D\uDD17", "https://pub.dev/documentation/box_transform/latest/"]
     ]
     ],
     ["License", "/license"]
