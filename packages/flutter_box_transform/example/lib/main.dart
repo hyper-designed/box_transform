@@ -63,6 +63,9 @@ class MyApp extends StatelessWidget {
 }
 
 class PlaygroundModel with ChangeNotifier {
+  Rect clampingRect = Rect.largest;
+  bool clampingEnabled = false;
+
   Rect? playgroundArea;
 
   final List<BoxData> boxes = [];
@@ -77,6 +80,13 @@ class PlaygroundModel with ChangeNotifier {
     final double width = size.width - kSidePanelWidth - kBoxesPanelWidth;
     final double height = size.height;
 
+    clampingRect = Rect.fromLTWH(
+      0,
+      0,
+      width,
+      size.height,
+    );
+
     boxes.clear();
     boxes.add(
       BoxData(
@@ -87,12 +97,6 @@ class PlaygroundModel with ChangeNotifier {
           (height - kInitialHeight) / 2,
           kInitialWidth,
           kInitialHeight,
-        ),
-        clampingRect: Rect.fromLTWH(
-          0,
-          0,
-          width,
-          size.height,
         ),
         flip: Flip.none,
       ),
@@ -134,15 +138,14 @@ class PlaygroundModel with ChangeNotifier {
     bool notify = true,
     bool insidePlayground = false,
   }) {
-    if (selectedBox == null) return;
-    selectedBox!.clampingRect = rect;
+    clampingRect = rect;
 
     if (insidePlayground && playgroundArea != null) {
-      selectedBox!.clampingRect = Rect.fromLTWH(
-        selectedBox!.clampingRect.left.clamp(0.0, playgroundArea!.width),
-        selectedBox!.clampingRect.top.clamp(0.0, playgroundArea!.height),
-        selectedBox!.clampingRect.width.clamp(0.0, playgroundArea!.width),
-        selectedBox!.clampingRect.height.clamp(0.0, playgroundArea!.height),
+      clampingRect = Rect.fromLTWH(
+        clampingRect.left.clamp(0.0, playgroundArea!.width),
+        clampingRect.top.clamp(0.0, playgroundArea!.height),
+        clampingRect.width.clamp(0.0, playgroundArea!.width),
+        clampingRect.height.clamp(0.0, playgroundArea!.height),
       );
     }
 
@@ -150,9 +153,6 @@ class PlaygroundModel with ChangeNotifier {
   }
 
   void addNewBox() {
-    final double width = playgroundArea!.width;
-    final double height = playgroundArea!.height;
-
     boxes.add(
       BoxData(
         name: 'Box ${boxes.length + 1}',
@@ -163,7 +163,6 @@ class PlaygroundModel with ChangeNotifier {
           kInitialWidth,
           kInitialHeight,
         ),
-        clampingRect: Rect.fromLTWH(0, 0, width, height),
         flip: Flip.none,
       ),
     );
@@ -213,8 +212,7 @@ class PlaygroundModel with ChangeNotifier {
   }
 
   void toggleClamping(bool enabled) {
-    if (selectedBoxIndex == -1) return;
-    selectedBox!.clampingEnabled = enabled;
+    clampingEnabled = enabled;
     notifyListeners();
   }
 
@@ -249,11 +247,11 @@ class PlaygroundModel with ChangeNotifier {
     double? bottom,
   }) {
     if (selectedBox == null) return;
-    selectedBox!.clampingRect = Rect.fromLTRB(
-      left ?? selectedBox!.clampingRect.left,
-      top ?? selectedBox!.clampingRect.top,
-      right ?? selectedBox!.clampingRect.right,
-      bottom ?? selectedBox!.clampingRect.bottom,
+    clampingRect = Rect.fromLTRB(
+      left ?? clampingRect.left,
+      top ?? clampingRect.top,
+      right ?? clampingRect.right,
+      bottom ?? clampingRect.bottom,
     );
     notifyListeners();
   }
@@ -381,24 +379,13 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
 
     final Rect playgroundArea = model.playgroundArea!;
 
-    for (final box in model.boxes) {
-      if (box.clampingRect.width > playgroundArea.width ||
-          box.clampingRect.height > playgroundArea.height) {
-        if (model.selectedBox?.name == box.name) {
-          model.setClampingRect(
-            box.clampingRect,
-            notify: notify,
-            insidePlayground: true,
-          );
-        } else {
-          box.clampingRect = Rect.fromLTWH(
-            box.clampingRect.left.clamp(0.0, playgroundArea.width),
-            box.clampingRect.top.clamp(0.0, playgroundArea.height),
-            box.clampingRect.width.clamp(0.0, playgroundArea.width),
-            box.clampingRect.height.clamp(0.0, playgroundArea.height),
-          );
-        }
-      }
+    if (model.clampingRect.width > playgroundArea.width ||
+        model.clampingRect.height > playgroundArea.height) {
+      model.setClampingRect(
+        model.clampingRect,
+        notify: notify,
+        insidePlayground: true,
+      );
     }
   }
 
@@ -445,9 +432,7 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
                               : kGridColor.withOpacity(0.1),
                         ),
                       ),
-                      if (model.selectedBox != null &&
-                          model.selectedBox!.clampingEnabled &&
-                          model.playgroundArea != null)
+                      if (model.clampingEnabled && model.playgroundArea != null)
                         const ClampingRect(),
                       for (int index = 0; index < model.boxes.length; index++)
                         ImageBox(
@@ -506,13 +491,13 @@ class _ImageBoxState extends State<ImageBox> {
 
   @override
   Widget build(BuildContext context) {
-    // final PlaygroundModel model = context.watch<PlaygroundModel>();
+    final PlaygroundModel model = context.read<PlaygroundModel>();
     final Color handleColor = Theme.of(context).colorScheme.primary;
     return TransformableBox(
       key: ValueKey('image-box-${box.name}'),
       rect: box.rect,
       flip: box.flip,
-      clampingRect: box.clampingEnabled ? box.clampingRect : null,
+      clampingRect: model.clampingEnabled ? model.clampingRect : null,
       constraints: box.constraintsEnabled ? box.constraints : null,
       onChanged: widget.onChanged,
       resizable: widget.selected && box.resizable,
@@ -647,16 +632,19 @@ class _ClampingRectState extends State<ClampingRect> {
       label = 'Clamping Box';
     }
 
-    final BoxData box = model.selectedBox!;
+    final minWidth = model.boxes.fold(0.0,
+        (previousValue, element) => max(previousValue, element.rect.width));
+    final minHeight = model.boxes.fold(0.0,
+        (previousValue, element) => max(previousValue, element.rect.height));
 
     return TransformableBox(
-      key: ValueKey('clamping-box-${box.name}'),
-      rect: box.clampingRect,
+      key: const ValueKey('clamping-box'),
+      rect: model.clampingRect,
       flip: Flip.none,
       clampingRect: model.playgroundArea!,
       constraints: BoxConstraints(
-        minWidth: box.rect.width,
-        minHeight: box.rect.height,
+        minWidth: minWidth,
+        minHeight: minHeight,
       ),
       onChanged: (result) => model.setClampingRect(result.rect),
       onTerminalSizeReached: (
@@ -691,8 +679,8 @@ class _ClampingRectState extends State<ClampingRect> {
         handleAlign: HandleAlign.inside,
       ),
       contentBuilder: (context, _, flip) => Container(
-        width: box.clampingRect.width,
-        height: box.clampingRect.height,
+        width: model.clampingRect.width,
+        height: model.clampingRect.height,
         alignment: Alignment.bottomRight,
         decoration: BoxDecoration(
           border: Border.symmetric(
@@ -1299,38 +1287,35 @@ class _ClampingControlsState extends State<ClampingControls> {
   void initState() {
     super.initState();
     leftController =
-        TextEditingController(text: box.clampingRect.left.toStringAsFixed(0));
+        TextEditingController(text: model.clampingRect.left.toStringAsFixed(0));
     topController =
-        TextEditingController(text: box.clampingRect.top.toStringAsFixed(0));
-    bottomController =
-        TextEditingController(text: box.clampingRect.bottom.toStringAsFixed(0));
-    rightController =
-        TextEditingController(text: box.clampingRect.right.toStringAsFixed(0));
+        TextEditingController(text: model.clampingRect.top.toStringAsFixed(0));
+    bottomController = TextEditingController(
+        text: model.clampingRect.bottom.toStringAsFixed(0));
+    rightController = TextEditingController(
+        text: model.clampingRect.right.toStringAsFixed(0));
 
     model.addListener(onModelChanged);
   }
 
   void onModelChanged() {
-    if (model.selectedBox == null) return;
-    if (box.clampingRect.left != left) {
-      leftController.text = box.clampingRect.left.toStringAsFixed(0);
+    if (model.clampingRect.left != left) {
+      leftController.text = model.clampingRect.left.toStringAsFixed(0);
     }
-    if (box.clampingRect.top != top) {
-      topController.text = box.clampingRect.top.toStringAsFixed(0);
+    if (model.clampingRect.top != top) {
+      topController.text = model.clampingRect.top.toStringAsFixed(0);
     }
-    if (box.clampingRect.bottom != bottom) {
-      bottomController.text = box.clampingRect.bottom.toStringAsFixed(0);
+    if (model.clampingRect.bottom != bottom) {
+      bottomController.text = model.clampingRect.bottom.toStringAsFixed(0);
     }
-    if (box.clampingRect.right != right) {
-      rightController.text = box.clampingRect.right.toStringAsFixed(0);
+    if (model.clampingRect.right != right) {
+      rightController.text = model.clampingRect.right.toStringAsFixed(0);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final PlaygroundModel model = context.watch<PlaygroundModel>();
-
-    final BoxData box = model.selectedBox!;
 
     return FocusScope(
       child: Builder(
@@ -1376,7 +1361,7 @@ class _ClampingControlsState extends State<ClampingControls> {
                           child: Transform.scale(
                             scale: 0.7,
                             child: Switch(
-                              value: box.clampingEnabled,
+                              value: model.clampingEnabled,
                               onChanged: (value) => model.toggleClamping(value),
                             ),
                           ),
@@ -1384,7 +1369,7 @@ class _ClampingControlsState extends State<ClampingControls> {
                       ],
                     ),
                   ),
-                  if (box.clampingEnabled)
+                  if (model.clampingEnabled)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                       child: Column(
@@ -1403,7 +1388,7 @@ class _ClampingControlsState extends State<ClampingControls> {
                             children: [
                               Expanded(
                                 child: TextField(
-                                  enabled: box.clampingEnabled,
+                                  enabled: model.clampingEnabled,
                                   controller: leftController,
                                   onSubmitted: (value) {
                                     model.onClampingRectChanged(left: left);
@@ -1421,7 +1406,7 @@ class _ClampingControlsState extends State<ClampingControls> {
                               const SizedBox(width: 16),
                               Expanded(
                                 child: TextField(
-                                  enabled: box.clampingEnabled,
+                                  enabled: model.clampingEnabled,
                                   controller: topController,
                                   onSubmitted: (value) {
                                     model.onClampingRectChanged(top: top);
@@ -1451,7 +1436,7 @@ class _ClampingControlsState extends State<ClampingControls> {
                             children: [
                               Expanded(
                                 child: TextFormField(
-                                  enabled: box.clampingEnabled,
+                                  enabled: model.clampingEnabled,
                                   controller: rightController,
                                   onFieldSubmitted: (value) {
                                     model.onClampingRectChanged(right: right);
@@ -1469,7 +1454,7 @@ class _ClampingControlsState extends State<ClampingControls> {
                               const SizedBox(width: 16),
                               Expanded(
                                 child: TextField(
-                                  enabled: box.clampingEnabled,
+                                  enabled: model.clampingEnabled,
                                   controller: bottomController,
                                   onSubmitted: (value) {
                                     model.onClampingRectChanged(bottom: bottom);
@@ -1919,12 +1904,10 @@ class BoxData {
   Flip flip = Flip.none;
   Rect rect2 = Rect.zero;
   Flip flip2 = Flip.none;
-  Rect clampingRect = Rect.largest;
   BoxConstraints constraints;
 
   bool flipRectWhileResizing = true;
   bool flipChild = true;
-  bool clampingEnabled = false;
   bool constraintsEnabled = false;
   bool resizable = true;
   bool movable = true;
@@ -1939,11 +1922,9 @@ class BoxData {
     this.flip = Flip.none,
     this.rect2 = Rect.zero,
     this.flip2 = Flip.none,
-    this.clampingRect = Rect.largest,
     this.constraints = const BoxConstraints(minWidth: 0, minHeight: 0),
     this.flipRectWhileResizing = true,
     this.flipChild = true,
-    this.clampingEnabled = false,
     this.constraintsEnabled = false,
     this.resizable = true,
     this.movable = true,
