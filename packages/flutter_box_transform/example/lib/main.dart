@@ -558,7 +558,8 @@ class _ImageBoxState extends State<ImageBox> {
                               ? Colors.red
                               : handleColor,
                       width: 2,
-                      strokeAlign: BorderSide.strokeAlignCenter,
+                      // TODO: Due to flutter issue in 3.7.10, this doesn't work in debug mode.
+                      // strokeAlign: BorderSide.strokeAlignCenter,
                     ),
                     vertical: BorderSide(
                       color: minWidthReached
@@ -567,7 +568,8 @@ class _ImageBoxState extends State<ImageBox> {
                               ? Colors.red
                               : handleColor,
                       width: 2,
-                      strokeAlign: BorderSide.strokeAlignCenter,
+                      // TODO: Due to flutter issue in 3.7.10, this doesn't work in debug mode.
+                      // strokeAlign: BorderSide.strokeAlignCenter,
                     ),
                   )
                 : null,
