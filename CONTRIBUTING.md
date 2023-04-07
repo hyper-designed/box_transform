@@ -8,7 +8,7 @@ Here are the guidelines we'd like you to follow:
 - [Found an Issue?](#issue)
 
 ## <a name="coc"></a> Code of Conduct
-[Code of Conduct](coc)
+[Code of Conduct][coc]
 
 ## <a name="commit"></a> Git Commit Messages
 
@@ -49,15 +49,15 @@ Where did you expect to find this information?
 If you find a bug in the source code or a mistake in the documentation, you can help us by
 submitting an issue to our project.
 
-To submit an issue, please check the [Issue Template](issue).
+To submit an issue, please check the [Issue Template][issue].
 
 Even better you can submit a Pull Request with a fix.
 
 ### Pull Request
 
-* Search [GitHub](pulls) for an open or closed Pull Request
+* Search [GitHub][pulls] for an open or closed Pull Request
   that relates to your submission. You don't want to duplicate effort.
-* Please have a look at [License](license) before sending pull
+* Please have a look at [License][license] before sending pull
   requests. We cannot accept code without this.
 
 That's it! Thank you for your contribution!

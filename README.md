@@ -4,7 +4,7 @@
 
 [![melos](https://img.shields.io/badge/maintained%20with-melos-f700ff.svg?style=flat-square)](https://github.com/invertase/melos) [![Codemagic build status](https://api.codemagic.io/apps/63dd4d4ae6be1d561b8f45d2/63dd4d4ae6be1d561b8f45d1/status_badge.svg)](https://codemagic.io/apps/63dd4d4ae6be1d561b8f45d2/63dd4d4ae6be1d561b8f45d1/latest_build) [![Tests](https://github.com/hyper-designed/box_transform/workflows/Tests/badge.svg?branch=main)](https://github.com/hyper-designed/box_transform/actions)
 
-[Box Transform](github) provides packages that allows you to programmatically handle box resizing and dragging. 
+[Box Transform][github] provides packages that allows you to programmatically handle box resizing and dragging. 
 It provides highly flexible, programmatically resizable and draggable boxes that can be used in any Dart or Flutter 
 project. A library for advanced resizing of rect in UI.
 
@@ -28,26 +28,26 @@ project. A library for advanced resizing of rect in UI.
 
 ## Getting Started
 
-Go to the [Getting Started](https://docs.page/hyper-designed/box_transform/flutter_get_started) page of the 
-[documentation](docsite) to start using Box Transform.
+Go to the [Getting Started][get-started] page of the 
+[documentation][docsite] to start using Box Transform.
 
-### Live Demo: [box-transform.codemagic.app](https://box-transform.codemagic.app)
+### Live Demo: [Box-transform Playground][demo]
 
 ## Documentation
 
-Documentation is available at https://docs.page/hyper-designed/box_transform.
+Documentation is available at [boxtransform.hyperdesigned.dev][docsite].
 
 ## Contributing
 
-See [CONTRIBUTING.md](https://github.com/hyper-designed/box_transform/blob/main/CONTRIBUTING.md) for details.
+See [CONTRIBUTING.md][contributing] for details.
 
-See [DEVELOPMENT.md](https://github.com/hyper-designed/box_transform/blob/main/development.md) for development setup.
+See [DEVELOPMENT.md][development] for development setup.
 
 ## Authors
 
 <table>
   <tr>
-    <td align="center"><a href="https://github.com/hyper-designed"><img src="https://avatars.githubusercontent.com/u/20423471?s=100" width="100px;" alt=""/><br /><sub><b>Birju Vachhani</b></sub></a></td>
+    <td align="center"><a href="https://github.com/BirjuVachhani"><img src="https://avatars.githubusercontent.com/u/20423471?s=100" width="100px;" alt=""/><br /><sub><b>Birju Vachhani</b></sub></a></td>
     <td align="center"><a href="https://github.com/SaadArdati"><img src="https://avatars.githubusercontent.com/u/7407478?v=4" width="100px;" alt=""/><br /><sub><b>Saad Ardati</b></sub></a></td>
   </tr>
 </table>
@@ -86,8 +86,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ```
 
+[contributing]: https://github.com/hyper-designed/box_transform/blob/main/CONTRIBUTING.md
+[development]: https://github.com/hyper-designed/box_transform/blob/main/development.md
+[docsite]: https://boxtransform.hyperdesigned.dev/
+[demo]: https://boxtransform-demo.hyperdesigned.dev
+[get-started]: https://boxtransform.hyperdesigned.dev/flutter_get_started
 [github]: https://github.com/hyper-designed/box_transform
-
-[pubdev]: https://pub.dev/packages/rect_resizer
-
-[docsite]: https://docs.page/hyper-designed/box_transform
