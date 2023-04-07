@@ -1,5 +1,12 @@
+import 'package:vector_math/vector_math.dart';
+
+import 'geometry.dart';
+
 /// Represents a resizing handle on corners.
 enum HandlePosition {
+  /// Represents no handle. An empty resize operation.
+  none,
+
   /// Represents the left side of the rect.
   left,
 
@@ -23,6 +30,9 @@ enum HandlePosition {
 
   /// Represents the bottom right corner of the rect.
   bottomRight;
+
+  /// Whether the handle is none or not.
+  bool get isNone => this == HandlePosition.none;
 
   /// Whether the handle is on the left side of the rect.
   bool get influencesLeft =>
@@ -87,6 +97,108 @@ enum HandlePosition {
     HandlePosition.left,
     HandlePosition.right,
   ];
+
+  /// Returns the opposite handle position on the horizontal axis.
+  HandlePosition flipY() {
+    switch (this) {
+      case HandlePosition.top:
+        return HandlePosition.bottom;
+      case HandlePosition.bottom:
+        return HandlePosition.top;
+      case HandlePosition.topLeft:
+        return HandlePosition.bottomLeft;
+      case HandlePosition.topRight:
+        return HandlePosition.bottomRight;
+      case HandlePosition.bottomLeft:
+        return HandlePosition.topLeft;
+      case HandlePosition.bottomRight:
+        return HandlePosition.topRight;
+      default:
+        return this;
+    }
+  }
+
+  /// Returns the opposite handle position on the vertical axis.
+  HandlePosition flipX() {
+    switch (this) {
+      case HandlePosition.left:
+        return HandlePosition.right;
+      case HandlePosition.right:
+        return HandlePosition.left;
+      case HandlePosition.topLeft:
+        return HandlePosition.topRight;
+      case HandlePosition.topRight:
+        return HandlePosition.topLeft;
+      case HandlePosition.bottomLeft:
+        return HandlePosition.bottomRight;
+      case HandlePosition.bottomRight:
+        return HandlePosition.bottomLeft;
+      default:
+        return this;
+    }
+  }
+
+  /// Returns the opposite handle position on the given [flip] state.
+  HandlePosition flip(Flip flip) {
+    switch (flip) {
+      case Flip.none:
+        return this;
+      case Flip.horizontal:
+        return flipX();
+      case Flip.vertical:
+        return flipY();
+      case Flip.diagonal:
+        return flipX().flipY();
+    }
+  }
+
+  /// Gets the opposite handle position.
+  HandlePosition get opposite {
+    switch (this) {
+      case HandlePosition.top:
+        return HandlePosition.bottom;
+      case HandlePosition.bottom:
+        return HandlePosition.top;
+      case HandlePosition.left:
+        return HandlePosition.right;
+      case HandlePosition.right:
+        return HandlePosition.left;
+      case HandlePosition.topLeft:
+        return HandlePosition.bottomRight;
+      case HandlePosition.topRight:
+        return HandlePosition.bottomLeft;
+      case HandlePosition.bottomLeft:
+        return HandlePosition.topRight;
+      case HandlePosition.bottomRight:
+        return HandlePosition.topLeft;
+      default:
+        return this;
+    }
+  }
+
+  /// Gets the anchor point for the handle. Anchor point is the point on the
+  /// opposite handle.
+  Vector2 anchor(Box rect) {
+    switch (this) {
+      case HandlePosition.topLeft:
+        return rect.bottomRight;
+      case HandlePosition.top:
+        return rect.bottomCenter;
+      case HandlePosition.topRight:
+        return rect.bottomLeft;
+      case HandlePosition.left:
+        return rect.centerRight;
+      case HandlePosition.right:
+        return rect.centerLeft;
+      case HandlePosition.bottomLeft:
+        return rect.topRight;
+      case HandlePosition.bottom:
+        return rect.topCenter;
+      case HandlePosition.bottomRight:
+      case HandlePosition.none:
+        return rect.topLeft;
+    }
+  }
 }
 
 /// Represents the flip state of a rectangle, or, in other words, if the

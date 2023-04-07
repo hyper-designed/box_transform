@@ -242,6 +242,16 @@ class TransformableBox extends StatefulWidget {
   /// How to align the handles.
   final HandleAlign handleAlign;
 
+  /// Whether to allow the box to overflow the resize operation to its opposite
+  /// side to continue the resize operation until its constrained on both sides.
+  ///
+  /// If this is set to false, the box will cease the resize operation the
+  /// instant it hits an edge of the [clampingRect].
+  ///
+  /// If this is set to true, the box will continue the resize operation until
+  /// it is constrained to both sides of the [clampingRect].
+  final bool allowResizeOverflow;
+
   /// Creates a [TransformableBox] widget.
   const TransformableBox({
     super.key,
@@ -261,6 +271,7 @@ class TransformableBox extends StatefulWidget {
     this.allowContentFlipping = true,
     this.handleAlign = HandleAlign.center,
     this.hideHandlesWhenNotResizable = true,
+    this.allowResizeOverflow = true,
 
     // Raw values.
     Rect? rect,
@@ -322,7 +333,8 @@ class _TransformableBoxState extends State<TransformableBox> {
         ..movable = widget.movable
         ..resizable = widget.resizable
         ..flipWhileResizing = widget.flipWhileResizing
-        ..flipChild = widget.allowContentFlipping;
+        ..flipChild = widget.allowContentFlipping
+        ..allowResizeOverflow = widget.allowResizeOverflow;
     }
   }
 
@@ -349,7 +361,8 @@ class _TransformableBoxState extends State<TransformableBox> {
         ..hideHandlesWhenNotResizable = widget.hideHandlesWhenNotResizable
         ..movable = widget.movable
         ..flipWhileResizing = widget.flipWhileResizing
-        ..flipChild = widget.allowContentFlipping;
+        ..flipChild = widget.allowContentFlipping
+        ..allowResizeOverflow = widget.allowResizeOverflow;
     }
 
     // Return if the controller is external.
@@ -400,6 +413,10 @@ class _TransformableBoxState extends State<TransformableBox> {
 
     if (oldWidget.flipWhileResizing != widget.flipWhileResizing) {
       controller.flipWhileResizing = widget.flipWhileResizing;
+    }
+
+    if (oldWidget.allowResizeOverflow != widget.allowResizeOverflow) {
+      controller.allowResizeOverflow = widget.allowResizeOverflow;
     }
   }
 

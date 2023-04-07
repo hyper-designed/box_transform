@@ -16,6 +16,9 @@ dependencies:
   provider: ^6.0.5
   flutter_box_transform:
     path: ../
+  box_transform:
+    path: ../../box_transform
+  vector_math: ^2.1.4
 
 dev_dependencies:
   flutter_test:

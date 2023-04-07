@@ -76,6 +76,13 @@ class TransformResult<B extends Object, V extends Object, D extends Object>
   /// Whether the resizing box hit its minimum possible height.
   final bool maxHeightReached;
 
+  /// Represents an area in which the box could grow. This may eventually be
+  /// the maximum state of size and position a box can reach.
+  final B largestRect;
+
+  /// Handle used to resize the box.
+  final HandlePosition handle;
+
   /// Creates a [ResizeResult] object.
   const TransformResult({
     required this.rect,
@@ -88,6 +95,8 @@ class TransformResult<B extends Object, V extends Object, D extends Object>
     required this.maxWidthReached,
     required this.minHeightReached,
     required this.maxHeightReached,
+    required this.largestRect,
+    required this.handle,
   });
 
   @override
@@ -104,7 +113,9 @@ class TransformResult<B extends Object, V extends Object, D extends Object>
         other.minWidthReached == minWidthReached &&
         other.maxWidthReached == maxWidthReached &&
         other.minHeightReached == minHeightReached &&
-        other.maxHeightReached == maxHeightReached;
+        other.maxHeightReached == maxHeightReached &&
+        other.largestRect == largestRect &&
+        other.handle == handle;
   }
 
   @override
@@ -119,12 +130,25 @@ class TransformResult<B extends Object, V extends Object, D extends Object>
         maxWidthReached,
         minHeightReached,
         maxHeightReached,
+        largestRect,
+        handle,
       );
 
   @override
-  String toString() {
-    return 'TransformResult(box: $rect, oldBox: $oldRect, flip: $flip, resizeMode: $resizeMode, delta: $delta, rawSize: $rawSize, minWidthReached: $minWidthReached, maxWidthReached: $maxWidthReached, minHeightReached: $minHeightReached, maxHeightReached: $maxHeightReached)';
-  }
+  String toString() => 'TransformResult('
+      'box: $rect, '
+      'oldBox: $oldRect, '
+      'flip: $flip, '
+      'resizeMode: $resizeMode, '
+      'delta: $delta, '
+      'rawSize: $rawSize, '
+      'minWidthReached: $minWidthReached, '
+      'maxWidthReached: $maxWidthReached, '
+      'minHeightReached: $minHeightReached, '
+      'maxHeightReached: $maxHeightReached, '
+      'largestBox: $largestRect, '
+      'handle: $handle'
+      ')';
 }
 
 /// An object that represents the result of a move operation.
@@ -137,6 +161,7 @@ class MoveResult<B extends Object, V extends Object, D extends Object>
     required super.oldRect,
     required super.delta,
     required super.rawSize,
+    required super.largestRect,
   }) : super(
           flip: Flip.none,
           resizeMode: ResizeMode.freeform,
@@ -144,12 +169,18 @@ class MoveResult<B extends Object, V extends Object, D extends Object>
           maxWidthReached: false,
           minHeightReached: false,
           maxHeightReached: false,
+          handle: HandlePosition.none,
         );
 
   @override
-  String toString() {
-    return 'MoveResult(box: $rect, oldBox: $oldRect, delta: $delta)';
-  }
+  String toString() => 'MoveResult('
+      'box: $rect, '
+      'oldBox: $oldRect, '
+      'delta: $delta, '
+      'rawSize: $rawSize, '
+      'largestBox: $largestRect, '
+      'handle: $handle'
+      ')';
 }
 
 /// An object that represents the result of a resize operation.
@@ -167,10 +198,23 @@ class ResizeResult<B extends Object, V extends Object, D extends Object>
     required super.maxWidthReached,
     required super.minHeightReached,
     required super.maxHeightReached,
+    required super.largestRect,
+    required super.handle,
   });
 
   @override
-  String toString() {
-    return 'ResizeResult(box: $rect, oldBox: $oldRect, flip: $flip, resizeMode: $resizeMode, delta: $delta, rawSize: $rawSize, minWidthReached: $minWidthReached, maxWidthReached: $maxWidthReached, minHeightReached: $minHeightReached, maxHeightReached: $maxHeightReached)';
-  }
+  String toString() => 'ResizeResult('
+      'box: $rect, '
+      'oldBox: $oldRect, '
+      'flip: $flip, '
+      'resizeMode: $resizeMode, '
+      'delta: $delta, '
+      'rawSize: $rawSize, '
+      'minWidthReached: $minWidthReached, '
+      'maxWidthReached: $maxWidthReached, '
+      'minHeightReached: $minHeightReached, '
+      'maxHeightReached: $maxHeightReached, '
+      'largestBox: $largestRect, '
+      'handle: $handle'
+      ')';
 }

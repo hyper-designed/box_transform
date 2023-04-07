@@ -420,6 +420,32 @@ class Box {
           math.max(a.y, b.y),
         );
 
+  /// Construct a rectangle from given handle and its origin.
+  factory Box.fromHandle(
+      Vector2 origin, HandlePosition handle, double width, double height) {
+    switch (handle) {
+      case HandlePosition.none:
+      case HandlePosition.topLeft:
+        return Box.fromLTWH(origin.x - width, origin.y - height, width, height);
+      case HandlePosition.topRight:
+        return Box.fromLTWH(origin.x, origin.y - height, width, height);
+      case HandlePosition.bottomLeft:
+        return Box.fromLTWH(origin.x - width, origin.y, width, height);
+      case HandlePosition.bottomRight:
+        return Box.fromLTWH(origin.x, origin.y, width, height);
+      case HandlePosition.left:
+        return Box.fromLTWH(
+            origin.x - width, origin.y - height / 2, width, height);
+      case HandlePosition.top:
+        return Box.fromLTWH(
+            origin.x - width / 2, origin.y - height, width, height);
+      case HandlePosition.right:
+        return Box.fromLTWH(origin.x, origin.y - height / 2, width, height);
+      case HandlePosition.bottom:
+        return Box.fromLTWH(origin.x - width / 2, origin.y, width, height);
+    }
+  }
+
   /// The Vector2 of the left edge of this rectangle from the x axis.
   final double left;
 
@@ -490,8 +516,12 @@ class Box {
   /// To translate a rectangle by an [Vector2] rather than by separate x and y
   /// components, consider [shift].
   Box translate(double translateX, double translateY) {
-    return Box.fromLTRB(left + translateX, top + translateY, right + translateX,
-        bottom + translateY);
+    return Box.fromLTRB(
+      left + translateX,
+      top + translateY,
+      right + translateX,
+      bottom + translateY,
+    );
   }
 
   /// Returns a new rectangle with edges moved outwards by the given delta.
@@ -624,20 +654,55 @@ class Box {
     );
   }
 
+  /// Whether this box is overflowing the given [child] box. Returns true if
+  /// any of the child's edges are outside of this box.
+  bool isOverflowing(Box child) {
+    return child.left < left ||
+        child.top < top ||
+        child.right > right ||
+        child.bottom > bottom ||
+        child.width > width ||
+        child.height > height;
+  }
+
   /// Constrains the given [child] box instance within the bounds of this box.
   /// This function will preserve the sign of the child's width and height.
   /// It will also maintain the aspect ratio of the child if the [aspectRatio]
   /// is specified.
   ///
   /// [child] the child box to clamp inside this box.
+  ///
   /// [resizeMode] defines how to contain the child, whether it should keep its
   ///              aspect ratio or not, or if it should be resized to fit.
+  ///
+  /// [allowResizeOverflow] decides whether to allow the box to overflow the
+  /// resize operation to its opposite side to continue the resize operation
+  /// until its constrained on both sides.
+  ///
+  /// If this is set to false, the box will cease the resize operation the
+  /// instant it hits an edge of the [clampingRect].
+  ///
+  /// If this is set to true, the box will continue the resize operation until
+  /// it is constrained to both sides of the [clampingRect].
+  ///
+  /// [handle] defines the handle that is being dragged to resize the box if
+  /// available. This only matters if [allowResizeOverflow] is set to false.
+  ///
+  /// [currentFlip] defines the current flip of the box if available.
+  ///
+  /// [aspectRatio] will allow the box to maintain its aspect ratio if
+  /// it overflows outside its clamping box and needs to be re-adjusted to
+  /// fit back inside. This will ensure that the correction operation will
+  /// maintain the aspect ratio of the box.
   ///
   /// [returns] a new box instance.
   Box containOther(
     Box child, {
     ResizeMode resizeMode = ResizeMode.freeform,
+    HandlePosition handle = HandlePosition.none,
+    Flip currentFlip = Flip.none,
     double? aspectRatio,
+    bool allowResizeOverflow = true,
   }) {
     final double xSign = child.width.sign;
     final double ySign = child.height.sign;
