@@ -11,6 +11,35 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 Packages with breaking changes:
 
+ - There are no breaking changes in this release.
+
+Packages with other changes:
+
+ - [`box_transform` - `v0.2.1`](#box_transform---v021)
+ - [`flutter_box_transform` - `v0.2.1`](#flutter_box_transform---v021)
+
+---
+
+#### `box_transform` - `v0.2.1`
+
+ - Update license to Apache 2.0.
+ - Update docs and fix broken links.
+
+
+#### `flutter_box_transform` - `v0.2.1`
+
+ - Update license to Apache 2.0.
+ - Update playground to use unified clamping rect.
+ - Update docs and fix broken links.
+
+## 2023-04-07
+
+### Changes
+
+---
+
+Packages with breaking changes:
+
  - [`flutter_box_transform` - `v0.2.0`](#flutter_box_transform---v020)
 
 Packages with other changes:

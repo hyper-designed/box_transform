@@ -1,3 +1,9 @@
+## 0.2.1
+
+- Update license to Apache 2.0.
+- Update playground to use unified clamping rect.
+- Update docs and fix broken links.
+
 ## 0.2.0
 
 - Add `hideHandlesWhenNotResizable` flag to hide handles when the box is not
