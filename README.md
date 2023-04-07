@@ -1,4 +1,5 @@
-![Banner](https://raw.githubusercontent.com/hyper-designed/box_transform/main/docs/assets/banner.png)
+<img width="100%" alt="banner" width="200px" src="https://raw.githubusercontent.com/hyper-designed/box_transform/main/docs/assets/banner.png#gh-light-mode-only" />
+<img width="100%" alt="banner" width="200px" src="https://raw.githubusercontent.com/hyper-designed/box_transform/main/docs/assets/banner_dark.png#gh-dark-mode-only" />
 
 # Box Transform
 
