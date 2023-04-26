@@ -242,6 +242,9 @@ class BoxTransformer {
           rect: rect,
           clampingRect: clampingRect,
           handle: handle,
+          constraints: constraints,
+          initialRect: initialBox,
+          flip: flip,
         );
         break;
       case ResizeMode.symmetric:
@@ -327,15 +330,37 @@ class BoxTransformer {
     required Box rect,
     required Box clampingRect,
     required HandlePosition handle,
+    required Constraints constraints,
+    required Box initialRect,
+    required Flip flip,
   }) {
+
+    Box effectiveInitialRect = flipBox(initialRect, flip, handle);
+
+    Box newRect = Box.fromLTRB(
+      max(rect.left, clampingRect.left),
+      max(rect.top, clampingRect.top),
+      min(rect.right, clampingRect.right),
+      min(rect.bottom, clampingRect.bottom),
+    );
+
+    if(!constraints.isUnconstrained) {
+      final maxWidth =
+      newRect.width.clamp(constraints.minWidth, constraints.maxWidth);
+      final maxHeight =
+      newRect.height.clamp(constraints.minHeight, constraints.maxHeight);
+
+      newRect = Box.fromHandle(
+        handle.flip(flip).anchor(effectiveInitialRect),
+        handle.flip(flip),
+        maxWidth,
+        maxHeight,
+      );
+    }
+
     return InternalResizeResult(
-      rect: Box.fromLTRB(
-        max(rect.left, clampingRect.left),
-        max(rect.top, clampingRect.top),
-        min(rect.right, clampingRect.right),
-        min(rect.bottom, clampingRect.bottom),
-      ),
-      largest: clampingRect,
+      rect: newRect,
+      largest: effectiveInitialRect,
     );
   }
 
