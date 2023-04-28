@@ -14,11 +14,14 @@ dependencies:
   adaptive_theme: ^3.2.0
   url_launcher: ^6.1.10
   provider: ^6.0.5
+  equatable: ^2.0.5
+  dart_style: ^2.3.0
+  vector_math: ^2.1.4
+  file_picker: ^5.2.11
   flutter_box_transform:
     path: ../
   box_transform:
     path: ../../box_transform
-  vector_math: ^2.1.4
 
 dev_dependencies:
   flutter_test:

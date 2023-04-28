@@ -1,4 +1,5 @@
-import 'dart:math';
+import 'dart:developer';
+import 'dart:math' hide log;
 
 import 'package:adaptive_theme/adaptive_theme.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +12,10 @@ import 'package:vector_math/vector_math.dart' hide Colors;
 
 import 'resources/asset_icons.dart';
 import 'resources/images.dart';
+import 'test_recorder.dart';
+
+bool showTestRecorder =
+    const bool.fromEnvironment('test_recorder', defaultValue: false);
 
 void main() {
   runApp(const MyApp());
@@ -21,42 +26,48 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AdaptiveTheme(
-      light: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.light,
-        colorSchemeSeed: Colors.blue,
-        inputDecorationTheme: InputDecorationTheme(
-          isDense: true,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
+    return MultiProvider(
+      providers: [
+        // if (showTestRecorder)
+        ChangeNotifierProvider(create: (_) => TestRecorder()),
+      ],
+      child: AdaptiveTheme(
+        light: ThemeData(
+          useMaterial3: true,
+          brightness: Brightness.light,
+          colorSchemeSeed: Colors.blue,
+          inputDecorationTheme: InputDecorationTheme(
+            isDense: true,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6),
+            ),
           ),
         ),
-      ),
-      dark: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        colorSchemeSeed: Colors.blue,
-        inputDecorationTheme: InputDecorationTheme(
-          isDense: true,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
+        dark: ThemeData(
+          useMaterial3: true,
+          brightness: Brightness.dark,
+          colorSchemeSeed: Colors.blue,
+          inputDecorationTheme: InputDecorationTheme(
+            isDense: true,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6),
+            ),
           ),
         ),
-      ),
-      initial: AdaptiveThemeMode.system,
-      builder: (theme, darkTheme) => MaterialApp(
-        title: 'Box Transform demo',
-        debugShowCheckedModeBanner: false,
-        theme: theme,
-        darkTheme: darkTheme,
-        home: ChangeNotifierProvider(
-          create: (_) => PlaygroundModel(),
-          child: const Playground(),
+        initial: AdaptiveThemeMode.system,
+        builder: (theme, darkTheme) => MaterialApp(
+          title: 'Box Transform demo',
+          debugShowCheckedModeBanner: false,
+          theme: theme,
+          darkTheme: darkTheme,
+          home: ChangeNotifierProvider(
+            create: (_) => PlaygroundModel(),
+            child: const Playground(),
+          ),
         ),
       ),
     );
@@ -398,7 +409,7 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Row(
         children: [
-          const BoxesPanel(),
+          const LeftPanel(),
           Expanded(
             child: CallbackShortcuts(
               bindings: {
@@ -491,6 +502,35 @@ class _ImageBoxState extends State<ImageBox> {
   BoxData get box => widget.box;
 
   Rect largestClampingBox = Rect.zero;
+
+  late final TestRecorder recorder = context.read<TestRecorder>();
+
+  TestAction? currentAction;
+  UITransformResult? lastResult;
+
+  bool get isShiftPressed =>
+      WidgetsBinding.instance.keyboard.logicalKeysPressed
+          .contains(LogicalKeyboardKey.shiftLeft) ||
+      WidgetsBinding.instance.keyboard.logicalKeysPressed
+          .contains(LogicalKeyboardKey.shiftRight);
+
+  bool get isAltPressed =>
+      WidgetsBinding.instance.keyboard.logicalKeysPressed
+          .contains(LogicalKeyboardKey.altLeft) ||
+      WidgetsBinding.instance.keyboard.logicalKeysPressed
+          .contains(LogicalKeyboardKey.altRight);
+
+  ResizeMode get currentResizeMode {
+    if (isShiftPressed && isAltPressed) {
+      return ResizeMode.symmetricScale;
+    } else if (isShiftPressed) {
+      return ResizeMode.scale;
+    } else if (isAltPressed) {
+      return ResizeMode.symmetric;
+    } else {
+      return ResizeMode.freeform;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -676,6 +716,8 @@ class _ImageBoxState extends State<ImageBox> {
             widget.onChanged?.call(result);
             largestClampingBox = result.largestRect;
             setState(() {});
+            lastResult = result;
+            model.onRectChanged(result);
           },
           resizable: widget.selected && box.resizable,
           hideHandlesWhenNotResizable:
@@ -684,6 +726,34 @@ class _ImageBoxState extends State<ImageBox> {
           allowContentFlipping: box.flipChild,
           flipWhileResizing: box.flipRectWhileResizing,
           allowResizeOverflow: false,
+          onResizeStart: (event) {
+            if (!showTestRecorder || !recorder.isRecording) return;
+
+            log('Recording resize action');
+            currentAction = recorder.onAction(
+              resizeMode: currentResizeMode,
+              flip: box.flip,
+              rect: box.rect,
+              handle: event.handle,
+              cursorPosition: event.localPosition,
+              clampingRect: model.clampingEnabled ? model.clampingRect : null,
+              constraints: box.constraintsEnabled ? box.constraints : null,
+            );
+          },
+          onResizeEnd: (event) {
+            if (!showTestRecorder ||
+                currentAction == null ||
+                !recorder.isRecording ||
+                lastResult == null) {
+              return;
+            }
+            log('Recording resize action result');
+            recorder.onResult(
+              action: currentAction!,
+              result: lastResult!,
+              localPosition: event.localPosition,
+            );
+          },
           onTerminalSizeReached: (
             bool reachedMinWidth,
             bool reachedMaxWidth,
@@ -1069,6 +1139,29 @@ class ControlPanel extends StatelessWidget {
   }
 }
 
+class LeftPanel extends StatelessWidget {
+  const LeftPanel({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.zero,
+      shape: const RoundedRectangleBorder(),
+      child: SizedBox(
+        width: kSidePanelWidth,
+        height: MediaQuery.of(context).size.height,
+        child: Column(
+          children: [
+            const Expanded(child: BoxesPanel()),
+            const Divider(height: 1),
+            if (showTestRecorder) const Expanded(child: TestRecorderUI()),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class BoxesPanel extends StatelessWidget {
   const BoxesPanel({super.key});
 
@@ -1076,104 +1169,93 @@ class BoxesPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final PlaygroundModel model = context.watch<PlaygroundModel>();
 
-    return Card(
-      margin: const EdgeInsets.only(left: 0),
-      shape: const RoundedRectangleBorder(),
-      child: SizedBox(
-        width: kBoxesPanelWidth,
-        height: MediaQuery.of(context).size.height,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.fromLTRB(16, 0, 4, 0),
-                child: Row(
-                  children: [
-                    const SectionHeader(
-                      'Boxes',
-                      padding: EdgeInsets.zero,
-                    ),
-                    Text(
-                      ' • ${model.boxes.length}',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.secondary,
-                        letterSpacing: 1,
-                        fontSize: 12,
-                      ),
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      onPressed: model.selectedBox != null
-                          ? model.removeSelectedBox
-                          : null,
-                      tooltip: 'Delete selected box',
-                      iconSize: 18,
-                      splashRadius: 18,
-                      color: Theme.of(context).colorScheme.error,
-                      icon: const Icon(Icons.delete_outline_outlined),
-                    ),
-                    IconButton(
-                      onPressed: model.addNewBox,
-                      tooltip: 'Add new box',
-                      iconSize: 18,
-                      splashRadius: 18,
-                      icon: const Icon(Icons.add),
-                    ),
-                  ],
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 0, 4, 0),
+            child: Row(
+              children: [
+                const SectionHeader(
+                  'Boxes',
+                  padding: EdgeInsets.zero,
                 ),
-              ),
-              const Divider(height: 1),
-              if (model.boxes.isEmpty) ...[
-                const SizedBox(height: 44),
                 Text(
-                  'Add a box to see controls',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                        color: Theme.of(context).colorScheme.secondary,
-                      ),
+                  ' • ${model.boxes.length}',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.secondary,
+                    letterSpacing: 1,
+                    fontSize: 12,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  onPressed: model.selectedBox != null
+                      ? model.removeSelectedBox
+                      : null,
+                  tooltip: 'Delete selected box',
+                  iconSize: 18,
+                  splashRadius: 18,
+                  color: Theme.of(context).colorScheme.error,
+                  icon: const Icon(Icons.delete_outline_outlined),
+                ),
+                IconButton(
+                  onPressed: model.addNewBox,
+                  tooltip: 'Add new box',
+                  iconSize: 18,
+                  splashRadius: 18,
+                  icon: const Icon(Icons.add),
                 ),
               ],
-              if (model.boxes.isNotEmpty)
-                ReorderableListView.builder(
-                  itemCount: model.boxes.length,
-                  onReorder: model.onReorder,
-                  reverse: true,
-                  shrinkWrap: true,
-                  buildDefaultDragHandles: false,
-                  primary: false,
-                  itemBuilder: (context, index) {
-                    final box = model.boxes[index];
-                    return ReorderableDragStartListener(
-                      index: index,
-                      key: ValueKey(box.name),
-                      child: Container(
-                        color: box.name == model.selectedBox?.name
-                            ? Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withOpacity(0.2)
-                            : null,
-                        child: ListTile(
-                          title: Text(box.name),
-                          selected: box.name == model.selectedBox?.name,
-                          onTap: () => model.onBoxSelected(index),
-                          leading: const Icon(
-                            Icons.border_style_outlined,
-                            size: 18,
-                          ),
-                          minLeadingWidth: 20,
-                          dense: true,
-                          // selectedTileColor:
-                          //     Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-            ],
+            ),
           ),
-        ),
+          const Divider(height: 1),
+          if (model.boxes.isEmpty) ...[
+            const SizedBox(height: 44),
+            Text(
+              'Add a box to see controls',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                    color: Theme.of(context).colorScheme.secondary,
+                  ),
+            ),
+          ],
+          if (model.boxes.isNotEmpty)
+            ReorderableListView.builder(
+              itemCount: model.boxes.length,
+              onReorder: model.onReorder,
+              reverse: true,
+              shrinkWrap: true,
+              buildDefaultDragHandles: false,
+              primary: false,
+              itemBuilder: (context, index) {
+                final box = model.boxes[index];
+                return ReorderableDragStartListener(
+                  index: index,
+                  key: ValueKey(box.name),
+                  child: Container(
+                    color: box.name == model.selectedBox?.name
+                        ? Theme.of(context).colorScheme.primary.withOpacity(0.2)
+                        : null,
+                    child: ListTile(
+                      title: Text(box.name),
+                      selected: box.name == model.selectedBox?.name,
+                      onTap: () => model.onBoxSelected(index),
+                      leading: const Icon(
+                        Icons.border_style_outlined,
+                        size: 18,
+                      ),
+                      minLeadingWidth: 20,
+                      dense: true,
+                      // selectedTileColor:
+                      //     Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                    ),
+                  ),
+                );
+              },
+            ),
+        ],
       ),
     );
   }
@@ -1209,11 +1291,11 @@ class PositionControls extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: ValueText(box.rect.left.toStringAsFixed(0)),
+                    child: ValueText(box.rect.left.floor().toString()),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: ValueText(box.rect.top.toStringAsFixed(0)),
+                    child: ValueText(box.rect.top.floor().toString()),
                   ),
                 ],
               ),
@@ -1229,11 +1311,11 @@ class PositionControls extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: ValueText(box.rect.right.toStringAsFixed(0)),
+                    child: ValueText(box.rect.right.floor().toString()),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: ValueText(box.rect.bottom.toStringAsFixed(0)),
+                    child: ValueText(box.rect.bottom.floor().toString()),
                   ),
                 ],
               ),
