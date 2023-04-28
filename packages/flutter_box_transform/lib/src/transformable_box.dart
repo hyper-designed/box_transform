@@ -54,7 +54,7 @@ typedef PointerUpdateCallback = void Function(
 );
 
 /// A callback for pointer up events.
-typedef PointerUpCallback = VoidCallback;
+typedef PointerUpCallback = ValueChanged<Offset>;
 
 /// A default implementation of the corner [HandleBuilder] callback.
 Widget _defaultCornerHandleBuilder(
@@ -252,6 +252,12 @@ class TransformableBox extends StatefulWidget {
   /// it is constrained to both sides of the [clampingRect].
   final bool allowResizeOverflow;
 
+  /// A callback function that triggers when the box is about to start resizing.
+  final ValueChanged<ResizeStartEvent>? onResizeStart;
+
+  /// A callback function that triggers when the box is about to end resizing.
+  final ValueChanged<ResizeEndEvent>? onResizeEnd;
+
   /// Creates a [TransformableBox] widget.
   const TransformableBox({
     super.key,
@@ -288,6 +294,8 @@ class TransformableBox extends StatefulWidget {
     this.onTerminalWidthReached,
     this.onTerminalHeightReached,
     this.onTerminalSizeReached,
+    this.onResizeStart,
+    this.onResizeEnd,
   })  : assert(
           controller == null ||
               (rect == null &&
@@ -435,8 +443,12 @@ class _TransformableBoxState extends State<TransformableBox> {
   }
 
   /// Called when the handle drag starts.
-  void onHandlePanStart(Offset localPosition) {
+  void onHandlePanStart(Offset localPosition, HandlePosition handle) {
     controller.onResizeStart(localPosition);
+    widget.onResizeStart?.call(ResizeStartEvent(
+      localPosition: localPosition,
+      handle: handle,
+    ));
   }
 
   /// Called when the handle drag updates.
@@ -471,7 +483,7 @@ class _TransformableBoxState extends State<TransformableBox> {
   }
 
   /// Called when the handle drag ends.
-  void onHandlePanEnd() {
+  void onHandlePanEnd(HandlePosition handle, Offset localPosition) {
     controller.onResizeEnd();
     widget.onMinWidthReached?.call(false);
     widget.onMaxWidthReached?.call(false);
@@ -480,6 +492,10 @@ class _TransformableBoxState extends State<TransformableBox> {
     widget.onTerminalWidthReached?.call(false, false);
     widget.onTerminalHeightReached?.call(false, false);
     widget.onTerminalSizeReached?.call(false, false, false, false);
+    widget.onResizeEnd?.call(ResizeEndEvent(
+      localPosition: localPosition,
+      handle: handle,
+    ));
   }
 
   @override
@@ -526,9 +542,11 @@ class _TransformableBoxState extends State<TransformableBox> {
                 handlePosition: handle,
                 handleTapSize: widget.handleTapSize,
                 builder: widget.cornerHandleBuilder,
-                onPointerDown: onHandlePanStart,
+                onPointerDown: (localPosition) =>
+                    onHandlePanStart(localPosition, handle),
                 onPointerUpdate: onHandlePanUpdate,
-                onPointerUp: onHandlePanEnd,
+                onPointerUp: (localPosition) =>
+                    onHandlePanEnd(handle, localPosition),
               ),
           if (controller.resizable || !controller.hideHandlesWhenNotResizable)
             for (final handle in HandlePosition.sides)
@@ -537,9 +555,11 @@ class _TransformableBoxState extends State<TransformableBox> {
                 handlePosition: handle,
                 handleTapSize: widget.handleTapSize,
                 builder: widget.sideHandleBuilder,
-                onPointerDown: onHandlePanStart,
+                onPointerDown: (localPosition) =>
+                    onHandlePanStart(localPosition, handle),
                 onPointerUpdate: onHandlePanUpdate,
-                onPointerUp: onHandlePanEnd,
+                onPointerUp: (localPosition) =>
+                    onHandlePanEnd(handle, localPosition),
               ),
         ],
       ),
@@ -597,10 +617,10 @@ class _CornerHandleWidget extends StatelessWidget {
           onPointerUpdate(event.localPosition, handlePosition);
         },
         onPointerUp: (event) {
-          onPointerUp();
+          onPointerUp(event.localPosition);
         },
         onPointerCancel: (event) {
-          onPointerUp();
+          onPointerUp(event.localPosition);
         },
         child: MouseRegion(
           cursor: getCursorForHandle(handlePosition),
@@ -691,10 +711,10 @@ class _SideHandleWidget extends StatelessWidget {
           onPointerUpdate(event.localPosition, handlePosition);
         },
         onPointerUp: (event) {
-          onPointerUp();
+          onPointerUp(event.localPosition);
         },
         onPointerCancel: (event) {
-          onPointerUp();
+          onPointerUp(event.localPosition);
         },
         child: MouseRegion(
           cursor: getCursorForHandle(handlePosition),
@@ -717,4 +737,34 @@ class _SideHandleWidget extends StatelessWidget {
         throw Exception('Invalid handle position.');
     }
   }
+}
+
+/// Represents a resize start event.
+class ResizeStartEvent {
+  /// The position of the handle that was used to start the resize.
+  final Offset localPosition;
+
+  /// The handle that was used to start the resize.
+  final HandlePosition handle;
+
+  /// Creates a new resize start event.
+  ResizeStartEvent({
+    required this.localPosition,
+    required this.handle,
+  });
+}
+
+/// Represents a resize update event.
+class ResizeEndEvent {
+  /// The position of the handle that was used to end the resize.
+  final Offset localPosition;
+
+  /// The handle that was used to end the resize.
+  final HandlePosition handle;
+
+  /// Creates a new resize update event.
+  ResizeEndEvent({
+    required this.handle,
+    required this.localPosition,
+  });
 }

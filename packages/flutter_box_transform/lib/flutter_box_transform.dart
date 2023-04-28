@@ -1,6 +1,6 @@
 library flutter_box_transform;
 
-export 'package:box_transform/box_transform.dart' hide Box, Dimension;
+export 'package:box_transform/box_transform.dart';
 
 export 'src/extensions.dart' hide DimensionExt;
 export 'src/handle.dart';

@@ -321,6 +321,14 @@ class Dimension {
   /// A [Dimension] with the [width] and [height] swapped.
   Dimension get flipped => Dimension(height, width);
 
+  /// Returns a new [Dimension] with the width and height rounded to the next
+  /// largest integer values.
+  Dimension ceil() => Dimension(width.ceilToDouble(), height.ceilToDouble());
+
+  /// Returns a new [Dimension] with the width and height rounded to the next
+  /// smallest integer values.
+  Dimension floor() => Dimension(width.floorToDouble(), height.floorToDouble());
+
   /// Linearly interpolate between two sizes
   ///
   /// If either size is null, this function interpolates from [Dimension.zero].
@@ -740,6 +748,22 @@ class Box {
       newHeight * ySign,
     );
   }
+
+  /// Returns a new box with all the values ceiling rounded.
+  Box ceil() => Box.fromLTRB(
+    left.ceilToDouble(),
+    top.ceilToDouble(),
+    right.ceilToDouble(),
+    bottom.ceilToDouble(),
+  );
+
+  /// Returns a new box with all the values floor rounded.
+  Box floor() => Box.fromLTRB(
+    left.floorToDouble(),
+    top.floorToDouble(),
+    right.floorToDouble(),
+    bottom.floorToDouble(),
+  );
 
   /// Linearly interpolate between two rectangles.
   ///
