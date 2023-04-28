@@ -542,7 +542,7 @@ class BoxTransformer {
 
       initialRect = Box.fromHandle(
         handle.anchor(initialRect),
-        handle.opposite,
+        handle,
         maxWidth,
         maxHeight,
       );
