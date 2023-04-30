@@ -2,7 +2,7 @@
 
 # Box Transform
 
-[![melos](https://img.shields.io/badge/maintained%20with-melos-f700ff.svg?style=flat-square)](https://github.com/invertase/melos) [![Codemagic build status](https://api.codemagic.io/apps/63dd4d4ae6be1d561b8f45d2/63dd4d4ae6be1d561b8f45d1/status_badge.svg)](https://codemagic.io/apps/63dd4d4ae6be1d561b8f45d2/63dd4d4ae6be1d561b8f45d1/latest_build) [![Tests](https://github.com/hyper-designed/box_transform/workflows/Tests/badge.svg?branch=main)](https://github.com/hyper-designed/box_transform/actions)
+[![melos](https://img.shields.io/badge/maintained%20with-melos-f700ff.svg?style=flat-square)](https://github.com/invertase/melos) [![Codemagic build status](https://api.codemagic.io/apps/63dd4d4ae6be1d561b8f45d2/63dd4d4ae6be1d561b8f45d1/status_badge.svg)](https://codemagic.io/apps/63dd4d4ae6be1d561b8f45d2/63dd4d4ae6be1d561b8f45d1/latest_build) [![Tests](https://github.com/hyper-designed/box_transform/workflows/Tests/badge.svg?branch=main)](https://github.com/hyper-designed/box_transform/actions) [![codecov](https://codecov.io/gh/BirjuVachhani/box_transform/branch/main/graph/badge.svg?token=SX5FXDUD7A)](https://codecov.io/gh/BirjuVachhani/box_transform)
 
 [Box Transform][github] provides packages that allows you to programmatically handle box resizing and dragging. 
 It provides highly flexible, programmatically resizable and draggable boxes that can be used in any Dart or Flutter 
