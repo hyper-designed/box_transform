@@ -334,7 +334,6 @@ class BoxTransformer {
     required Box initialRect,
     required Flip flip,
   }) {
-
     Box effectiveInitialRect = flipBox(initialRect, flip, handle);
 
     Box newRect = Box.fromLTRB(
@@ -344,11 +343,11 @@ class BoxTransformer {
       min(rect.bottom, clampingRect.bottom),
     );
 
-    if(!constraints.isUnconstrained) {
+    if (!constraints.isUnconstrained) {
       final maxWidth =
-      newRect.width.clamp(constraints.minWidth, constraints.maxWidth);
+          newRect.width.clamp(constraints.minWidth, constraints.maxWidth);
       final maxHeight =
-      newRect.height.clamp(constraints.minHeight, constraints.maxHeight);
+          newRect.height.clamp(constraints.minHeight, constraints.maxHeight);
 
       newRect = Box.fromHandle(
         handle.flip(flip).anchor(effectiveInitialRect),

@@ -20,7 +20,11 @@ class TestRecorder with ChangeNotifier {
 
   String? testBeingRecorded;
 
-  void startRecording(String testName,{Box? clampingBox, Constraints? constraints}) {
+  void startRecording(
+    String testName, {
+    Box? clampingBox,
+    Constraints? constraints,
+  }) {
     testBeingRecorded = testName;
     current = [];
     isRecording = true;
@@ -397,12 +401,14 @@ class _TestRecorderUIState extends State<TestRecorderUI> {
     String? clampingRect;
     String? constraints;
 
-    if(record.action.clampingBox != null) {
-      clampingRect = 'Box.fromLTWH(${formattedValue(record.action.clampingBox!.left)}, ${formattedValue(record.action.clampingBox!.top)}, ${formattedValue(record.action.clampingBox!.width)}, ${formattedValue(record.action.clampingBox!.height)})';
+    if (record.action.clampingBox != null) {
+      clampingRect =
+          'Box.fromLTWH(${formattedValue(record.action.clampingBox!.left)}, ${formattedValue(record.action.clampingBox!.top)}, ${formattedValue(record.action.clampingBox!.width)}, ${formattedValue(record.action.clampingBox!.height)})';
     }
 
-    if(record.action.constraints != null) {
-      constraints = 'Constraints(minWidth: ${formattedValue(record.action.clampingBox!.width)}, minHeight: ${formattedValue(record.action.clampingBox!.height)}, maxWidth: ${formattedValue(record.action.clampingBox!.width)}, maxHeight: ${formattedValue(record.action.clampingBox!.height)}))';
+    if (record.action.constraints != null) {
+      constraints =
+          'Constraints(minWidth: ${formattedValue(record.action.clampingBox!.width)}, minHeight: ${formattedValue(record.action.clampingBox!.height)}, maxWidth: ${formattedValue(record.action.clampingBox!.width)}, maxHeight: ${formattedValue(record.action.clampingBox!.height)}))';
     }
 
     buffer.writeln('''

@@ -442,6 +442,15 @@ Box getAvailableAreaForHandle({
   required Box clampingRect,
   required HandlePosition handle,
 }) {
+  if (handle.isSide) {
+    final opposite = handle.opposite;
+    return Box.fromLTRB(
+      opposite.influencesLeft ? rect.left : clampingRect.left,
+      opposite.influencesTop ? rect.top : clampingRect.top,
+      opposite.influencesRight ? rect.right : clampingRect.right,
+      opposite.influencesBottom ? rect.bottom : clampingRect.bottom,
+    );
+  }
   return Box.fromLTRB(
     handle.influencesLeft ? clampingRect.left : rect.left,
     handle.influencesTop ? clampingRect.top : rect.top,
