@@ -24,7 +24,12 @@ class Constraints {
     this.maxWidth = double.infinity,
     this.minHeight = 0.0,
     this.maxHeight = double.infinity,
-  });
+  })  : assert(minWidth >= 0),
+        assert(maxWidth >= 0),
+        assert(minHeight >= 0),
+        assert(maxHeight >= 0),
+        assert(minWidth <= maxWidth),
+        assert(minHeight <= maxHeight);
 
   /// Creates a new unconstrained [Constraints] object.
   const Constraints.unconstrained()
@@ -182,11 +187,6 @@ class Dimension {
   ///  * [isInfinite], which checks whether either dimension is infinite.
   ///  * [isFinite], which checks whether both dimensions are finite.
   static const Dimension infinite = Dimension(double.infinity, double.infinity);
-
-  /// Whether this size encloses a non-zero area.
-  ///
-  /// Negative areas are considered empty.
-  bool get isEmpty => width <= 0.0 || height <= 0.0;
 
   /// Removes [other] from this size.
   Dimension operator -(Dimension other) =>
