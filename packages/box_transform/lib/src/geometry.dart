@@ -409,9 +409,11 @@ class Box {
   /// Constructs a rectangle from its center point, width, and height.
   ///
   /// The `center` argument is assumed to be an Vector2 from the origin.
-  Box.fromCenter(
-      {required Vector2 center, required double width, required double height})
-      : this.fromLTRB(
+  Box.fromCenter({
+    required Vector2 center,
+    required double width,
+    required double height,
+  }) : this.fromLTRB(
           center.x - width / 2,
           center.y - height / 2,
           center.x + width / 2,
@@ -751,19 +753,19 @@ class Box {
 
   /// Returns a new box with all the values ceiling rounded.
   Box ceil() => Box.fromLTRB(
-    left.ceilToDouble(),
-    top.ceilToDouble(),
-    right.ceilToDouble(),
-    bottom.ceilToDouble(),
-  );
+        left.ceilToDouble(),
+        top.ceilToDouble(),
+        right.ceilToDouble(),
+        bottom.ceilToDouble(),
+      );
 
   /// Returns a new box with all the values floor rounded.
   Box floor() => Box.fromLTRB(
-    left.floorToDouble(),
-    top.floorToDouble(),
-    right.floorToDouble(),
-    bottom.floorToDouble(),
-  );
+        left.floorToDouble(),
+        top.floorToDouble(),
+        right.floorToDouble(),
+        bottom.floorToDouble(),
+      );
 
   /// Linearly interpolate between two rectangles.
   ///
