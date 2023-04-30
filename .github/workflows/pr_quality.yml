@@ -28,3 +28,5 @@ jobs:
         run: melos check-format
       - name: Analyze
         run: melos analyze
+      - name: Run tests
+        run: melos test
