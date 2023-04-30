@@ -3,7 +3,7 @@ import 'package:test/test.dart';
 import 'package:vector_math/vector_math.dart';
 
 void main() {
-  test('RawTransformResult equality tests', (){
+  test('RawTransformResult equality tests', () {
     final result1 = RawTransformResult(
       rect: Box.fromLTRB(100, 100, 500, 400),
       handle: HandlePosition.bottomRight,
@@ -40,7 +40,7 @@ void main() {
     expect(result1 == result2, isTrue);
   });
 
-  test('RawResizeResult equality tests', (){
+  test('RawResizeResult equality tests', () {
     final result1 = RawResizeResult(
       rect: Box.fromLTRB(100, 100, 500, 400),
       handle: HandlePosition.bottomRight,
@@ -77,7 +77,7 @@ void main() {
     expect(result1 == result2, isTrue);
   });
 
-  test('RawMoveResult equality tests', (){
+  test('RawMoveResult equality tests', () {
     final result1 = RawMoveResult(
       rect: Box.fromLTRB(100, 100, 500, 400),
       oldRect: Box.fromLTRB(100, 100, 300, 200),

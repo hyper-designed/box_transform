@@ -108,99 +108,99 @@ void main() {
 
       flip = getFlipForBox(
         box,
-        Vector2(10, 10),
-        HandlePosition.bottomRight,
-        ResizeMode.scale,
-      );
-      expect(flip, Flip.none);
-
-      flip = getFlipForBox(
-        box,
-        Vector2(-500, -400),
-        HandlePosition.bottomRight,
-        ResizeMode.scale,
+        Vector2(500, 500),
+        HandlePosition.topLeft,
+        ResizeMode.freeform,
       );
       expect(flip, Flip.diagonal);
 
       flip = getFlipForBox(
         box,
-        Vector2(-500, 10),
-        HandlePosition.bottomRight,
-        ResizeMode.scale,
+        Vector2(500, -10),
+        HandlePosition.topLeft,
+        ResizeMode.freeform,
       );
       expect(flip, Flip.horizontal);
 
       flip = getFlipForBox(
         box,
-        Vector2(10, -400),
-        HandlePosition.bottomRight,
-        ResizeMode.scale,
+        Vector2(-10, 500),
+        HandlePosition.topLeft,
+        ResizeMode.freeform,
       );
       expect(flip, Flip.vertical);
 
       flip = getFlipForBox(
         box,
-        Vector2(10, 10),
-        HandlePosition.bottomRight,
-        ResizeMode.symmetric,
+        Vector2(-10, -10),
+        HandlePosition.topLeft,
+        ResizeMode.freeform,
       );
       expect(flip, Flip.none);
 
       flip = getFlipForBox(
         box,
-        Vector2(-300, -200),
-        HandlePosition.bottomRight,
-        ResizeMode.symmetric,
-      );
-      expect(flip, Flip.diagonal);
-
-      flip = getFlipForBox(
-        box,
-        Vector2(-300, 10),
-        HandlePosition.bottomRight,
-        ResizeMode.symmetric,
-      );
-      expect(flip, Flip.horizontal);
-
-      flip = getFlipForBox(
-        box,
-        Vector2(10, -200),
-        HandlePosition.bottomRight,
-        ResizeMode.symmetric,
-      );
-      expect(flip, Flip.vertical);
-
-      flip = getFlipForBox(
-        box,
-        Vector2(10, 10),
-        HandlePosition.bottomRight,
-        ResizeMode.symmetricScale,
+        Vector2(10, -10),
+        HandlePosition.topRight,
+        ResizeMode.freeform,
       );
       expect(flip, Flip.none);
 
       flip = getFlipForBox(
         box,
-        Vector2(-300, -200),
-        HandlePosition.bottomRight,
-        ResizeMode.symmetricScale,
+        Vector2(10, 500),
+        HandlePosition.topRight,
+        ResizeMode.freeform,
+      );
+      expect(flip, Flip.vertical);
+
+      flip = getFlipForBox(
+        box,
+        Vector2(-500, 500),
+        HandlePosition.topRight,
+        ResizeMode.freeform,
       );
       expect(flip, Flip.diagonal);
 
       flip = getFlipForBox(
         box,
-        Vector2(-300, 10),
-        HandlePosition.bottomRight,
-        ResizeMode.symmetricScale,
+        Vector2(-500, -10),
+        HandlePosition.topRight,
+        ResizeMode.freeform,
       );
       expect(flip, Flip.horizontal);
 
       flip = getFlipForBox(
         box,
-        Vector2(10, -200),
-        HandlePosition.bottomRight,
-        ResizeMode.symmetricScale,
+        Vector2(500, 10),
+        HandlePosition.bottomLeft,
+        ResizeMode.freeform,
+      );
+      expect(flip, Flip.horizontal);
+
+      flip = getFlipForBox(
+        box,
+        Vector2(-10, 10),
+        HandlePosition.bottomLeft,
+        ResizeMode.freeform,
+      );
+      expect(flip, Flip.none);
+
+      flip = getFlipForBox(
+        box,
+        Vector2(-10, -500),
+        HandlePosition.bottomLeft,
+        ResizeMode.freeform,
       );
       expect(flip, Flip.vertical);
+
+      flip = getFlipForBox(
+        box,
+        Vector2(500, -500),
+        HandlePosition.bottomLeft,
+        ResizeMode.freeform,
+      );
+      expect(flip, Flip.diagonal);
     });
 
     test('getFlipForBox test for top-left handle', () {
