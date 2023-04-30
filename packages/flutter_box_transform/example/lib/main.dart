@@ -886,10 +886,11 @@ class _ClampingRectState extends State<ClampingRect> {
       label = 'Clamping Box';
     }
 
-    final minWidth = model.boxes.fold(0.0,
-        (previousValue, element) => max(previousValue, element.rect.width));
-    final minHeight = model.boxes.fold(0.0,
-        (previousValue, element) => max(previousValue, element.rect.height));
+    // TODO: enable again
+    // final minWidth = model.boxes.fold(0.0,
+    //     (previousValue, element) => max(previousValue, element.rect.width));
+    // final minHeight = model.boxes.fold(0.0,
+    //     (previousValue, element) => max(previousValue, element.rect.height));
 
     return TransformableBox(
       key: const ValueKey('clamping-box'),
