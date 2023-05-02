@@ -963,4 +963,102 @@ void main() {
         withTolerance(Box.fromLTWH(113.48, 380.63, 363.54, 273.57)));
     expect(result.resizeMode, ResizeMode.symmetricScale);
   });
+
+  test('Extra tests for scaledSymmetricClampingBox', () {
+    var result = BoxTransformer.resize(
+      resizeMode: ResizeMode.symmetricScale,
+      initialFlip: Flip.none,
+      initialBox: Box.fromLTWH(455.26, 505.17, 264.08, 320.10),
+      handle: HandlePosition.bottomRight,
+      initialLocalPosition: Vector2(12.82, 11.23),
+      flipRect: true,
+      localPosition: Vector2(95.09, 105.91),
+      clampingRect: Box.fromLTWH(240.98, 39.17, 718.00, 840.12),
+    );
+
+    expect(result.flip, Flip.none);
+    expect(result.rect,
+        withTolerance(Box.fromLTWH(410.68, 451.14, 353.23, 428.15)));
+    expect(result.resizeMode, ResizeMode.symmetricScale);
+
+    result = BoxTransformer.resize(
+      resizeMode: ResizeMode.symmetricScale,
+      initialFlip: Flip.none,
+      initialBox: Box.fromLTWH(410.68, 451.14, 353.23, 428.15),
+      handle: HandlePosition.bottomRight,
+      initialLocalPosition: Vector2(12.86, 13.04),
+      flipRect: true,
+      localPosition: Vector2(-309.99, -368.25),
+      clampingRect: Box.fromLTWH(240.98, 39.17, 718.00, 840.12),
+    );
+
+    expect(result.flip, Flip.diagonal);
+    expect(result.rect,
+        withTolerance(Box.fromLTWH(441.07, 487.97, 292.46, 354.50)));
+    expect(result.resizeMode, ResizeMode.symmetricScale);
+
+    result = BoxTransformer.resize(
+      resizeMode: ResizeMode.symmetricScale,
+      initialFlip: Flip.diagonal,
+      initialBox: Box.fromLTWH(441.07, 487.97, 292.46, 354.50),
+      handle: HandlePosition.topLeft,
+      initialLocalPosition: Vector2(11.64, 14.61),
+      flipRect: true,
+      localPosition: Vector2(305.00, 363.81),
+      clampingRect: Box.fromLTWH(240.98, 39.17, 718.00, 840.12),
+    );
+
+    expect(result.flip, Flip.none);
+    expect(result.rect,
+        withTolerance(Box.fromLTWH(440.18, 486.89, 294.24, 356.65)));
+    expect(result.resizeMode, ResizeMode.symmetricScale);
+
+    result = BoxTransformer.resize(
+      resizeMode: ResizeMode.symmetricScale,
+      initialFlip: Flip.none,
+      initialBox: Box.fromLTWH(361.01, 91.52, 294.24, 356.65),
+      handle: HandlePosition.bottomRight,
+      initialLocalPosition: Vector2(14.72, 10.38),
+      flipRect: true,
+      localPosition: Vector2(107.06, 116.24),
+      clampingRect: Box.fromLTWH(240.98, 39.17, 718.00, 840.12),
+    );
+
+    expect(result.flip, Flip.none);
+    expect(result.rect,
+        withTolerance(Box.fromLTWH(317.82, 39.17, 380.62, 461.35)));
+    expect(result.resizeMode, ResizeMode.symmetricScale);
+
+    result = BoxTransformer.resize(
+      resizeMode: ResizeMode.symmetricScale,
+      initialFlip: Flip.none,
+      initialBox: Box.fromLTWH(317.82, 39.17, 380.62, 461.35),
+      handle: HandlePosition.bottomRight,
+      initialLocalPosition: Vector2(14.30, 12.47),
+      flipRect: true,
+      localPosition: Vector2(-325.27, -396.19),
+      clampingRect: Box.fromLTWH(240.98, 39.17, 718.00, 840.12),
+    );
+
+    expect(result.flip, Flip.diagonal);
+    expect(result.rect,
+        withTolerance(Box.fromLTWH(358.88, 88.94, 298.50, 361.82)));
+    expect(result.resizeMode, ResizeMode.symmetricScale);
+
+    result = BoxTransformer.resize(
+      resizeMode: ResizeMode.symmetricScale,
+      initialFlip: Flip.diagonal,
+      initialBox: Box.fromLTWH(358.88, 88.94, 298.50, 361.82),
+      handle: HandlePosition.topLeft,
+      initialLocalPosition: Vector2(11.76, 13.66),
+      flipRect: true,
+      localPosition: Vector2(293.66, 330.71),
+      clampingRect: Box.fromLTWH(240.98, 39.17, 718.00, 840.12),
+    );
+
+    expect(result.flip, Flip.none);
+    expect(result.rect,
+        withTolerance(Box.fromLTWH(375.48, 109.07, 265.29, 321.56)));
+    expect(result.resizeMode, ResizeMode.symmetricScale);
+  });
 }
