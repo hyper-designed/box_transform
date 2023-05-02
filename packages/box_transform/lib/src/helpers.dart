@@ -162,11 +162,7 @@ Box getClampingRectForSideHandle({
       height = (availableArea.bottom - initialRect.center.y) * 2;
       width = height * initialAspectRatio;
       break;
-    case HandlePosition.topLeft:
-    case HandlePosition.topRight:
-    case HandlePosition.bottomLeft:
-    case HandlePosition.bottomRight:
-    case HandlePosition.none:
+    default:
       throw Exception('Unsupported handle');
   }
 
@@ -210,10 +206,7 @@ Box getClampingRectForSideHandle({
         maxWidth,
         maxHeight,
       );
-    case HandlePosition.topLeft:
-    case HandlePosition.topRight:
-    case HandlePosition.bottomLeft:
-    case HandlePosition.bottomRight:
+    default:
       throw Exception('Unsupported handle');
   }
 }
@@ -238,56 +231,6 @@ Vector2? intersectionBetweenTwoLines(
   } else {
     return null;
   }
-}
-
-/// Returns
-HandlePosition intersectionBetweenLineAndRect(
-  Vector2 inner,
-  Vector2 outer,
-  Box rect,
-  Box initialRect, {
-  HandlePosition? excludeHandle,
-}) {
-  final Vector2 topLeft = rect.topLeft;
-  final Vector2 topRight = rect.topRight;
-  final Vector2 bottomLeft = rect.bottomLeft;
-  final Vector2 bottomRight = rect.bottomRight;
-
-  // final Vector2? result = extend2(rect, inner, outer);
-
-  final Vector2? top =
-      intersectionBetweenTwoLines(inner, outer, topLeft, topRight);
-  final Vector2? bottom =
-      intersectionBetweenTwoLines(inner, outer, bottomLeft, bottomRight);
-  final Vector2? left =
-      intersectionBetweenTwoLines(inner, outer, topLeft, bottomLeft);
-  final Vector2? right =
-      intersectionBetweenTwoLines(inner, outer, topRight, bottomRight);
-
-  final sides = {
-    HandlePosition.top: top,
-    HandlePosition.bottom: bottom,
-    HandlePosition.left: left,
-    HandlePosition.right: right,
-  };
-
-  sides.remove(excludeHandle);
-
-  final closest = sides.entries
-      .where((element) => element.value != null)
-      .reduce((value, element) {
-    final valueDistance = value.value!.distanceToSquared(initialRect.center);
-    final elementDistance =
-        element.value!.distanceToSquared(initialRect.center);
-
-    if (valueDistance < elementDistance) {
-      return value;
-    } else {
-      return element;
-    }
-  });
-
-  return closest.key;
 }
 
 /// Extends given line to the given rectangle such that it touches the

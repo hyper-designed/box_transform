@@ -661,4 +661,26 @@ void main() {
           clampingRect.left, clampingRect.top, rect.right, clampingRect.bottom),
     );
   });
+
+  test('getClosestEdge tests', () {
+    Box rect = Box.fromLTWH(200, 300, 400, 300);
+    Box clampingRect = Box.fromLTWH(100, 100, 1000, 1000);
+
+    expect(getClosestEdge(rect, clampingRect), HandlePosition.left);
+
+    rect = Box.fromLTWH(200, 150, 400, 300);
+    expect(getClosestEdge(rect, clampingRect), HandlePosition.top);
+
+    rect = Box.fromLTWH(200, 900, 400, 300);
+    expect(getClosestEdge(rect, clampingRect), HandlePosition.bottom);
+
+    rect = Box.fromLTWH(900, 300, 400, 300);
+    expect(getClosestEdge(rect, clampingRect), HandlePosition.right);
+
+    rect = Box.fromLTWH(900, 900, 400, 300);
+    expect(getClosestEdge(rect, clampingRect), HandlePosition.right);
+
+    rect = Box.fromLTWH(900, 150, 400, 300);
+    expect(getClosestEdge(rect, clampingRect), HandlePosition.right);
+  });
 }

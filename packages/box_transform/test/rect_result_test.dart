@@ -99,4 +99,21 @@ void main() {
     expect(result1.hashCode, result2.hashCode);
     expect(result1 == result2, isTrue);
   });
+
+  test('InternalResizeResult equality tests', () {
+    final result1 = InternalResizeResult(
+      rect: Box.fromLTRB(100, 100, 500, 400),
+      largest: Box.fromLTRB(100, 100, 1000, 1000),
+    );
+
+    final result2 = InternalResizeResult(
+      rect: Box.fromLTRB(100, 100, 500, 400),
+      largest: Box.fromLTRB(100, 100, 1000, 1000),
+    );
+
+    expect(result1, result2);
+    expect(result1.toString(), result2.toString());
+    expect(result1.hashCode, result2.hashCode);
+    expect(result1 == result2, isTrue);
+  });
 }
