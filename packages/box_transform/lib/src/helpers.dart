@@ -384,22 +384,27 @@ Box getAvailableAreaForHandle({
   required Box rect,
   required Box clampingRect,
   required HandlePosition handle,
+  Constraints constraints = const Constraints.unconstrained(),
 }) {
+  Box box;
   if (handle.isSide) {
     final opposite = handle.opposite;
-    return Box.fromLTRB(
+    box = Box.fromLTRB(
       opposite.influencesLeft ? rect.left : clampingRect.left,
       opposite.influencesTop ? rect.top : clampingRect.top,
       opposite.influencesRight ? rect.right : clampingRect.right,
       opposite.influencesBottom ? rect.bottom : clampingRect.bottom,
     );
+  } else {
+    box = Box.fromLTRB(
+      handle.influencesLeft ? clampingRect.left : rect.left,
+      handle.influencesTop ? clampingRect.top : rect.top,
+      handle.influencesRight ? clampingRect.right : rect.right,
+      handle.influencesBottom ? clampingRect.bottom : rect.bottom,
+    );
   }
-  return Box.fromLTRB(
-    handle.influencesLeft ? clampingRect.left : rect.left,
-    handle.influencesTop ? clampingRect.top : rect.top,
-    handle.influencesRight ? clampingRect.right : rect.right,
-    handle.influencesBottom ? clampingRect.bottom : rect.bottom,
-  );
+
+  return box;
 }
 
 /// Returns the clamping rect for the given handle for [ResizeMode.scale].
@@ -484,5 +489,62 @@ Box getClampingRectForCornerHandle({
     handle,
     maxWidth,
     maxHeight,
+  );
+}
+
+/// Constrains available area for [ResizeMode.scale].
+Box constrainAvailableAreaForScaling({
+  required Box area,
+  required Box initialRect,
+  required HandlePosition handle,
+  required Constraints constraints,
+}) {
+  if (constraints.isUnconstrained) return area;
+
+  final maxWidth = min(constraints.maxWidth, area.width);
+  final maxHeight = min(constraints.maxHeight, area.height);
+
+  final constrainedBox = Box.fromHandle(
+    handle.anchor(initialRect),
+    handle,
+    maxWidth,
+    maxHeight,
+  );
+
+  return Box.fromLTRB(
+    max(constrainedBox.left, area.left),
+    max(constrainedBox.top, area.top),
+    min(constrainedBox.right, area.right),
+    min(constrainedBox.bottom, area.bottom),
+  );
+}
+
+/// Returns a minimum Rect for given constraints when [ResizeMode.scale].
+Box getMinRectForScaling({
+  required Box initialRect,
+  required HandlePosition handle,
+  required Constraints constraints,
+}) {
+  final double minWidth;
+  final double minHeight;
+
+  if (!constraints.isUnconstrained) {
+    if (initialRect.aspectRatio < 1) {
+      minWidth = constraints.minWidth;
+      minHeight = minWidth / initialRect.aspectRatio;
+    } else {
+      minHeight = constraints.minHeight;
+      minWidth = minHeight * initialRect.aspectRatio;
+    }
+  } else {
+    minWidth = 0;
+    minHeight = 0;
+  }
+
+  return Box.fromHandle(
+    handle.anchor(initialRect),
+    handle,
+    minWidth,
+    minHeight,
   );
 }

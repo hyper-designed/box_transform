@@ -24,11 +24,7 @@ class Constraints {
     this.maxWidth = double.infinity,
     this.minHeight = 0.0,
     this.maxHeight = double.infinity,
-  })  : assert(minWidth >= 0),
-        assert(maxWidth >= 0),
-        assert(minHeight >= 0),
-        assert(maxHeight >= 0),
-        assert(minWidth <= maxWidth),
+  })  : assert(minWidth <= maxWidth),
         assert(minHeight <= maxHeight);
 
   /// Creates a new unconstrained [Constraints] object.

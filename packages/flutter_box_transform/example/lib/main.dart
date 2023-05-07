@@ -76,7 +76,7 @@ class MyApp extends StatelessWidget {
 
 class PlaygroundModel with ChangeNotifier {
   Rect clampingRect = Rect.largest;
-  bool clampingEnabled = false;
+  bool clampingEnabled = true;
 
   Rect? playgroundArea;
 
@@ -111,6 +111,13 @@ class PlaygroundModel with ChangeNotifier {
           kInitialHeight,
         ),
         flip: Flip.none,
+        constraintsEnabled: true,
+        constraints: const BoxConstraints(
+          minWidth: 100,
+          minHeight: 100,
+          maxWidth: 500,
+          maxHeight: 500,
+        ),
       ),
     );
     selectedBoxIndex = 0;
@@ -1149,7 +1156,7 @@ class LeftPanel extends StatelessWidget {
       margin: EdgeInsets.zero,
       shape: const RoundedRectangleBorder(),
       child: SizedBox(
-        width: kSidePanelWidth,
+        width: kBoxesPanelWidth,
         height: MediaQuery.of(context).size.height,
         child: Column(
           children: [
