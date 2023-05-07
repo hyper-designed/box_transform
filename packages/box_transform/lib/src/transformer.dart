@@ -252,6 +252,7 @@ class BoxTransformer {
           rect: rect,
           clampingRect: clampingRect,
           handle: handle,
+          constraints: constraints,
         );
         break;
       case ResizeMode.scale:
@@ -261,6 +262,7 @@ class BoxTransformer {
           clampingRect: clampingRect,
           handle: handle,
           flip: flip,
+          constraints: constraints,
         );
         break;
       case ResizeMode.symmetricScale:
@@ -270,6 +272,7 @@ class BoxTransformer {
           clampingRect: clampingRect,
           handle: handle,
           flip: flip,
+          constraints: constraints,
         );
         break;
     }
@@ -370,11 +373,20 @@ class BoxTransformer {
     Box initialRect,
     Box clampingRect,
     HandlePosition handle,
+    Constraints constraints,
   ) {
-    final area = getAvailableAreaForHandle(
+    Box area = getAvailableAreaForHandle(
       rect: rect,
       clampingRect: clampingRect,
       handle: handle,
+      constraints: constraints,
+    );
+
+    area = constrainAvailableAreaForScaling(
+      area: area,
+      initialRect: initialRect,
+      handle: handle,
+      constraints: constraints,
     );
 
     final initialAspectRatio = initialRect.width / initialRect.height;
@@ -390,10 +402,16 @@ class BoxTransformer {
       rectHeight = rectWidth / initialAspectRatio;
     }
 
-    final effectiveArea = getClampingRectForHandle(
+    final maxRect = getClampingRectForHandle(
       initialRect: initialRect,
       availableArea: area,
       handle: handle,
+    );
+
+    final minRect = getMinRectForScaling(
+      initialRect: initialRect,
+      handle: handle,
+      constraints: constraints,
     );
 
     rect = Box.fromHandle(
@@ -403,12 +421,13 @@ class BoxTransformer {
       rectHeight,
     );
 
-    if (rect.width > effectiveArea.width ||
-        rect.height > effectiveArea.height) {
-      return InternalResizeResult(rect: effectiveArea, largest: effectiveArea);
+    if (rect.width > maxRect.width || rect.height > maxRect.height) {
+      return InternalResizeResult(rect: maxRect, largest: maxRect);
+    } else if (rect.width < minRect.width || rect.height < minRect.height) {
+      return InternalResizeResult(rect: minRect, largest: maxRect);
     }
 
-    return InternalResizeResult(rect: rect, largest: effectiveArea);
+    return InternalResizeResult(rect: rect, largest: maxRect);
   }
 
   /// Handle resizing for the right handle.
@@ -417,18 +436,27 @@ class BoxTransformer {
     Box initialRect,
     Box clampingRect,
     HandlePosition handle,
+    Constraints constraints,
   ) {
     final initialAspectRatio = initialRect.width / initialRect.height;
 
-    final availableArea = getAvailableAreaForHandle(
+    Box area = getAvailableAreaForHandle(
       rect: initialRect,
       clampingRect: clampingRect,
       handle: handle,
+      constraints: constraints,
     );
 
-    if (availableArea.width < initialRect.width) {
+    area = constrainAvailableAreaForScaling(
+      area: area,
+      initialRect: initialRect,
+      handle: handle,
+      constraints: constraints,
+    );
+
+    if (area.width < initialRect.width) {
       // initial box needs shrinking
-      final maxWidth = availableArea.width;
+      final maxWidth = area.width;
       final maxHeight = maxWidth / initialAspectRatio;
 
       initialRect = Box.fromHandle(
@@ -439,10 +467,16 @@ class BoxTransformer {
       );
     }
 
-    final area = getClampingRectForHandle(
+    final maxRect = getClampingRectForHandle(
       initialRect: initialRect,
-      availableArea: clampingRect,
+      availableArea: area,
       handle: handle,
+    );
+
+    final minRect = getMinRectForScaling(
+      initialRect: initialRect,
+      handle: handle,
+      constraints: constraints,
     );
 
     double rectWidth = rect.width;
@@ -457,12 +491,13 @@ class BoxTransformer {
       rectHeight,
     );
 
-    if (rect.width > area.width || rect.height > area.height) {
-      rect = area;
-      return InternalResizeResult(rect: area, largest: area);
+    if (rect.width > maxRect.width || rect.height > maxRect.height) {
+      return InternalResizeResult(rect: maxRect, largest: maxRect);
+    } else if (rect.width < minRect.width || rect.height < minRect.height) {
+      return InternalResizeResult(rect: minRect, largest: maxRect);
     }
 
-    return InternalResizeResult(rect: rect, largest: area);
+    return InternalResizeResult(rect: rect, largest: maxRect);
   }
 
   /// handle resizing for the left handle
@@ -471,18 +506,27 @@ class BoxTransformer {
     Box initialRect,
     Box clampingRect,
     HandlePosition handle,
+    Constraints constraints,
   ) {
     final initialAspectRatio = initialRect.width / initialRect.height;
 
-    final availableArea = getAvailableAreaForHandle(
+    Box area = getAvailableAreaForHandle(
       rect: initialRect,
       clampingRect: clampingRect,
       handle: handle,
+      constraints: constraints,
     );
 
-    if (availableArea.width < initialRect.width) {
+    area = constrainAvailableAreaForScaling(
+      area: area,
+      initialRect: initialRect,
+      handle: handle,
+      constraints: constraints,
+    );
+
+    if (area.width < initialRect.width) {
       // initial box needs shrinking
-      final maxWidth = availableArea.width;
+      final maxWidth = area.width;
       final maxHeight = maxWidth / initialAspectRatio;
 
       initialRect = Box.fromHandle(
@@ -493,10 +537,16 @@ class BoxTransformer {
       );
     }
 
-    final area = getClampingRectForHandle(
+    final maxRect = getClampingRectForHandle(
       initialRect: initialRect,
       availableArea: clampingRect,
       handle: handle,
+    );
+
+    final minRect = getMinRectForScaling(
+      initialRect: initialRect,
+      handle: handle,
+      constraints: constraints,
     );
 
     double rectWidth = rect.width;
@@ -511,12 +561,14 @@ class BoxTransformer {
       rectHeight,
     );
 
-    if (rect.width > area.width || rect.height > area.height) {
-      rect = area;
-      return InternalResizeResult(rect: area, largest: area);
+    if (rect.width > maxRect.width || rect.height > maxRect.height) {
+      rect = maxRect;
+      return InternalResizeResult(rect: maxRect, largest: maxRect);
+    } else if (rect.width < minRect.width || rect.height < minRect.height) {
+      return InternalResizeResult(rect: minRect, largest: maxRect);
     }
 
-    return InternalResizeResult(rect: rect, largest: area);
+    return InternalResizeResult(rect: rect, largest: maxRect);
   }
 
   /// handle resizing for the bottom handle.
@@ -525,18 +577,27 @@ class BoxTransformer {
     Box initialRect,
     Box clampingRect,
     HandlePosition handle,
+    Constraints constraints,
   ) {
     final initialAspectRatio = initialRect.width / initialRect.height;
 
-    final availableArea = getAvailableAreaForHandle(
+    Box area = getAvailableAreaForHandle(
       rect: initialRect,
       clampingRect: clampingRect,
       handle: handle,
+      constraints: constraints,
     );
 
-    if (availableArea.height < initialRect.height) {
+    area = constrainAvailableAreaForScaling(
+      area: area,
+      initialRect: initialRect,
+      handle: handle,
+      constraints: constraints,
+    );
+
+    if (area.height < initialRect.height) {
       // initial box needs shrinking
-      final maxHeight = availableArea.height;
+      final maxHeight = area.height;
       final maxWidth = maxHeight * initialAspectRatio;
 
       initialRect = Box.fromHandle(
@@ -547,10 +608,16 @@ class BoxTransformer {
       );
     }
 
-    final effectiveArea = getClampingRectForHandle(
+    final maxRect = getClampingRectForHandle(
       initialRect: initialRect,
-      availableArea: clampingRect,
+      availableArea: area,
       handle: handle,
+    );
+
+    final minRect = getMinRectForScaling(
+      initialRect: initialRect,
+      handle: handle,
+      constraints: constraints,
     );
 
     double rectWidth = rect.width;
@@ -565,13 +632,13 @@ class BoxTransformer {
       rectHeight,
     );
 
-    if (rect.width > effectiveArea.width ||
-        rect.height > effectiveArea.height) {
-      rect = effectiveArea;
-      return InternalResizeResult(rect: effectiveArea, largest: effectiveArea);
+    if (rect.width > maxRect.width || rect.height > maxRect.height) {
+      return InternalResizeResult(rect: maxRect, largest: maxRect);
+    } else if (rect.width < minRect.width || rect.height < minRect.height) {
+      return InternalResizeResult(rect: minRect, largest: maxRect);
     }
 
-    return InternalResizeResult(rect: rect, largest: effectiveArea);
+    return InternalResizeResult(rect: rect, largest: maxRect);
   }
 
   /// handle resizing for the top handle.
@@ -580,18 +647,27 @@ class BoxTransformer {
     Box initialRect,
     Box clampingRect,
     HandlePosition handle,
+    Constraints constraints,
   ) {
     final initialAspectRatio = initialRect.width / initialRect.height;
 
-    final availableArea = getAvailableAreaForHandle(
+    Box area = getAvailableAreaForHandle(
       rect: initialRect,
       clampingRect: clampingRect,
       handle: handle,
+      constraints: constraints,
     );
 
-    if (availableArea.height < initialRect.height) {
+    area = constrainAvailableAreaForScaling(
+      area: area,
+      initialRect: initialRect,
+      handle: handle,
+      constraints: constraints,
+    );
+
+    if (area.height < initialRect.height) {
       // initial box needs shrinking
-      final maxHeight = availableArea.height;
+      final maxHeight = area.height;
       final maxWidth = maxHeight * initialAspectRatio;
 
       initialRect = Box.fromHandle(
@@ -602,10 +678,16 @@ class BoxTransformer {
       );
     }
 
-    final area = getClampingRectForHandle(
+    final maxRect = getClampingRectForHandle(
       initialRect: initialRect,
-      availableArea: clampingRect,
+      availableArea: area,
       handle: handle,
+    );
+
+    final minRect = getMinRectForScaling(
+      initialRect: initialRect,
+      handle: handle,
+      constraints: constraints,
     );
 
     double rectWidth = rect.width;
@@ -620,12 +702,14 @@ class BoxTransformer {
       rectHeight,
     );
 
-    if (rect.width > area.width || rect.height > area.height) {
-      rect = area;
-      return InternalResizeResult(rect: area, largest: area);
+    if (rect.width > maxRect.width || rect.height > maxRect.height) {
+      rect = maxRect;
+      return InternalResizeResult(rect: maxRect, largest: maxRect);
+    } else if (rect.width < minRect.width || rect.height < minRect.height) {
+      return InternalResizeResult(rect: minRect, largest: maxRect);
     }
 
-    return InternalResizeResult(rect: rect, largest: area);
+    return InternalResizeResult(rect: rect, largest: maxRect);
   }
 
   /// Handles the symmetric resize mode for corner handles.
@@ -634,9 +718,53 @@ class BoxTransformer {
     Box initialRect,
     Box clampingRect,
     HandlePosition handle,
+    Constraints constraints,
   ) {
     final initialAspectRatio = initialRect.width / initialRect.height;
-    final area = scaledSymmetricClampingBox(initialRect, clampingRect);
+
+    final Box availableArea;
+
+    if (!constraints.isUnconstrained) {
+      final constrainedBox = Box.fromCenter(
+        center: initialRect.center,
+        width: constraints.maxWidth,
+        height: constraints.maxHeight,
+      );
+      availableArea = Box.fromLTRB(
+        max(constrainedBox.left, clampingRect.left),
+        max(constrainedBox.top, clampingRect.top),
+        min(constrainedBox.right, clampingRect.right),
+        min(constrainedBox.bottom, clampingRect.bottom),
+      );
+    } else {
+      availableArea = clampingRect;
+    }
+
+    final maxRect = scaledSymmetricClampingBox(initialRect, availableArea);
+
+    final Box minRect;
+    if (!constraints.isUnconstrained) {
+      final double minWidth;
+      final double minHeight;
+      if (initialRect.aspectRatio > 1) {
+        minHeight = constraints.minHeight;
+        minWidth = minHeight * initialAspectRatio;
+      } else {
+        minWidth = constraints.minWidth;
+        minHeight = minWidth / initialAspectRatio;
+      }
+      minRect = Box.fromCenter(
+        center: initialRect.center,
+        width: minWidth,
+        height: minHeight,
+      );
+    } else {
+      minRect = Box.fromCenter(
+        center: initialRect.center,
+        width: 0,
+        height: 0,
+      );
+    }
 
     double rectWidth = rect.width;
     double rectHeight = rect.height;
@@ -655,12 +783,14 @@ class BoxTransformer {
       height: rectHeight,
     );
 
-    if (rect.width > area.width || rect.height > area.height) {
-      rect = area;
-      return InternalResizeResult(rect: area, largest: area);
+    if (rect.width > maxRect.width || rect.height > maxRect.height) {
+      rect = maxRect;
+      return InternalResizeResult(rect: maxRect, largest: maxRect);
+    } else if (rect.width < minRect.width || rect.height < minRect.height) {
+      return InternalResizeResult(rect: minRect, largest: maxRect);
     }
 
-    return InternalResizeResult(rect: rect, largest: area);
+    return InternalResizeResult(rect: rect, largest: maxRect);
   }
 
   /// Handles the symmetric resize mode for side handles.
@@ -669,9 +799,53 @@ class BoxTransformer {
     Box initialRect,
     Box clampingRect,
     HandlePosition handle,
+    Constraints constraints,
   ) {
     final initialAspectRatio = initialRect.width / initialRect.height;
-    final area = scaledSymmetricClampingBox(initialRect, clampingRect);
+
+    final Box availableArea;
+
+    if (!constraints.isUnconstrained) {
+      final constrainedBox = Box.fromCenter(
+        center: initialRect.center,
+        width: constraints.maxWidth,
+        height: constraints.maxHeight,
+      );
+      availableArea = Box.fromLTRB(
+        max(constrainedBox.left, clampingRect.left),
+        max(constrainedBox.top, clampingRect.top),
+        min(constrainedBox.right, clampingRect.right),
+        min(constrainedBox.bottom, clampingRect.bottom),
+      );
+    } else {
+      availableArea = clampingRect;
+    }
+
+    final maxRect = scaledSymmetricClampingBox(initialRect, availableArea);
+
+    final Box minRect;
+    if (!constraints.isUnconstrained) {
+      final double minWidth;
+      final double minHeight;
+      if (initialRect.aspectRatio > 1) {
+        minHeight = constraints.minHeight;
+        minWidth = minHeight * initialAspectRatio;
+      } else {
+        minWidth = constraints.minWidth;
+        minHeight = minWidth / initialAspectRatio;
+      }
+      minRect = Box.fromCenter(
+        center: initialRect.center,
+        width: minWidth,
+        height: minHeight,
+      );
+    } else {
+      minRect = Box.fromCenter(
+        center: initialRect.center,
+        width: 0,
+        height: 0,
+      );
+    }
 
     double rectWidth = rect.width.abs();
     double rectHeight = rect.height.abs();
@@ -688,12 +862,14 @@ class BoxTransformer {
       height: rectHeight,
     );
 
-    if (rect.width > area.width || rect.height > area.height) {
-      rect = area;
-      return InternalResizeResult(rect: area, largest: area);
+    if (rect.width > maxRect.width || rect.height > maxRect.height) {
+      rect = maxRect;
+      return InternalResizeResult(rect: maxRect, largest: maxRect);
+    } else if (rect.width < minRect.width || rect.height < minRect.height) {
+      return InternalResizeResult(rect: minRect, largest: maxRect);
     }
 
-    return InternalResizeResult(rect: rect, largest: area);
+    return InternalResizeResult(rect: rect, largest: maxRect);
   }
 
   /// Handle resizing for [HandlePosition.topLeft] handle
@@ -703,11 +879,20 @@ class BoxTransformer {
     Box initialRect,
     Box clampingRect,
     HandlePosition handle,
+    Constraints constraints,
   ) {
-    final area = getAvailableAreaForHandle(
+    Box area = getAvailableAreaForHandle(
       rect: rect,
       clampingRect: clampingRect,
       handle: handle,
+      constraints: constraints,
+    );
+
+    area = constrainAvailableAreaForScaling(
+      area: area,
+      initialRect: initialRect,
+      handle: handle,
+      constraints: constraints,
     );
 
     final initialAspectRatio = initialRect.width / initialRect.height;
@@ -723,10 +908,16 @@ class BoxTransformer {
       rectHeight = rectWidth / initialAspectRatio;
     }
 
-    final effectiveArea = getClampingRectForHandle(
+    final maxRect = getClampingRectForHandle(
       initialRect: initialRect,
       availableArea: area,
       handle: handle,
+    );
+
+    final minRect = getMinRectForScaling(
+      initialRect: initialRect,
+      handle: handle,
+      constraints: constraints,
     );
 
     rect = Box.fromHandle(
@@ -736,12 +927,13 @@ class BoxTransformer {
       rectHeight,
     );
 
-    if (rect.width > effectiveArea.width ||
-        rect.height > effectiveArea.height) {
-      return InternalResizeResult(rect: effectiveArea, largest: effectiveArea);
+    if (rect.width > maxRect.width || rect.height > maxRect.height) {
+      return InternalResizeResult(rect: maxRect, largest: maxRect);
+    } else if (rect.width < minRect.width || rect.height < minRect.height) {
+      return InternalResizeResult(rect: minRect, largest: maxRect);
     }
 
-    return InternalResizeResult(rect: rect, largest: effectiveArea);
+    return InternalResizeResult(rect: rect, largest: maxRect);
   }
 
   /// Handle resizing for [HandlePosition.bottomLeft] handle
@@ -751,11 +943,20 @@ class BoxTransformer {
     Box initialRect,
     Box clampingRect,
     HandlePosition handle,
+    Constraints constraints,
   ) {
-    final area = getAvailableAreaForHandle(
+    Box area = getAvailableAreaForHandle(
       rect: rect,
       clampingRect: clampingRect,
       handle: handle,
+      constraints: constraints,
+    );
+
+    area = constrainAvailableAreaForScaling(
+      area: area,
+      initialRect: initialRect,
+      handle: handle,
+      constraints: constraints,
     );
 
     final initialAspectRatio = initialRect.width / initialRect.height;
@@ -771,10 +972,16 @@ class BoxTransformer {
       rectHeight = rectWidth / initialAspectRatio;
     }
 
-    final effectiveArea = getClampingRectForHandle(
+    final maxRect = getClampingRectForHandle(
       initialRect: initialRect,
       availableArea: area,
       handle: handle,
+    );
+
+    final minRect = getMinRectForScaling(
+      initialRect: initialRect,
+      handle: handle,
+      constraints: constraints,
     );
 
     rect = Box.fromHandle(
@@ -784,12 +991,13 @@ class BoxTransformer {
       rectHeight,
     );
 
-    if (rect.width > effectiveArea.width ||
-        rect.height > effectiveArea.height) {
-      return InternalResizeResult(rect: effectiveArea, largest: effectiveArea);
+    if (rect.width > maxRect.width || rect.height > maxRect.height) {
+      return InternalResizeResult(rect: maxRect, largest: maxRect);
+    } else if (rect.width < minRect.width || rect.height < minRect.height) {
+      return InternalResizeResult(rect: minRect, largest: maxRect);
     }
 
-    return InternalResizeResult(rect: rect, largest: effectiveArea);
+    return InternalResizeResult(rect: rect, largest: maxRect);
   }
 
   /// Handle resizing for [HandlePosition.topRight] handle
@@ -799,11 +1007,20 @@ class BoxTransformer {
     Box initialRect,
     Box clampingRect,
     HandlePosition handle,
+    Constraints constraints,
   ) {
-    final area = getAvailableAreaForHandle(
+    Box area = getAvailableAreaForHandle(
       rect: rect,
       clampingRect: clampingRect,
       handle: handle,
+      constraints: constraints,
+    );
+
+    area = constrainAvailableAreaForScaling(
+      area: area,
+      initialRect: initialRect,
+      handle: handle,
+      constraints: constraints,
     );
 
     final initialAspectRatio = initialRect.width / initialRect.height;
@@ -819,10 +1036,16 @@ class BoxTransformer {
       rectHeight = rectWidth / initialAspectRatio;
     }
 
-    final effectiveArea = getClampingRectForHandle(
+    final maxRect = getClampingRectForHandle(
       initialRect: initialRect,
       availableArea: area,
       handle: handle,
+    );
+
+    final minRect = getMinRectForScaling(
+      initialRect: initialRect,
+      handle: handle,
+      constraints: constraints,
     );
 
     rect = Box.fromHandle(
@@ -832,12 +1055,13 @@ class BoxTransformer {
       rectHeight,
     );
 
-    if (rect.width > effectiveArea.width ||
-        rect.height > effectiveArea.height) {
-      return InternalResizeResult(rect: effectiveArea, largest: effectiveArea);
+    if (rect.width > maxRect.width || rect.height > maxRect.height) {
+      return InternalResizeResult(rect: maxRect, largest: maxRect);
+    } else if (rect.width < minRect.width || rect.height < minRect.height) {
+      return InternalResizeResult(rect: minRect, largest: maxRect);
     }
 
-    return InternalResizeResult(rect: rect, largest: effectiveArea);
+    return InternalResizeResult(rect: rect, largest: maxRect);
   }
 
   /// Handle resizing for [ResizeMode.symmetric].
@@ -845,25 +1069,47 @@ class BoxTransformer {
     required Box rect,
     required Box clampingRect,
     required HandlePosition handle,
+    required Constraints constraints,
   }) {
     final double horizontalMirrorRight = clampingRect.right - rect.center.x;
     final double horizontalMirrorLeft = rect.center.x - clampingRect.left;
     final double verticalMirrorTop = rect.center.y - clampingRect.top;
     final double verticalMirrorBottom = clampingRect.bottom - rect.center.y;
-    return InternalResizeResult(
-      rect: Box.fromCenter(
-        center: rect.center,
-        width: min(
-          min(horizontalMirrorLeft, horizontalMirrorRight) * 2,
-          rect.width,
-        ),
-        height: min(
-          min(verticalMirrorTop, verticalMirrorBottom) * 2,
-          rect.height,
-        ),
-      ),
-      largest: clampingRect,
+
+    Box area = Box.fromCenter(
+      center: rect.center,
+      width: min(horizontalMirrorLeft, horizontalMirrorRight) * 2,
+      height: min(verticalMirrorTop, verticalMirrorBottom) * 2,
     );
+
+    if (!constraints.isUnconstrained) {
+      final constrainedBox = Box.fromCenter(
+        center: rect.center,
+        width: constraints.maxWidth,
+        height: constraints.maxHeight,
+      );
+
+      area = Box.fromLTRB(
+        max(area.left, constrainedBox.left),
+        max(area.top, constrainedBox.top),
+        min(area.right, constrainedBox.right),
+        min(area.bottom, constrainedBox.bottom),
+      );
+    }
+
+    final Box minRect = Box.fromCenter(
+      center: rect.center,
+      width: constraints.isUnconstrained ? 0 : constraints.minWidth,
+      height: constraints.isUnconstrained ? 0 : constraints.minHeight,
+    );
+
+    Box newRect = Box.fromCenter(
+      center: rect.center,
+      width: min(area.width, max(rect.width, minRect.width)),
+      height: min(area.height, max(rect.height, minRect.height)),
+    );
+
+    return InternalResizeResult(rect: newRect, largest: area);
   }
 
   /// Handle resizing for [ResizeMode.scale].
@@ -873,6 +1119,7 @@ class BoxTransformer {
     required Box clampingRect,
     required HandlePosition handle,
     required Flip flip,
+    required Constraints constraints,
   }) {
     final flippedHandle = handle.flip(flip);
     final initialRect = flipBox(initialBox, flip, handle);
@@ -881,31 +1128,37 @@ class BoxTransformer {
 
     switch (flippedHandle) {
       case HandlePosition.topLeft:
-        result = handleTopLeft(rect, initialRect, clampingRect, flippedHandle);
+        result = handleTopLeft(
+            rect, initialRect, clampingRect, flippedHandle, constraints);
         break;
       case HandlePosition.topRight:
-        result = handleTopRight(rect, initialRect, clampingRect, flippedHandle);
+        result = handleTopRight(
+            rect, initialRect, clampingRect, flippedHandle, constraints);
         break;
       case HandlePosition.bottomLeft:
-        result =
-            handleBottomLeft(rect, initialRect, clampingRect, flippedHandle);
+        result = handleBottomLeft(
+            rect, initialRect, clampingRect, flippedHandle, constraints);
         break;
       case HandlePosition.none:
       case HandlePosition.bottomRight:
-        result =
-            handleBottomRight(rect, initialRect, clampingRect, flippedHandle);
+        result = handleBottomRight(
+            rect, initialRect, clampingRect, flippedHandle, constraints);
         break;
       case HandlePosition.left:
-        result = handleLeft(rect, initialRect, clampingRect, flippedHandle);
+        result = handleLeft(
+            rect, initialRect, clampingRect, flippedHandle, constraints);
         break;
       case HandlePosition.top:
-        result = handleTop(rect, initialRect, clampingRect, flippedHandle);
+        result = handleTop(
+            rect, initialRect, clampingRect, flippedHandle, constraints);
         break;
       case HandlePosition.right:
-        result = handleRight(rect, initialRect, clampingRect, flippedHandle);
+        result = handleRight(
+            rect, initialRect, clampingRect, flippedHandle, constraints);
         break;
       case HandlePosition.bottom:
-        result = handleBottom(rect, initialRect, clampingRect, flippedHandle);
+        result = handleBottom(
+            rect, initialRect, clampingRect, flippedHandle, constraints);
         break;
     }
     return result;
@@ -918,6 +1171,7 @@ class BoxTransformer {
     required Box clampingRect,
     required HandlePosition handle,
     required Flip flip,
+    required Constraints constraints,
   }) {
     switch (handle) {
       case HandlePosition.none:
@@ -926,12 +1180,13 @@ class BoxTransformer {
       case HandlePosition.bottomLeft:
       case HandlePosition.bottomRight:
         return handleScaleSymmetricCorner(
-            rect, initialBox, clampingRect, handle);
+            rect, initialBox, clampingRect, handle, constraints);
       case HandlePosition.left:
       case HandlePosition.top:
       case HandlePosition.right:
       case HandlePosition.bottom:
-        return handleScaleSymmetricSide(rect, initialBox, clampingRect, handle);
+        return handleScaleSymmetricSide(
+            rect, initialBox, clampingRect, handle, constraints);
     }
   }
 }
