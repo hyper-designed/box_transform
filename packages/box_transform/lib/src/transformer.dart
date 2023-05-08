@@ -198,6 +198,8 @@ class BoxTransformer {
     final double width = (right - left).abs();
     final double height = (bottom - top).abs();
 
+    // If in symmetric scaling mode, utilize width and height to constructor
+    // the new box from its center.
     if (resizeMode.hasSymmetry) {
       final widthDelta = (initialBox.width - width) / 2;
       final heightDelta = (initialBox.height - height) / 2;
@@ -239,7 +241,7 @@ class BoxTransformer {
     switch (resizeMode) {
       case ResizeMode.freeform:
         result = handleFreeformResizing(
-          rect: rect,
+          explodedRect: rect,
           clampingRect: clampingRect,
           handle: handle,
           constraints: constraints,
@@ -330,7 +332,7 @@ class BoxTransformer {
 
   /// Handles resizing for [ResizeMode.freeform].
   static InternalResizeResult handleFreeformResizing({
-    required Box rect,
+    required Box explodedRect,
     required Box clampingRect,
     required HandlePosition handle,
     required Constraints constraints,
@@ -340,24 +342,53 @@ class BoxTransformer {
     Box effectiveInitialRect = flipBox(initialRect, flip, handle);
 
     Box newRect = Box.fromLTRB(
-      max(rect.left, clampingRect.left),
-      max(rect.top, clampingRect.top),
-      min(rect.right, clampingRect.right),
-      min(rect.bottom, clampingRect.bottom),
+      max(explodedRect.left, clampingRect.left),
+      max(explodedRect.top, clampingRect.top),
+      min(explodedRect.right, clampingRect.right),
+      min(explodedRect.bottom, clampingRect.bottom),
     );
 
     if (!constraints.isUnconstrained) {
-      final maxWidth =
+      final constrainedWidth =
           newRect.width.clamp(constraints.minWidth, constraints.maxWidth);
-      final maxHeight =
+      final constrainedHeight =
           newRect.height.clamp(constraints.minHeight, constraints.maxHeight);
 
       newRect = Box.fromHandle(
         handle.flip(flip).anchor(effectiveInitialRect),
         handle.flip(flip),
-        maxWidth,
-        maxHeight,
+        constrainedWidth,
+        constrainedHeight,
       );
+    }
+
+    // If the operation produced a rect that is outside of the clamping rect,
+    // return the last legal rect.
+    // This can happen if the min constraints force a flip-state that can only
+    // exist outside of the clamping rect.
+    if (!clampingRect.contains(newRect.topLeft) ||
+        !clampingRect.contains(newRect.bottomRight)) {
+      newRect = Box.fromLTRB(
+        max(explodedRect.left, clampingRect.left),
+        max(explodedRect.top, clampingRect.top),
+        min(explodedRect.right, clampingRect.right),
+        min(explodedRect.bottom, clampingRect.bottom),
+      );
+
+      final constrainedWidth =
+          newRect.width.clamp(constraints.minWidth, constraints.maxWidth);
+      final constrainedHeight =
+          newRect.height.clamp(constraints.minHeight, constraints.maxHeight);
+
+      // De-flip
+      newRect = Box.fromHandle(
+        handle.anchor(initialRect),
+        handle,
+        constrainedWidth,
+        constrainedHeight,
+      );
+
+      return InternalResizeResult(rect: newRect, largest: newRect);
     }
 
     return InternalResizeResult(
