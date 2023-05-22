@@ -169,7 +169,7 @@ class MoveResult<B extends Object, V extends Object, D extends Object>
           maxWidthReached: false,
           minHeightReached: false,
           maxHeightReached: false,
-          handle: HandlePosition.none,
+          handle: HandlePosition.bottomRight,
         );
 
   @override

@@ -563,6 +563,10 @@ class _ImageBoxState extends State<ImageBox> {
                 rect.topRight.toVector2(),
               );
 
+              if (line1 == null || line2 == null) {
+                return const SizedBox.shrink();
+              }
+
               return IgnorePointer(
                 child: Stack(
                   fit: StackFit.expand,
@@ -649,7 +653,7 @@ class _ImageBoxState extends State<ImageBox> {
                       ),
                     ),
                     Positioned(
-                      left: line1![0].x,
+                      left: line1[0].x,
                       top: line1[0].y,
                       child: FractionalTranslation(
                         translation: const Offset(-0.5, -0.5),
@@ -664,7 +668,7 @@ class _ImageBoxState extends State<ImageBox> {
                       ),
                     ),
                     Positioned(
-                      left: line2![0].x,
+                      left: line2[0].x,
                       top: line2[0].y,
                       child: FractionalTranslation(
                         translation: const Offset(-0.5, -0.5),
@@ -893,22 +897,17 @@ class _ClampingRectState extends State<ClampingRect> {
       label = 'Clamping Box';
     }
 
-    // TODO: enable again
-    // final minWidth = model.boxes.fold(0.0,
-    //     (previousValue, element) => max(previousValue, element.rect.width));
-    // final minHeight = model.boxes.fold(0.0,
-    //     (previousValue, element) => max(previousValue, element.rect.height));
+    final minWidth = model.boxes.fold(0.0,
+        (previousValue, element) => max(previousValue, element.rect.width));
+    final minHeight = model.boxes.fold(0.0,
+        (previousValue, element) => max(previousValue, element.rect.height));
 
     return TransformableBox(
       key: const ValueKey('clamping-box'),
       rect: model.clampingRect,
       flip: Flip.none,
       clampingRect: model.playgroundArea!,
-      // TODO: enable again
-      // constraints: BoxConstraints(
-      //   minWidth: minWidth,
-      //   minHeight: minHeight,
-      // ),
+      constraints: BoxConstraints(minWidth: minWidth, minHeight: minHeight),
       onChanged: (result) => model.setClampingRect(result.rect),
       onTerminalSizeReached: (
         bool reachedMinWidth,
@@ -1288,8 +1287,8 @@ class PositionControls extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                children: const [
+              const Row(
+                children: [
                   Expanded(child: Label('LEFT')),
                   SizedBox(width: 16),
                   Expanded(child: Label('TOP')),
@@ -1308,8 +1307,8 @@ class PositionControls extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              Row(
-                children: const [
+              const Row(
+                children: [
                   Expanded(child: Label('RIGHT')),
                   SizedBox(width: 16),
                   Expanded(child: Label('BOTTOM')),
@@ -1328,8 +1327,8 @@ class PositionControls extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              Row(
-                children: const [
+              const Row(
+                children: [
                   Expanded(child: Label('WIDTH')),
                   SizedBox(width: 16),
                   Expanded(child: Label('HEIGHT')),
@@ -1348,8 +1347,8 @@ class PositionControls extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              Row(
-                children: const [
+              const Row(
+                children: [
                   Expanded(child: Label('ASPECT RATIO')),
                   Expanded(child: Label('CENTER')),
                 ],
@@ -1510,14 +1509,14 @@ class FlipControls extends StatelessWidget {
                     ],
                     selectedColor: Theme.of(context).colorScheme.primary,
                     constraints: const BoxConstraints.tightFor(height: 32),
-                    children: [
+                    children: const [
                       Tooltip(
                         message: 'Flip Horizontally',
-                        waitDuration: const Duration(milliseconds: 500),
+                        waitDuration: Duration(milliseconds: 500),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          padding: EdgeInsets.symmetric(horizontal: 8),
                           child: Row(
-                            children: const [
+                            children: [
                               ImageIcon(
                                 AssetImage(AssetIcons.icFlip),
                                 size: 20,
@@ -1530,11 +1529,11 @@ class FlipControls extends StatelessWidget {
                       ),
                       Tooltip(
                         message: 'Flip Vertically',
-                        waitDuration: const Duration(milliseconds: 500),
+                        waitDuration: Duration(milliseconds: 500),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          padding: EdgeInsets.symmetric(horizontal: 8),
                           child: Row(
-                            children: const [
+                            children: [
                               RotatedBox(
                                 quarterTurns: 1,
                                 child: ImageIcon(
@@ -1677,8 +1676,8 @@ class _ClampingControlsState extends State<ClampingControls> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Row(
-                            children: const [
+                          const Row(
+                            children: [
                               Expanded(child: Label('LEFT')),
                               SizedBox(width: 16),
                               Expanded(child: Label('TOP')),
@@ -1725,8 +1724,8 @@ class _ClampingControlsState extends State<ClampingControls> {
                             ],
                           ),
                           const SizedBox(height: 16),
-                          Row(
-                            children: const [
+                          const Row(
+                            children: [
                               Expanded(child: Label('RIGHT')),
                               SizedBox(width: 16),
                               Expanded(child: Label('BOTTOM')),
@@ -1928,8 +1927,8 @@ class _ConstraintsControlsState extends State<ConstraintsControls> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Row(
-                            children: const [
+                          const Row(
+                            children: [
                               Expanded(child: Label('Min W')),
                               SizedBox(width: 16),
                               Expanded(child: Label('Min H')),
@@ -1984,8 +1983,8 @@ class _ConstraintsControlsState extends State<ConstraintsControls> {
                             ],
                           ),
                           const SizedBox(height: 16),
-                          Row(
-                            children: const [
+                          const Row(
+                            children: [
                               Expanded(child: Label('Max W')),
                               SizedBox(width: 16),
                               Expanded(child: Label('Max H')),

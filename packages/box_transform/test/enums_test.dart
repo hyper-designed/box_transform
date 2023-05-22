@@ -262,7 +262,7 @@ void main() {
       expect(HandlePosition.left.anchor(rect), Vector2(500, 300));
       expect(HandlePosition.right.anchor(rect), Vector2(100, 300));
       // HandlePosition.none assumes bottom-right and returns top-left.
-      expect(HandlePosition.none.anchor(rect), Vector2(100, 100));
+      expect(()=> HandlePosition.none.anchor(rect), throwsArgumentError);
     });
   });
 
