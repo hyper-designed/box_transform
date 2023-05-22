@@ -304,7 +304,7 @@ class TransformableBoxController extends ChangeNotifier {
       initialLocalPosition: initialLocalPosition,
       localPosition: initialLocalPosition,
       clampingRect: clampingRect,
-      handle: HandlePosition.none,
+      handle: HandlePosition.bottomRight,
       resizeMode: ResizeMode.scale,
       initialFlip: initialFlip,
       constraints: constraints,

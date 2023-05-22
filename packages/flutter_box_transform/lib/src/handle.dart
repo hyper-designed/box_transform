@@ -330,7 +330,7 @@ class AngularHandlePainter extends CustomPainter {
     Offset offset;
     switch (handle) {
       case HandlePosition.none:
-        throw Exception('Cannot get center for HandlePosition.none');
+        throw ArgumentError('HandlePosition.none is not supported!');
       case HandlePosition.topLeft:
       case HandlePosition.topRight:
       case HandlePosition.bottomLeft:

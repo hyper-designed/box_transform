@@ -17,3 +17,10 @@ extension RawTransformResultExt on RawTransformResult {
   /// Convenient getter for [oldBox.topLeft].
   Vector2 get oldPosition => oldRect.topLeft;
 }
+
+/// Extensions for double.
+extension DoubleExt on double {
+  /// Rounds a double to the given precision.
+  double roundToPrecision(int precision) =>
+      double.parse((this).toStringAsFixed(precision));
+}

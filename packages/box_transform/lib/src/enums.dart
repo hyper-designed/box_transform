@@ -195,8 +195,9 @@ enum HandlePosition {
       case HandlePosition.bottom:
         return rect.topCenter;
       case HandlePosition.bottomRight:
-      case HandlePosition.none:
         return rect.topLeft;
+      case HandlePosition.none:
+        throw ArgumentError('HandlePosition.none is not supported!');
     }
   }
 }

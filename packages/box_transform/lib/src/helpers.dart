@@ -2,15 +2,14 @@ import 'dart:math';
 
 import 'package:vector_math/vector_math.dart';
 
-import 'enums.dart';
-import 'geometry.dart';
+import '../box_transform.dart';
 
 /// Flips the given [rect] with given [flip] with [handle] being the
 /// pivot point.
 Box flipBox(Box rect, Flip flip, HandlePosition handle) {
   switch (handle) {
     case HandlePosition.none:
-      return rect;
+      throw ArgumentError('HandlePosition.none is not supported!');
     case HandlePosition.topLeft:
       return rect.translate(
         flip.isHorizontal ? rect.width : 0,
@@ -168,7 +167,7 @@ Box getClampingRectForSideHandle({
 
   switch (handle) {
     case HandlePosition.none:
-      return availableArea;
+      throw ArgumentError('HandlePosition.none is not supported!');
     case HandlePosition.left:
       final maxWidth = min(width, initialRect.right - availableArea.left);
       final maxHeight = maxWidth / initialAspectRatio;
@@ -415,7 +414,7 @@ Box getClampingRectForHandle({
 }) {
   switch (handle) {
     case HandlePosition.none:
-      return availableArea;
+      throw ArgumentError('HandlePosition.none is not supported!');
     case HandlePosition.topLeft:
     case HandlePosition.topRight:
     case HandlePosition.bottomLeft:
@@ -443,10 +442,6 @@ Box getClampingRectForCornerHandle({
   required Box availableArea,
   required HandlePosition handle,
 }) {
-  if (handle == HandlePosition.none) {
-    handle = HandlePosition.bottomRight;
-  }
-
   final initialAspectRatio = initialRect.aspectRatio;
 
   final double areaAspectRatio = availableArea.aspectRatio;
@@ -547,4 +542,30 @@ Box getMinRectForScaling({
     minWidth,
     minHeight,
   );
+}
+
+/// [returns] whether the given [rect] is properly confined within its
+/// [constraints] but at the same time is not outside of the [clampingRect].
+bool isValidBox(Box rect, Constraints constraints, Box clampingRect) {
+  print('clamping top: ${clampingRect.top} | rect top: ${rect.top}');
+  if (clampingRect.left.roundToPrecision(4) > rect.left.roundToPrecision(4) ||
+      clampingRect.top.roundToPrecision(4) > rect.top.roundToPrecision(4) ||
+      clampingRect.right.roundToPrecision(4) < rect.right.roundToPrecision(4) ||
+      clampingRect.bottom.roundToPrecision(4) <
+          rect.bottom.roundToPrecision(4)) {
+    return false;
+  }
+  if (!constraints.isUnconstrained) {
+    if (rect.width.roundToPrecision(4) <
+            constraints.minWidth.roundToPrecision(4) ||
+        rect.width.roundToPrecision(4) >
+            constraints.maxWidth.roundToPrecision(4) ||
+        rect.height.roundToPrecision(4) <
+            constraints.minHeight.roundToPrecision(4) ||
+        rect.height.roundToPrecision(4) >
+            constraints.maxHeight.roundToPrecision(4)) {
+      return false;
+    }
+  }
+  return true;
 }
