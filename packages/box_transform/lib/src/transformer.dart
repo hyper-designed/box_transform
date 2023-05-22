@@ -572,7 +572,7 @@ class BoxTransformer {
 
     final maxRect = getClampingRectForHandle(
       initialRect: initialRect,
-      availableArea: clampingRect,
+      availableArea: area,
       handle: handle,
     );
 
