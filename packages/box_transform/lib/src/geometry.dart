@@ -431,6 +431,7 @@ class Box {
       Vector2 origin, HandlePosition handle, double width, double height) {
     switch (handle) {
       case HandlePosition.none:
+        throw ArgumentError('HandlePosition.none is not supported!');
       case HandlePosition.topLeft:
         return Box.fromLTWH(origin.x - width, origin.y - height, width, height);
       case HandlePosition.topRight:
@@ -705,7 +706,7 @@ class Box {
   Box containOther(
     Box child, {
     ResizeMode resizeMode = ResizeMode.freeform,
-    HandlePosition handle = HandlePosition.none,
+    required HandlePosition handle,
     Flip currentFlip = Flip.none,
     double? aspectRatio,
     bool allowResizeOverflow = true,

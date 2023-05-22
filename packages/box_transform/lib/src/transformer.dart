@@ -1,10 +1,10 @@
-import 'dart:math';
+import 'dart:developer';
+import 'dart:math' hide log;
 
 import 'package:meta/meta.dart';
 import 'package:vector_math/vector_math.dart';
 
 import '../box_transform.dart';
-import 'helpers.dart';
 
 /// A class that transforms a [Box] in several different supported forms.
 class BoxTransformer {
@@ -26,7 +26,8 @@ class BoxTransformer {
     final Vector2 delta = localPosition - initialLocalPosition;
 
     final Box unclampedBox = initialBox.translate(delta.x, delta.y);
-    final Box clampedBox = clampingRect.containOther(unclampedBox);
+    final Box clampedBox = clampingRect.containOther(unclampedBox,
+        handle: HandlePosition.bottomRight);
     final Vector2 clampedDelta = clampedBox.topLeft - initialBox.topLeft;
 
     final Box newRect = initialBox.translate(clampedDelta.x, clampedDelta.y);
@@ -76,6 +77,11 @@ class BoxTransformer {
     bool flipRect = true,
     bool allowResizeOverflow = false,
   }) {
+    if (handle == HandlePosition.none) {
+      log('Using bottomRight handle instead of none.');
+      handle = HandlePosition.bottomRight;
+    }
+
     Vector2 delta = localPosition - initialLocalPosition;
 
     // getFlipForBox uses delta instead of localPosition to know exactly when
@@ -348,6 +354,7 @@ class BoxTransformer {
       min(explodedRect.bottom, clampingRect.bottom),
     );
 
+    bool isValid = true;
     if (!constraints.isUnconstrained) {
       final constrainedWidth =
           newRect.width.clamp(constraints.minWidth, constraints.maxWidth);
@@ -360,40 +367,22 @@ class BoxTransformer {
         constrainedWidth,
         constrainedHeight,
       );
-    }
 
-    // If the operation produced a rect that is outside of the clamping rect,
-    // return the last legal rect.
-    // This can happen if the min constraints force a flip-state that can only
-    // exist outside of the clamping rect.
-    if (!clampingRect.contains(newRect.topLeft) ||
-        !clampingRect.contains(newRect.bottomRight)) {
-      newRect = Box.fromLTRB(
-        max(explodedRect.left, clampingRect.left),
-        max(explodedRect.top, clampingRect.top),
-        min(explodedRect.right, clampingRect.right),
-        min(explodedRect.bottom, clampingRect.bottom),
-      );
-
-      final constrainedWidth =
-          newRect.width.clamp(constraints.minWidth, constraints.maxWidth);
-      final constrainedHeight =
-          newRect.height.clamp(constraints.minHeight, constraints.maxHeight);
-
-      // De-flip
-      newRect = Box.fromHandle(
-        handle.anchor(initialRect),
-        handle,
-        constrainedWidth,
-        constrainedHeight,
-      );
-
-      return InternalResizeResult(rect: newRect, largest: newRect);
+      isValid = isValidBox(newRect, constraints, clampingRect);
+      if (!isValid) {
+        newRect = Box.fromHandle(
+          handle.anchor(initialRect),
+          handle,
+          constrainedWidth,
+          constrainedHeight,
+        );
+      }
     }
 
     return InternalResizeResult(
       rect: newRect,
       largest: effectiveInitialRect,
+      isValid: isValid,
     );
   }
 
@@ -405,6 +394,7 @@ class BoxTransformer {
     Box clampingRect,
     HandlePosition handle,
     Constraints constraints,
+    Flip flip,
   ) {
     Box area = getAvailableAreaForHandle(
       rect: rect,
@@ -452,13 +442,18 @@ class BoxTransformer {
       rectHeight,
     );
 
+    Box largest = maxRect;
     if (rect.width > maxRect.width || rect.height > maxRect.height) {
-      return InternalResizeResult(rect: maxRect, largest: maxRect);
+      rect = maxRect;
+      largest = maxRect;
     } else if (rect.width < minRect.width || rect.height < minRect.height) {
-      return InternalResizeResult(rect: minRect, largest: maxRect);
+      rect = minRect;
+      largest = maxRect;
     }
 
-    return InternalResizeResult(rect: rect, largest: maxRect);
+    final isValid = isValidBox(rect, constraints, clampingRect);
+
+    return InternalResizeResult(rect: rect, largest: largest, isValid: isValid);
   }
 
   /// Handle resizing for the right handle.
@@ -468,6 +463,7 @@ class BoxTransformer {
     Box clampingRect,
     HandlePosition handle,
     Constraints constraints,
+    Flip flip,
   ) {
     final initialAspectRatio = initialRect.width / initialRect.height;
 
@@ -522,13 +518,18 @@ class BoxTransformer {
       rectHeight,
     );
 
+    Box largest = maxRect;
     if (rect.width > maxRect.width || rect.height > maxRect.height) {
-      return InternalResizeResult(rect: maxRect, largest: maxRect);
+      rect = maxRect;
+      largest = maxRect;
     } else if (rect.width < minRect.width || rect.height < minRect.height) {
-      return InternalResizeResult(rect: minRect, largest: maxRect);
+      rect = minRect;
+      largest = maxRect;
     }
 
-    return InternalResizeResult(rect: rect, largest: maxRect);
+    final isValid = isValidBox(rect, constraints, clampingRect);
+
+    return InternalResizeResult(rect: rect, largest: largest, isValid: isValid);
   }
 
   /// handle resizing for the left handle
@@ -538,6 +539,7 @@ class BoxTransformer {
     Box clampingRect,
     HandlePosition handle,
     Constraints constraints,
+    Flip flip,
   ) {
     final initialAspectRatio = initialRect.width / initialRect.height;
 
@@ -592,14 +594,18 @@ class BoxTransformer {
       rectHeight,
     );
 
+    Box largest = maxRect;
     if (rect.width > maxRect.width || rect.height > maxRect.height) {
       rect = maxRect;
-      return InternalResizeResult(rect: maxRect, largest: maxRect);
+      largest = maxRect;
     } else if (rect.width < minRect.width || rect.height < minRect.height) {
-      return InternalResizeResult(rect: minRect, largest: maxRect);
+      rect = minRect;
+      largest = maxRect;
     }
 
-    return InternalResizeResult(rect: rect, largest: maxRect);
+    final isValid = isValidBox(rect, constraints, clampingRect);
+
+    return InternalResizeResult(rect: rect, largest: largest, isValid: isValid);
   }
 
   /// handle resizing for the bottom handle.
@@ -609,6 +615,7 @@ class BoxTransformer {
     Box clampingRect,
     HandlePosition handle,
     Constraints constraints,
+    Flip flip,
   ) {
     final initialAspectRatio = initialRect.width / initialRect.height;
 
@@ -663,13 +670,18 @@ class BoxTransformer {
       rectHeight,
     );
 
+    Box largest = maxRect;
     if (rect.width > maxRect.width || rect.height > maxRect.height) {
-      return InternalResizeResult(rect: maxRect, largest: maxRect);
+      rect = maxRect;
+      largest = maxRect;
     } else if (rect.width < minRect.width || rect.height < minRect.height) {
-      return InternalResizeResult(rect: minRect, largest: maxRect);
+      rect = minRect;
+      largest = maxRect;
     }
 
-    return InternalResizeResult(rect: rect, largest: maxRect);
+    final isValid = isValidBox(rect, constraints, clampingRect);
+
+    return InternalResizeResult(rect: rect, largest: largest, isValid: isValid);
   }
 
   /// handle resizing for the top handle.
@@ -679,6 +691,7 @@ class BoxTransformer {
     Box clampingRect,
     HandlePosition handle,
     Constraints constraints,
+    Flip flip,
   ) {
     final initialAspectRatio = initialRect.width / initialRect.height;
 
@@ -733,14 +746,18 @@ class BoxTransformer {
       rectHeight,
     );
 
+    Box largest = maxRect;
     if (rect.width > maxRect.width || rect.height > maxRect.height) {
       rect = maxRect;
-      return InternalResizeResult(rect: maxRect, largest: maxRect);
+      largest = maxRect;
     } else if (rect.width < minRect.width || rect.height < minRect.height) {
-      return InternalResizeResult(rect: minRect, largest: maxRect);
+      rect = minRect;
+      largest = maxRect;
     }
 
-    return InternalResizeResult(rect: rect, largest: maxRect);
+    final isValid = isValidBox(rect, constraints, clampingRect);
+
+    return InternalResizeResult(rect: rect, largest: largest, isValid: isValid);
   }
 
   /// Handles the symmetric resize mode for corner handles.
@@ -911,6 +928,7 @@ class BoxTransformer {
     Box clampingRect,
     HandlePosition handle,
     Constraints constraints,
+    Flip flip,
   ) {
     Box area = getAvailableAreaForHandle(
       rect: rect,
@@ -958,13 +976,18 @@ class BoxTransformer {
       rectHeight,
     );
 
+    Box largest = maxRect;
     if (rect.width > maxRect.width || rect.height > maxRect.height) {
-      return InternalResizeResult(rect: maxRect, largest: maxRect);
+      rect = maxRect;
+      largest = maxRect;
     } else if (rect.width < minRect.width || rect.height < minRect.height) {
-      return InternalResizeResult(rect: minRect, largest: maxRect);
+      rect = minRect;
+      largest = maxRect;
     }
 
-    return InternalResizeResult(rect: rect, largest: maxRect);
+    final isValid = isValidBox(rect, constraints, clampingRect);
+
+    return InternalResizeResult(rect: rect, largest: largest, isValid: isValid);
   }
 
   /// Handle resizing for [HandlePosition.bottomLeft] handle
@@ -975,6 +998,7 @@ class BoxTransformer {
     Box clampingRect,
     HandlePosition handle,
     Constraints constraints,
+    Flip flip,
   ) {
     Box area = getAvailableAreaForHandle(
       rect: rect,
@@ -1022,13 +1046,18 @@ class BoxTransformer {
       rectHeight,
     );
 
+    Box largest = maxRect;
     if (rect.width > maxRect.width || rect.height > maxRect.height) {
-      return InternalResizeResult(rect: maxRect, largest: maxRect);
+      rect = maxRect;
+      largest = maxRect;
     } else if (rect.width < minRect.width || rect.height < minRect.height) {
-      return InternalResizeResult(rect: minRect, largest: maxRect);
+      rect = minRect;
+      largest = maxRect;
     }
 
-    return InternalResizeResult(rect: rect, largest: maxRect);
+    final isValid = isValidBox(rect, constraints, clampingRect);
+
+    return InternalResizeResult(rect: rect, largest: largest, isValid: isValid);
   }
 
   /// Handle resizing for [HandlePosition.topRight] handle
@@ -1039,6 +1068,7 @@ class BoxTransformer {
     Box clampingRect,
     HandlePosition handle,
     Constraints constraints,
+    Flip flip,
   ) {
     Box area = getAvailableAreaForHandle(
       rect: rect,
@@ -1086,13 +1116,18 @@ class BoxTransformer {
       rectHeight,
     );
 
+    Box largest = maxRect;
     if (rect.width > maxRect.width || rect.height > maxRect.height) {
-      return InternalResizeResult(rect: maxRect, largest: maxRect);
+      rect = maxRect;
+      largest = maxRect;
     } else if (rect.width < minRect.width || rect.height < minRect.height) {
-      return InternalResizeResult(rect: minRect, largest: maxRect);
+      rect = minRect;
+      largest = maxRect;
     }
 
-    return InternalResizeResult(rect: rect, largest: maxRect);
+    final isValid = isValidBox(rect, constraints, clampingRect);
+
+    return InternalResizeResult(rect: rect, largest: largest, isValid: isValid);
   }
 
   /// Handle resizing for [ResizeMode.symmetric].
@@ -1158,40 +1193,53 @@ class BoxTransformer {
     InternalResizeResult result;
 
     switch (flippedHandle) {
+      case HandlePosition.none:
+        throw ArgumentError('HandlePosition.none is not supported!');
       case HandlePosition.topLeft:
         result = handleTopLeft(
-            rect, initialRect, clampingRect, flippedHandle, constraints);
+            rect, initialRect, clampingRect, flippedHandle, constraints, flip);
         break;
       case HandlePosition.topRight:
         result = handleTopRight(
-            rect, initialRect, clampingRect, flippedHandle, constraints);
+            rect, initialRect, clampingRect, flippedHandle, constraints, flip);
         break;
       case HandlePosition.bottomLeft:
         result = handleBottomLeft(
-            rect, initialRect, clampingRect, flippedHandle, constraints);
+            rect, initialRect, clampingRect, flippedHandle, constraints, flip);
         break;
-      case HandlePosition.none:
       case HandlePosition.bottomRight:
         result = handleBottomRight(
-            rect, initialRect, clampingRect, flippedHandle, constraints);
+            rect, initialRect, clampingRect, flippedHandle, constraints, flip);
         break;
       case HandlePosition.left:
         result = handleLeft(
-            rect, initialRect, clampingRect, flippedHandle, constraints);
+            rect, initialRect, clampingRect, flippedHandle, constraints, flip);
         break;
       case HandlePosition.top:
         result = handleTop(
-            rect, initialRect, clampingRect, flippedHandle, constraints);
+            rect, initialRect, clampingRect, flippedHandle, constraints, flip);
         break;
       case HandlePosition.right:
         result = handleRight(
-            rect, initialRect, clampingRect, flippedHandle, constraints);
+            rect, initialRect, clampingRect, flippedHandle, constraints, flip);
         break;
       case HandlePosition.bottom:
         result = handleBottom(
-            rect, initialRect, clampingRect, flippedHandle, constraints);
+            rect, initialRect, clampingRect, flippedHandle, constraints, flip);
         break;
     }
+
+    if (!result.isValid) {
+      return handleScaleResizing(
+        rect: rect,
+        initialBox: initialBox,
+        clampingRect: clampingRect,
+        handle: handle,
+        flip: Flip.none,
+        constraints: constraints,
+      );
+    }
+
     return result;
   }
 
@@ -1206,12 +1254,13 @@ class BoxTransformer {
   }) {
     switch (handle) {
       case HandlePosition.none:
+        throw ArgumentError('HandlePosition.none is not supported!');
       case HandlePosition.topLeft:
       case HandlePosition.topRight:
       case HandlePosition.bottomLeft:
       case HandlePosition.bottomRight:
-        return handleScaleSymmetricCorner(
-            rect, initialBox, clampingRect, handle, constraints);
+        return handleScaleSymmetricCorner(rect, initialBox, clampingRect,
+            handle.isNone ? HandlePosition.bottomRight : handle, constraints);
       case HandlePosition.left:
       case HandlePosition.top:
       case HandlePosition.right:
@@ -1232,10 +1281,14 @@ class InternalResizeResult {
   /// the resize operation.
   final Box largest;
 
+  /// Whether the resulting rect is valid and adheres to the constraints.
+  final bool isValid;
+
   /// The result of a resize operation.
   InternalResizeResult({
     required this.rect,
     required this.largest,
+    this.isValid = true,
   });
 
   @override
@@ -1244,13 +1297,14 @@ class InternalResizeResult {
       other is InternalResizeResult &&
           runtimeType == other.runtimeType &&
           rect == other.rect &&
-          largest == other.largest;
+          largest == other.largest &&
+          isValid == other.isValid;
 
   @override
-  int get hashCode => Object.hash(rect, largest);
+  int get hashCode => Object.hash(rect, largest, isValid);
 
   @override
   String toString() {
-    return 'InternalResizeResult(rect: $rect, largest: $largest)';
+    return 'InternalResizeResult(rect: $rect, largest: $largest, isValid: $isValid)';
   }
 }
