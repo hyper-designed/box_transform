@@ -547,7 +547,6 @@ Box getMinRectForScaling({
 /// [returns] whether the given [rect] is properly confined within its
 /// [constraints] but at the same time is not outside of the [clampingRect].
 bool isValidBox(Box rect, Constraints constraints, Box clampingRect) {
-  print('clamping top: ${clampingRect.top} | rect top: ${rect.top}');
   if (clampingRect.left.roundToPrecision(4) > rect.left.roundToPrecision(4) ||
       clampingRect.top.roundToPrecision(4) > rect.top.roundToPrecision(4) ||
       clampingRect.right.roundToPrecision(4) < rect.right.roundToPrecision(4) ||
