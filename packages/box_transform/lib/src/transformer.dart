@@ -382,7 +382,7 @@ class BoxTransformer {
     return InternalResizeResult(
       rect: newRect,
       largest: effectiveInitialRect,
-      isValid: isValid,
+      hasInvalidFlip: isValid,
     );
   }
 
@@ -397,7 +397,7 @@ class BoxTransformer {
     Flip flip,
   ) {
     Box area = getAvailableAreaForHandle(
-      rect: rect,
+      rect: initialRect,
       clampingRect: clampingRect,
       handle: handle,
       constraints: constraints,
@@ -453,7 +453,8 @@ class BoxTransformer {
 
     final isValid = isValidBox(rect, constraints, clampingRect);
 
-    return InternalResizeResult(rect: rect, largest: largest, isValid: isValid);
+    return InternalResizeResult(
+        rect: rect, largest: largest, hasInvalidFlip: isValid);
   }
 
   /// Handle resizing for the right handle.
@@ -529,7 +530,8 @@ class BoxTransformer {
 
     final isValid = isValidBox(rect, constraints, clampingRect);
 
-    return InternalResizeResult(rect: rect, largest: largest, isValid: isValid);
+    return InternalResizeResult(
+        rect: rect, largest: largest, hasInvalidFlip: isValid);
   }
 
   /// handle resizing for the left handle
@@ -605,7 +607,8 @@ class BoxTransformer {
 
     final isValid = isValidBox(rect, constraints, clampingRect);
 
-    return InternalResizeResult(rect: rect, largest: largest, isValid: isValid);
+    return InternalResizeResult(
+        rect: rect, largest: largest, hasInvalidFlip: isValid);
   }
 
   /// handle resizing for the bottom handle.
@@ -681,7 +684,8 @@ class BoxTransformer {
 
     final isValid = isValidBox(rect, constraints, clampingRect);
 
-    return InternalResizeResult(rect: rect, largest: largest, isValid: isValid);
+    return InternalResizeResult(
+        rect: rect, largest: largest, hasInvalidFlip: isValid);
   }
 
   /// handle resizing for the top handle.
@@ -757,7 +761,8 @@ class BoxTransformer {
 
     final isValid = isValidBox(rect, constraints, clampingRect);
 
-    return InternalResizeResult(rect: rect, largest: largest, isValid: isValid);
+    return InternalResizeResult(
+        rect: rect, largest: largest, hasInvalidFlip: isValid);
   }
 
   /// Handles the symmetric resize mode for corner handles.
@@ -987,7 +992,8 @@ class BoxTransformer {
 
     final isValid = isValidBox(rect, constraints, clampingRect);
 
-    return InternalResizeResult(rect: rect, largest: largest, isValid: isValid);
+    return InternalResizeResult(
+        rect: rect, largest: largest, hasInvalidFlip: isValid);
   }
 
   /// Handle resizing for [HandlePosition.bottomLeft] handle
@@ -1057,7 +1063,8 @@ class BoxTransformer {
 
     final isValid = isValidBox(rect, constraints, clampingRect);
 
-    return InternalResizeResult(rect: rect, largest: largest, isValid: isValid);
+    return InternalResizeResult(
+        rect: rect, largest: largest, hasInvalidFlip: isValid);
   }
 
   /// Handle resizing for [HandlePosition.topRight] handle
@@ -1127,7 +1134,8 @@ class BoxTransformer {
 
     final isValid = isValidBox(rect, constraints, clampingRect);
 
-    return InternalResizeResult(rect: rect, largest: largest, isValid: isValid);
+    return InternalResizeResult(
+        rect: rect, largest: largest, hasInvalidFlip: isValid);
   }
 
   /// Handle resizing for [ResizeMode.symmetric].
@@ -1229,9 +1237,13 @@ class BoxTransformer {
         break;
     }
 
-    if (!result.isValid) {
+    if (!result.hasInvalidFlip) {
+      // Since we can't flip the box, rect (which is a raw rect with delta applied)
+      // would be flipped so we can't use that because it would make the size
+      // calculations wrong. Instead we use box from the result which is the
+      // flipped box but with correct constraints applied. (min rect always).
       return handleScaleResizing(
-        rect: rect,
+        rect: result.rect,
         initialBox: initialBox,
         clampingRect: clampingRect,
         handle: handle,
@@ -1282,13 +1294,13 @@ class InternalResizeResult {
   final Box largest;
 
   /// Whether the resulting rect is valid and adheres to the constraints.
-  final bool isValid;
+  final bool hasInvalidFlip;
 
   /// The result of a resize operation.
   InternalResizeResult({
     required this.rect,
     required this.largest,
-    this.isValid = true,
+    this.hasInvalidFlip = true,
   });
 
   @override
@@ -1298,13 +1310,13 @@ class InternalResizeResult {
           runtimeType == other.runtimeType &&
           rect == other.rect &&
           largest == other.largest &&
-          isValid == other.isValid;
+          hasInvalidFlip == other.hasInvalidFlip;
 
   @override
-  int get hashCode => Object.hash(rect, largest, isValid);
+  int get hashCode => Object.hash(rect, largest, hasInvalidFlip);
 
   @override
   String toString() {
-    return 'InternalResizeResult(rect: $rect, largest: $largest, isValid: $isValid)';
+    return 'InternalResizeResult(rect: $rect, largest: $largest, isValid: $hasInvalidFlip)';
   }
 }
