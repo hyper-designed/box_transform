@@ -408,7 +408,7 @@ class _TestRecorderUIState extends State<TestRecorderUI> {
 
     if (record.action.constraints != null) {
       constraints =
-          'Constraints(minWidth: ${formattedValue(record.action.clampingBox!.width)}, minHeight: ${formattedValue(record.action.clampingBox!.height)}, maxWidth: ${formattedValue(record.action.clampingBox!.width)}, maxHeight: ${formattedValue(record.action.clampingBox!.height)}))';
+          'Constraints(minWidth: ${formattedValue(record.action.constraints!.minWidth)}, minHeight: ${formattedValue(record.action.constraints!.minHeight)}, maxWidth: ${formattedValue(record.action.constraints!.maxWidth)}, maxHeight: ${formattedValue(record.action.constraints!.maxHeight)})';
     }
 
     buffer.writeln('''
