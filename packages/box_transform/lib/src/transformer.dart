@@ -936,7 +936,7 @@ class BoxTransformer {
     Flip flip,
   ) {
     Box area = getAvailableAreaForHandle(
-      rect: rect,
+      rect: initialRect,
       clampingRect: clampingRect,
       handle: handle,
       constraints: constraints,
@@ -1007,7 +1007,7 @@ class BoxTransformer {
     Flip flip,
   ) {
     Box area = getAvailableAreaForHandle(
-      rect: rect,
+      rect: initialRect,
       clampingRect: clampingRect,
       handle: handle,
       constraints: constraints,
@@ -1078,7 +1078,7 @@ class BoxTransformer {
     Flip flip,
   ) {
     Box area = getAvailableAreaForHandle(
-      rect: rect,
+      rect: initialRect,
       clampingRect: clampingRect,
       handle: handle,
       constraints: constraints,
