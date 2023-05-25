@@ -374,8 +374,12 @@ class BoxTransformer {
         newRect = Box.fromHandle(
           handle.anchor(initialRect),
           handle,
-          constraints.minWidth,
-          constraints.minHeight,
+          !handle.isSide || handle.isHorizontal
+              ? constraints.minWidth
+              : constrainedWidth,
+          !handle.isSide || handle.isVertical
+              ? constraints.minHeight
+              : constrainedHeight,
         );
       }
     }
