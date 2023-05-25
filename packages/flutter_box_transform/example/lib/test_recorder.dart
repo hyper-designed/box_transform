@@ -383,6 +383,7 @@ class _TestRecorderUIState extends State<TestRecorderUI> {
     final StringBuffer buffer = StringBuffer();
 
     String formattedValue(num value) {
+      if(value.isInfinite) return 'double.infinity';
       return roundValues ? value.round().toString() : value.toStringAsFixed(2);
     }
 
