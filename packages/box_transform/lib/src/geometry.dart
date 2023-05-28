@@ -628,6 +628,15 @@ class Box {
   /// Returns aspect ratio of this rectangle.
   double get aspectRatio => size.aspectRatio;
 
+  /// Returns aspect ratio of this rectangle. Unlike [aspectRatio], it has a
+  /// safe mechanism where if the width or height is zero, returns 1.
+  double get safeAspectRatio {
+    if (size.width == 0 || size.height == 0) {
+      return 1.0;
+    }
+    return size.aspectRatio;
+  }
+
   /// Whether the point specified by the given Vector2 (which is assumed to be
   /// relative to the origin) lies between the left and right and the top and
   /// bottom edges of this rectangle.
