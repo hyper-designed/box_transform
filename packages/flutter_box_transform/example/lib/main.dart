@@ -749,6 +749,7 @@ class _ImageBoxState extends State<ImageBox> {
               cursorPosition: event.localPosition,
               clampingRect: model.clampingEnabled ? model.clampingRect : null,
               constraints: box.constraintsEnabled ? box.constraints : null,
+              flipRect: box.flipRectWhileResizing,
             );
           },
           onResizeEnd: (event) {

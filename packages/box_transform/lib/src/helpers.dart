@@ -442,9 +442,9 @@ Box getClampingRectForCornerHandle({
   required Box availableArea,
   required HandlePosition handle,
 }) {
-  final initialAspectRatio = initialRect.aspectRatio;
+  final initialAspectRatio = initialRect.safeAspectRatio;
 
-  final double areaAspectRatio = availableArea.aspectRatio;
+  final double areaAspectRatio = availableArea.safeAspectRatio;
 
   double maxWidth;
   double maxHeight;
@@ -524,12 +524,12 @@ Box getMinRectForScaling({
   final double minHeight;
 
   if (!constraints.isUnconstrained) {
-    if (initialRect.aspectRatio < 1) {
+    if (initialRect.safeAspectRatio < 1) {
       minWidth = constraints.minWidth;
-      minHeight = minWidth / initialRect.aspectRatio;
+      minHeight = minWidth / initialRect.safeAspectRatio;
     } else {
       minHeight = constraints.minHeight;
-      minWidth = minHeight * initialRect.aspectRatio;
+      minWidth = minHeight * initialRect.safeAspectRatio;
     }
   } else {
     minWidth = 0;

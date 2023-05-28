@@ -128,6 +128,7 @@ class BoxTransformer {
       constraints: constraints,
       allowResizeOverflow: allowResizeOverflow,
       localPosition: localPosition,
+      flipRect: flipRect,
     );
 
     final Box newRect = result.rect;
@@ -190,6 +191,7 @@ class BoxTransformer {
     required HandlePosition handle,
     required Vector2 delta,
     required ResizeMode resizeMode,
+    required bool flipRect,
   }) {
     double left;
     double top;
@@ -201,18 +203,40 @@ class BoxTransformer {
     right = initialBox.right + (handle.influencesRight ? delta.x : 0);
     bottom = initialBox.bottom + (handle.influencesBottom ? delta.y : 0);
 
-    final double width = (right - left).abs();
-    final double height = (bottom - top).abs();
+    double width = right - left;
+    double height = bottom - top;
+
+    if (flipRect) {
+      width = width.abs();
+      height = height.abs();
+    } else {
+      // If not flipping, we need to make sure the width and height are
+      // positive which would imply that the left and top are less than
+      // the right and bottom respectively stopping rect from flipping.
+      width = width.clamp(0, double.infinity);
+      height = height.clamp(0, double.infinity);
+    }
 
     // If in symmetric scaling mode, utilize width and height to constructor
     // the new box from its center.
     if (resizeMode.hasSymmetry) {
+      // symmetric resizing is not affected if flipping is disabled.
       final widthDelta = (initialBox.width - width) / 2;
       final heightDelta = (initialBox.height - height) / 2;
       left = initialBox.left + widthDelta;
       top = initialBox.top + heightDelta;
       right = initialBox.right - widthDelta;
       bottom = initialBox.bottom - heightDelta;
+    } else if (!flipRect) {
+      // If not flipping, then we know that handles are not allowed to
+      // cross the opposite one. So we use handle with width and height
+      // instead of left, top, right, bottom to construct the new box.
+      return Box.fromHandle(
+        handle.anchor(initialBox),
+        handle,
+        width,
+        height,
+      );
     }
 
     return Box.fromLTRB(
@@ -233,6 +257,7 @@ class BoxTransformer {
     Constraints constraints = const Constraints.unconstrained(),
     bool allowResizeOverflow = true,
     required Vector2 localPosition,
+    required bool flipRect,
   }) {
     // No constraints or clamping is done. Only delta is applied to the
     // initial box.
@@ -241,6 +266,7 @@ class BoxTransformer {
       handle: handle,
       delta: delta,
       resizeMode: resizeMode,
+      flipRect: flipRect,
     );
 
     InternalResizeResult result;
@@ -315,7 +341,7 @@ class BoxTransformer {
     //
     // final double newWidth;
     // final double newHeight;
-    // final newAspectRatio = rect.width / rect.height;
+    // final newAspectRatio = rect.safeAspectRatio;
     //
     // if (resizeMode.isScalable) {
     //   if (newAspectRatio.abs() < aspectRatio.abs()) {
@@ -422,14 +448,14 @@ class BoxTransformer {
       constraints: constraints,
     );
 
-    final initialAspectRatio = initialRect.width / initialRect.height;
+    final initialAspectRatio = initialRect.safeAspectRatio;
 
     double rectWidth = rect.width;
     double rectHeight = rect.height;
 
     final cursorRect = rect;
 
-    if (cursorRect.aspectRatio.abs() < initialAspectRatio.abs()) {
+    if (cursorRect.safeAspectRatio.abs() < initialAspectRatio.abs()) {
       rectWidth = rectHeight * initialAspectRatio;
     } else {
       rectHeight = rectWidth / initialAspectRatio;
@@ -478,7 +504,7 @@ class BoxTransformer {
     Constraints constraints,
     Flip flip,
   ) {
-    final initialAspectRatio = initialRect.width / initialRect.height;
+    final initialAspectRatio = initialRect.safeAspectRatio;
 
     Box area = getAvailableAreaForHandle(
       rect: initialRect,
@@ -555,7 +581,7 @@ class BoxTransformer {
     Constraints constraints,
     Flip flip,
   ) {
-    final initialAspectRatio = initialRect.width / initialRect.height;
+    final initialAspectRatio = initialRect.safeAspectRatio;
 
     Box area = getAvailableAreaForHandle(
       rect: initialRect,
@@ -632,7 +658,7 @@ class BoxTransformer {
     Constraints constraints,
     Flip flip,
   ) {
-    final initialAspectRatio = initialRect.width / initialRect.height;
+    final initialAspectRatio = initialRect.safeAspectRatio;
 
     Box area = getAvailableAreaForHandle(
       rect: initialRect,
@@ -709,7 +735,7 @@ class BoxTransformer {
     Constraints constraints,
     Flip flip,
   ) {
-    final initialAspectRatio = initialRect.width / initialRect.height;
+    final initialAspectRatio = initialRect.safeAspectRatio;
 
     Box area = getAvailableAreaForHandle(
       rect: initialRect,
@@ -785,7 +811,7 @@ class BoxTransformer {
     HandlePosition handle,
     Constraints constraints,
   ) {
-    final initialAspectRatio = initialRect.width / initialRect.height;
+    final initialAspectRatio = initialRect.safeAspectRatio;
 
     final Box availableArea;
 
@@ -811,7 +837,7 @@ class BoxTransformer {
     if (!constraints.isUnconstrained) {
       final double minWidth;
       final double minHeight;
-      if (initialRect.aspectRatio > 1) {
+      if (initialRect.safeAspectRatio > 1) {
         minHeight = constraints.minHeight;
         minWidth = minHeight * initialAspectRatio;
       } else {
@@ -836,7 +862,7 @@ class BoxTransformer {
 
     final cursorRect = rect;
 
-    if (cursorRect.aspectRatio.abs() < initialAspectRatio.abs()) {
+    if (cursorRect.safeAspectRatio.abs() < initialAspectRatio.abs()) {
       rectWidth = rectHeight * initialAspectRatio;
     } else {
       rectHeight = rectWidth / initialAspectRatio;
@@ -866,7 +892,7 @@ class BoxTransformer {
     HandlePosition handle,
     Constraints constraints,
   ) {
-    final initialAspectRatio = initialRect.width / initialRect.height;
+    final initialAspectRatio = initialRect.safeAspectRatio;
 
     final Box availableArea;
 
@@ -892,7 +918,7 @@ class BoxTransformer {
     if (!constraints.isUnconstrained) {
       final double minWidth;
       final double minHeight;
-      if (initialRect.aspectRatio > 1) {
+      if (initialRect.safeAspectRatio > 1) {
         minHeight = constraints.minHeight;
         minWidth = minHeight * initialAspectRatio;
       } else {
@@ -961,14 +987,14 @@ class BoxTransformer {
       constraints: constraints,
     );
 
-    final initialAspectRatio = initialRect.width / initialRect.height;
+    final initialAspectRatio = initialRect.safeAspectRatio;
 
     double rectWidth = rect.width;
     double rectHeight = rect.height;
 
     final cursorRect = rect;
 
-    if (cursorRect.aspectRatio.abs() < initialAspectRatio.abs()) {
+    if (cursorRect.safeAspectRatio.abs() < initialAspectRatio.abs()) {
       rectWidth = rectHeight * initialAspectRatio;
     } else {
       rectHeight = rectWidth / initialAspectRatio;
@@ -1032,14 +1058,14 @@ class BoxTransformer {
       constraints: constraints,
     );
 
-    final initialAspectRatio = initialRect.width / initialRect.height;
+    final initialAspectRatio = initialRect.safeAspectRatio;
 
     double rectWidth = rect.width;
     double rectHeight = rect.height;
 
     final cursorRect = rect;
 
-    if (cursorRect.aspectRatio.abs() < initialAspectRatio.abs()) {
+    if (cursorRect.safeAspectRatio.abs() < initialAspectRatio.abs()) {
       rectWidth = rectHeight * initialAspectRatio;
     } else {
       rectHeight = rectWidth / initialAspectRatio;
@@ -1103,14 +1129,14 @@ class BoxTransformer {
       constraints: constraints,
     );
 
-    final initialAspectRatio = initialRect.width / initialRect.height;
+    final initialAspectRatio = initialRect.safeAspectRatio;
 
     double rectWidth = rect.width;
     double rectHeight = rect.height;
 
     final cursorRect = rect;
 
-    if (cursorRect.aspectRatio.abs() < initialAspectRatio.abs()) {
+    if (cursorRect.safeAspectRatio.abs() < initialAspectRatio.abs()) {
       rectWidth = rectHeight * initialAspectRatio;
     } else {
       rectHeight = rectWidth / initialAspectRatio;

@@ -37,6 +37,7 @@ class TestRecorder with ChangeNotifier {
     required Rect rect,
     required HandlePosition handle,
     required Offset cursorPosition,
+    required bool flipRect,
     Rect? clampingRect,
     BoxConstraints? constraints,
   }) {
@@ -48,6 +49,7 @@ class TestRecorder with ChangeNotifier {
       position: cursorPosition,
       clampingBox: clampingRect,
       constraints: constraints,
+      flipRect: flipRect,
     );
     current.add(TestRecord(action: action));
     return action;
@@ -98,6 +100,7 @@ class TestAction with EquatableMixin {
   final Offset position;
   final Rect? clampingBox;
   final BoxConstraints? constraints;
+  final bool flipRect;
 
   TestAction({
     required this.resizeMode,
@@ -107,6 +110,7 @@ class TestAction with EquatableMixin {
     required this.position,
     this.clampingBox,
     this.constraints,
+    this.flipRect = false,
   }) : id = DateTime.now().millisecondsSinceEpoch;
 
   @override
@@ -119,6 +123,7 @@ class TestAction with EquatableMixin {
         position,
         clampingBox,
         constraints,
+        flipRect,
       ];
 }
 
@@ -383,7 +388,7 @@ class _TestRecorderUIState extends State<TestRecorderUI> {
     final StringBuffer buffer = StringBuffer();
 
     String formattedValue(num value) {
-      if(value.isInfinite) return 'double.infinity';
+      if (value.isInfinite) return 'double.infinity';
       return roundValues ? value.round().toString() : value.toStringAsFixed(2);
     }
 
@@ -420,7 +425,7 @@ class _TestRecorderUIState extends State<TestRecorderUI> {
         initialBox: Box.fromLTWH($left, $top, $width, $height),
         handle: ${record.action.handle},
         initialLocalPosition: Vector2(${formattedValue(record.action.position.dx)}, ${formattedValue(record.action.position.dy)}),
-        flipRect: true,
+        flipRect: ${record.action.flipRect},
         localPosition: Vector2(${formattedValue(record.localPosition!.dx)}, ${formattedValue(record.localPosition!.dy)}),
         ${clampingRect != null ? 'clampingRect: $clampingRect,' : ''}
         ${constraints != null ? 'constraints: $constraints,' : ''}
