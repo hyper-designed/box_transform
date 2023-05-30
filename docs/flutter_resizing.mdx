@@ -4,7 +4,7 @@ title: Resizing
 
 # Resizing
 
-`TransformableBox` can be used to resize a widget by default. [Transformable Box][transformableBox] utilizes 
+`TransformableBox` is used to resize its content by default. [Transformable Box][transformableBox] utilizes
 [Box Transform][boxTransform] to create a fully-featured Flutter implementation of the [Box Transform][boxTransform] API.
 
 ```dart title="Resizable widget"
@@ -30,10 +30,12 @@ title: Resizing
   );
 ```
 
-<Info>**_onChanged_** callback is a general callback that is called whenever a change is made to the box. To listen to specific
-changes, you can use **_onResized_** and **_onMoved_** callbacks for resizing and moving respectively.</Info>
+<Info>The **_onChanged_** callback is a general callback that is called whenever a change is made to the box. To listen
+to specific changes, you can use **_onResized_** and **_onMoved_** callbacks for resizing and moving respectively.
 
-By default, resizing allows flipping the rect horizontally and vertically. Flipping is done by using the 
+There are also more granular callbacks if desired.</Info>
+
+By default, resizing allows flipping the rect horizontally and vertically. Flipping is done by using the
 `Transform.scale` widget with negative scale values.
 
 Resizing is freeform by default, meaning that the user can resize the box in any direction and in any size.
@@ -41,18 +43,18 @@ Resizing is freeform by default, meaning that the user can resize the box in any
 ## Controlling Resize Modes
 
 The `resolveResizeModeCallback` is a callback that is called whenever a resize operation is about to be performed on a
-given [Transformable Box][transformableBox]. This allows you to define the resize behavior at the time of the resize 
+given [Transformable Box][transformableBox]. This allows you to define the resize behavior at the time of the resize
 operation. This is useful when you want to change the resize behavior based on the state of the application.
 
-The most common use case for this is **keyboard shortcuts**. A `defaultResolveResizeModeCallback` function is used by 
+The most common use case for this is **keyboard shortcuts**. A `defaultResolveResizeModeCallback` function is used by
 default when resizing, and it's job is to listen to keyboard meta keys to change the `ResizeMode`.
 
 ### Default Resize Mode:
 
 1. ResizeMode.freeform: **Default** mode. When no keys are pressed.
 2. ResizeMode.scale: When `Shift` key is pressed.
-3. ResizeMode.symmetric: When `Alt` key is pressed.
-4. ResizeMode.symmetricScale: When both `Shift` and `Alt` keys are pressed.
+3. ResizeMode.symmetric: When `Alt` or `Option` key is pressed.
+4. ResizeMode.symmetricScale: When both `Shift` and `Alt`/`Option` keys are pressed.
 
 See [ResizeModes](/resize_modes) page for more information on the different resize modes.
 
@@ -68,7 +70,7 @@ resizing to your liking. This can also be used to allow only certain resize mode
     contentBuilder: (context, rect, flip) {...},
   );
 ```
-This will resize the box such that the **aspect ratio** is preserved.
+This will resize the box such that the **aspect ratio** is preserved at all times.
 
 ## Flipping
 
@@ -76,9 +78,9 @@ By default, resizing allows flipping the rect horizontally and vertically. Flipp
 `Transform.scale` widget with negative scale values internally. There are two kinds of flipping involved in resizing:
 
 ### Flipping the rect while resizing
-While resizing, the rect can be flipped horizontally and vertically whenever the
-user drags a handle beyond the opposite side of the rect. This allows more flexibility in resizing the box. However,
-this is not responsible for flipping the content of the box.
+While resizing, the rect can be flipped horizontally and vertically whenever the user drags a handle beyond the opposite
+side of the rect. This allows more freedom when resizing a box. However, this is not responsible for flipping the
+content of the box.
 
 This behavior can be disabled by setting `flipRectWhileResizing` to `false`.
 
@@ -93,26 +95,28 @@ This behavior can be disabled by setting `flipRectWhileResizing` to `false`.
 ```
 
 ### Flipping the content of the box
-This is done by using the `Transform.scale` widget with negative scale values. This
-is done to allow the content to be flipped horizontally and vertically. 
+This is done by using the `Transform.scale` widget with negative scale values. This is done to allow the content to be
+flipped horizontally and vertically.
 
-This behavior can be disabled by setting `flipChild` to `false`.
+This behavior can be disabled by setting `allowContentFlipping` to `false`.
 
 ```dart title="Disable flipping the child/content of the box"
   TransformableBox(
     rect: rect,
     flip: flip,
-    flipChild: false,
+    allowContentFlipping: false,
     onChanged: (event) {...},
     contentBuilder: (context, rect, flip) {...},
   );
 ```
 
-You can set both `flipRectWhileResizing` and `flipChild` to `false` to disable flipping completely.
+You can set both `flipRectWhileResizing` and `allowContentFlipping` to `false` to disable flipping completely.
+The result will be a box that stops shrinking once it reaches a size of zero, as if it hit a wall.
 
 ## Constraints
 
-Resizing can be constrained by providing `minSize` and `maxSize` using `constraints` property.
+Resizing can be constrained by providing any desirable combination of `minHeight`, `minWidth`, `maxHeight` and
+`maxWidth` using the `constraints` property.
 
 ```dart title="Resizable widget with constrained resizing"
   TransformableBox(
@@ -128,19 +132,25 @@ Resizing can be constrained by providing `minSize` and `maxSize` using `constrai
     contentBuilder: (context, rect, flip) {...},
   );
 ```
-This will allow resizing the box between 100x100 and 500x500 pixels.
+This will disallow the box from growing or shrinking beyond 100x100 and 500x500 pixels.
 
 ### Constraint callbacks
 
-You can register callbacks to listen to when the box reaches the minimum or maximum size. This is useful when you want
+You can listen to callbacks to listen to when the box reaches the minimum or maximum size. This is useful when you want
 to react to these events to show some UI indication like showing a message or changing border color.
 
-You can register `onTerminalSizeReached` callback to listen to when the box reaches the terminal size. This is useful
-when you want to show a message to the user that the box has reached the maximum size.
+You can listen to the `onTerminalSizeReached` callback to listen to when the box reaches some terminal size, vertically
+or horizontally to a minimum or maximum size. This is useful when you want to show a message to the user that the box
+has reached some resizing limit.
 
-<Info>A **terminal size** is a size that is either the **minimum** or **maximum** size of the box on either axis. 
-This can happen when the user tries to resize the box beyond the given **constraints** or the size reaches the 
-`clampingRect` size.</Info>
+<Info>A **terminal size** is a size that is either the **minimum** or **maximum** size of the box on either axis.
+    This can happen when the user tries to resize the box beyond the given **constraints** or the size reaches the
+    `clampingRect` size.</Info>
+
+There are more granular terminal callback functions if desired. You can use `onMinWidthReached`, `onMaxWidthReached`,
+`onMinHeightReached` and `onMaxHeightReached` callbacks to listen to the individual terminal size events.
+You can also use `onTerminalWidthReached` and `onTerminalHeightReached` to listen to combined terminal width and height
+events respectively.
 
 ```dart title="onTerminalSizeReached callback"
   TransformableBox(
@@ -165,13 +175,9 @@ This can happen when the user tries to resize the box beyond the given **constra
   );
 ```
 
-You can also use `onMinWidthReached`, `onMaxWidthReached`, `onMinHeightReached` and `onMaxHeightReached` callbacks to 
-listen to the individual terminal size events. You can also use `onTerminalWidthReached` and `onTerminalHeightReached` to listen
-to combined terminal width and height events respectively.
-
 ## Disable Resizing
 
-Resizing can be disabled by setting the `resizable` property to `false`.
+Resizing can be disabled completely by setting the `resizable` property to `false`.
 
 ```dart title="Resizable widget without resizing"
   TransformableBox(

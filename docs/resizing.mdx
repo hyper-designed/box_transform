@@ -14,7 +14,7 @@ title: Resizing
     resizeMode: ResizeMode.freeform,
     initialFlip: Flip.none,
   );
-  
+
   result.rect; // the new rect
 ```
 
@@ -37,7 +37,7 @@ While resizing, the rect can be flipped horizontally and vertically whenever the
 user drags a handle beyond the opposite side of the rect. This allows more flexibility in resizing the box. However,
 this is not responsible for flipping the content of the box.
 
-This behavior can be disabled by setting `flipRectWhileResizing` to `false`.
+This behavior can be disabled by setting `allowBoxFlipping` to `false`.
 
 ```dart title="Disable flipping the rect while resizing"
   final Box rect = Box.fromLTWH(50, 50, 100, 100);
@@ -48,15 +48,16 @@ This behavior can be disabled by setting `flipRectWhileResizing` to `false`.
     localPosition: Vector2.zero(),
     resizeMode: ResizeMode.freeform,
     initialFlip: Flip.none,
-    flipRectWhileResizing: false, // disables flipping the rect while resizing
+    allowBoxFlipping: false, // disables flipping the rect while resizing
   );
-  
+
   result.rect; // the new rect
 ```
 
 ## Constraints
 
-Resizing can be constrained by providing `minSize` and `maxSize` using `constraints` property.
+Resizing can be constrained by providing any desirable combination of `minHeight`, `minWidth`, `maxHeight` and
+`maxWidth` using the `constraints` property.
 
 ```dart title="Resizable widget with constrained resizing"
   final Box rect = Box.fromLTWH(50, 50, 100, 100);
@@ -74,12 +75,12 @@ Resizing can be constrained by providing `minSize` and `maxSize` using `constrai
       maxHeight: 500,
     ),
   );
-  
+
   result.rect; // the new rect
 ```
-This will allow resizing the box between 100x100 and 500x500 pixels.
+This will disallow the box from growing or shrinking beyond 100x100 and 500x500 pixels.
 
-`ResizeResult` also provides information about whether the resizing was constrained or not. 
+`ResizeResult` also provides information about whether the resizing was constrained or not.
 `ResizeResult.minWidthReached`, `ResizeResult.minHeightReached`, `ResizeResult.maxWidthReached` and
 `ResizeResult.maxHeightReached` are `bool` values that indicate whether the resizing was constrained or not.
 

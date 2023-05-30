@@ -6,7 +6,7 @@ title: Getting Started
 
 ## Installation
 
-Add this package as dependency in your `pubspec.yaml` file:
+Add this package to your dependencies in your `pubspec.yaml` file:
 
 ```dart
   dependencies:
@@ -19,12 +19,12 @@ or run following command in your project directory:
 ```
 
 ## Usage
-Wrap the widget you want to resize/move with `TransformableBox`. 
+Wrap the widget you want to resize or move with `TransformableBox`.
 
-<Warning>**_TransformableBox_** internally uses **_Positioned_** to place child at given position with given size. 
-So, **_TransformableBox_** must be a child of **_Stack_** widget.</Warning>
+<Warning>**_TransformableBox_** internally uses **_Positioned_** to place its content at a given position with a given
+size. So, **_TransformableBox_** must be a child of a **_Stack_** widget.</Warning>
 
-```dart title="Using as a widget"
+```dart title="Using TransformableBox inside a Stack"
   Stack(
     children: [
       TransformableBox(
@@ -51,9 +51,9 @@ So, **_TransformableBox_** must be a child of **_Stack_** widget.</Warning>
   );
 ```
 
-`onChanged` callback is called when user resizes/moves the box. You can use this callback to update the box by calling
+`onChanged` callback is called when user resizes or moves the box. You can use this callback to update the box by calling
 `setState` method explicitly.
 
-<Info>**_TransformableBox_** follows flutter widget pattern and does not store any state. So, you must store the box and 
-flip state in your widget state and pass it to **_TransformableBox_** as parameters. Don't forget to call **_setState_** 
-method to update the state.</Info>
+<Info>**_TransformableBox_** follows flutter's widget patterns by not storing any state. You must store the box and
+flip state by yourself in your widget's state class and pass it to **_TransformableBox_** as constructor parameters.
+Be sure to call **_setState_** to refresh the UI when changes occur.</Info>

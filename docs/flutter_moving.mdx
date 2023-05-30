@@ -4,7 +4,7 @@ title: Moving
 
 # Moving/Dragging
 
-`TransformableBox` can be used to move/drag a widget by default.
+`TransformableBox` allows moving/dragging/translating a widget by default.
 
 ```dart title="Moving a widget"
   Stack(
@@ -19,13 +19,14 @@ title: Moving
     ],
   );
 ```
-`onChanged` callback is called when user moves the box. You can use this callback to update the box by calling
-`setState` method explicitly. You can also use `TransformableBox.onMoved` callback to 
+`onMoved` callback is called when the user drags the box. You can use this callback to update the box by calling
+the `setState` method explicitly. You can also use `TransformableBox.onChanged` callback for a combined event that
+includes resizing in addition to moving/dragging.
 
 ## Limiting movements
 
-You can limit the movements by setting `TransformableBox.clampingBox` property. `clampingBox` takes a `Rect` that 
-defines the boundary for the box to move within.
+You can limit the allowed space the box can be moved within by setting `TransformableBox.clampingBox` property.
+`clampingBox` takes a `Rect` that defines a legal boundary that the box must stay inside.
 
 ```dart title="Limiting movements"
   TransformableBox(
@@ -38,12 +39,12 @@ defines the boundary for the box to move within.
   );
 ```
 
-This will limit the movements to a box of size `1000x1000` and centered at origin. If your `Stack` has a size, provide
-that size to `clampingBox` to allow movements only within the `Stack` boundary.
+This will limit the space the box can be move in to be inside an area of size `1000x1000` and centered at the origin.
+If your `Stack` has a size, provide that size to `clampingBox` to allow movements only within the `Stack` boundary.
 
 ## Disable movements
 
-Setting `TransformableBox.movable` to `false` will disable movements.
+Setting `TransformableBox.movable` to `false` will completely disable moving/dragging behavior.
 
 ```dart title="Disable moving"
   TransformableBox(

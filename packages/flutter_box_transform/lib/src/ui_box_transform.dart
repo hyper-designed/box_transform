@@ -32,7 +32,7 @@ class UIBoxTransform {
         initialFlip: initialFlip,
         clampingRect: clampingRect.toBox(),
         constraints: constraints.toConstraints(),
-        flipRect: flipRect,
+        allowBoxFlipping: flipRect,
         allowResizeOverflow: allowResizeOverflow,
       ).toUI();
 

@@ -74,7 +74,7 @@ class BoxTransformer {
     required Flip initialFlip,
     Box clampingRect = Box.largest,
     Constraints constraints = const Constraints.unconstrained(),
-    bool flipRect = true,
+    bool allowBoxFlipping = true,
     bool allowResizeOverflow = false,
   }) {
     if (handle == HandlePosition.none) {
@@ -86,12 +86,12 @@ class BoxTransformer {
 
     // getFlipForBox uses delta instead of localPosition to know exactly when
     // to flip based on the current local position of the mouse cursor.
-    final Flip currentFlip = !flipRect
+    final Flip currentFlip = !allowBoxFlipping
         ? Flip.none
         : getFlipForBox(initialBox, delta, handle, resizeMode);
 
     // This sets the constraints such that it reflects flipRect state.
-    if (flipRect && (constraints.minWidth == 0 || constraints.minHeight == 0)) {
+    if (allowBoxFlipping && (constraints.minWidth == 0 || constraints.minHeight == 0)) {
       // Rect flipping is enabled, but minWidth or minHeight is 0 which
       // means it won't be able to flip. So we update the constraints
       // to allow flipping.
@@ -105,7 +105,7 @@ class BoxTransformer {
         maxWidth: constraints.maxWidth,
         maxHeight: constraints.maxHeight,
       );
-    } else if (!flipRect && constraints.isUnconstrained) {
+    } else if (!allowBoxFlipping && constraints.isUnconstrained) {
       // Rect flipping is disabled, but the constraints are unconstrained.
       // So we update the constraints to prevent flipping.
       constraints = Constraints(
@@ -128,7 +128,7 @@ class BoxTransformer {
       constraints: constraints,
       allowResizeOverflow: allowResizeOverflow,
       localPosition: localPosition,
-      flipRect: flipRect,
+      flipRect: allowBoxFlipping,
     );
 
     final Box newRect = result.rect;

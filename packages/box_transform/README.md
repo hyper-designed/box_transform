@@ -2,26 +2,27 @@
 
 # Box Transform
 
-[![melos](https://img.shields.io/badge/maintained%20with-melos-f700ff.svg?style=flat-square)](https://github.com/invertase/melos) [![Codemagic build status](https://api.codemagic.io/apps/63dd4d4ae6be1d561b8f45d2/63dd4d4ae6be1d561b8f45d1/status_badge.svg)](https://codemagic.io/apps/63dd4d4ae6be1d561b8f45d2/63dd4d4ae6be1d561b8f45d1/latest_build) [![Tests](https://github.com/hyper-designed/box_transform/workflows/Tests/badge.svg?branch=main)](https://github.com/hyper-designed/box_transform/actions) [![Pub Version](https://img.shields.io/pub/v/box_transform?label=Pub)](https://pub.dev/packages/box_transform) 
+[![melos](https://img.shields.io/badge/maintained%20with-melos-f700ff.svg?style=flat-square)](https://github.com/invertase/melos) [![Codemagic build status](https://api.codemagic.io/apps/63dd4d4ae6be1d561b8f45d2/63dd4d4ae6be1d561b8f45d1/status_badge.svg)](https://codemagic.io/apps/63dd4d4ae6be1d561b8f45d2/63dd4d4ae6be1d561b8f45d1/latest_build) [![Tests](https://github.com/hyper-designed/box_transform/workflows/Tests/badge.svg?branch=main)](https://github.com/hyper-designed/box_transform/actions) [![Pub Version](https://img.shields.io/pub/v/box_transform?label=Pub)](https://pub.dev/packages/box_transform)
 
-Box Transform is a pure-Dart base package that allows you to programmatically handle box resizing and dragging without
-relying on Flutter. It provides highly flexible, programmatically resizable and draggable boxes that can be used in any
-Dart project.
+[Box Transform](https://github.com/hyper-designed/box_transform) is a pure-Dart base package that allows you to
+programmatically handle box resizing and dragging without relying on Flutter. It provides a highly flexible,
+programmatically resizable and draggable boxes that can be used in any Dart project.
 
 ## Features
 
-* 📏 **Dimension Constraining:** Set maximum and minimum constraints to keep boxes within specific boundaries while resizing.
+* 📏 **Dimension Constraining:** Set maximum and minimum constraints to keep boxes within specific boundaries while
+  resizing.
 * 🔁 **Flipping Mechanics:** Advanced positional-flipping when resizing hits extreme values with hard constraints.
-* 🔒 **Drag Clamping:** Clamp boxes inside a parent box to contain them within a specific area.
-* 🎨 **Flexible Resizing Modes:** Choose from four different resizing modes for more flexibility in how boxes are resized.
+* 🔒 **Drag Clamping:** Specify clamping boxes to keep your transformable boxes within a specific region.
+* 🎨 **Flexible Resizing Modes:** Choose from four different resizing modes for more flexibility in how boxes are
+  resized.
 * 📍 **Customizable Anchor Points:** Define resizing corner-handles to anchor different parts of the box when resizing.
-* 🎨 **Customizable Handles:** Use default resizing handles or define your own custom handles.
-* 🚀 **Easy Integration:** Integrate Box Transform into your Dart project with ease using stateless and static functions.
+* 🚀 **Easy Integration:** Integrate Box Transform into your Dart or Flutter project with ease.
 
 ## Getting started
 
 Go to the [Getting Started](https://docs.page/hyper-designed/box_transform/get_started) page of the
-[documentation](docsite) to start using Box Transform.
+[documentation](https://boxtransform.hyperdesigned.dev/) to start using Box Transform.
 
 ### Live Demo: [box-transform.codemagic.app](https://box-transform.codemagic.app)
 
@@ -43,6 +44,8 @@ See [DEVELOPMENT.md](https://github.com/BirjuVachhani/adaptive_theme/blob/main/d
     <td align="center"><a href="https://github.com/SaadArdati"><img src="https://avatars.githubusercontent.com/u/7407478?v=4" width="100px;" alt=""/><br /><sub><b>Saad Ardati</b></sub></a></td>
   </tr>
 </table>
+
+Feel free to join our Discord server for any inquiries or support: https://discord.gg/yrahEhCqTJ
 
 ## License
 
