@@ -262,7 +262,6 @@ class TransformableBoxController extends ChangeNotifier {
       clampingRect: clampingRect,
       constraints: constraints,
       flipRect: flipWhileResizing,
-      allowResizeOverflow: allowResizeOverflow,
     );
 
     rect = result.rect;
@@ -309,7 +308,6 @@ class TransformableBoxController extends ChangeNotifier {
       initialFlip: initialFlip,
       constraints: constraints,
       flipRect: flipWhileResizing,
-      allowResizeOverflow: allowResizeOverflow,
     );
 
     rect = result.rect;
