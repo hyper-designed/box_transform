@@ -27,9 +27,9 @@ final class FreeformResizeHandler extends ResizeHandler {
     bool isValid = true;
     if (!constraints.isUnconstrained) {
       final constrainedWidth =
-      newRect.width.clamp(constraints.minWidth, constraints.maxWidth);
+          newRect.width.clamp(constraints.minWidth, constraints.maxWidth);
       final constrainedHeight =
-      newRect.height.clamp(constraints.minHeight, constraints.maxHeight);
+          newRect.height.clamp(constraints.minHeight, constraints.maxHeight);
 
       newRect = Box.fromHandle(
         flippedHandle.anchor(effectiveInitialRect),

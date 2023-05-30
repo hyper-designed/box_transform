@@ -1,7 +1,6 @@
 import 'dart:developer';
 import 'dart:math' hide log;
 
-import 'package:meta/meta.dart';
 import 'package:vector_math/vector_math.dart';
 
 import '../box_transform.dart';
