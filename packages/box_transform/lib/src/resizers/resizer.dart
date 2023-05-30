@@ -2,7 +2,9 @@ library resize_handlers;
 
 import 'dart:math';
 
-import '../../box_transform.dart';
+import '../enums.dart';
+import '../geometry.dart';
+import '../helpers.dart';
 
 part 'freeform_resizing.dart';
 
@@ -13,16 +15,16 @@ part 'symmetric_resizing.dart';
 part 'symmetric_scale_resizing.dart';
 
 /// An abstract class the provides a common interface for all resize modes.
-sealed class ResizeHandler {
-  /// A default constructor for [ResizeHandler].
-  const ResizeHandler();
+sealed class Resizer {
+  /// A default constructor for [Resizer].
+  const Resizer();
 
-  /// Creates a [ResizeHandler] from the given [mode].
-  factory ResizeHandler.from(ResizeMode mode) => switch (mode) {
-        ResizeMode.freeform => const FreeformResizeHandler(),
-        ResizeMode.scale => const ScaleResizeHandler(),
-        ResizeMode.symmetric => const SymmetricResizeHandler(),
-        ResizeMode.symmetricScale => const SymmetricScaleResizeHandler(),
+  /// Creates a [Resizer] from the given [mode].
+  factory Resizer.from(ResizeMode mode) => switch (mode) {
+        ResizeMode.freeform => const FreeformResizer(),
+        ResizeMode.scale => const ScaleResizer(),
+        ResizeMode.symmetric => const SymmetricResizer(),
+        ResizeMode.symmetricScale => const SymmetricScaleResizer(),
       };
 
   /// Resizes the given [explodedRect] to fit within the [clampingRect].
