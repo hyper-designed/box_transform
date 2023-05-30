@@ -4,17 +4,20 @@ title: Using a controller
 
 ## Using a controller
 
-`TransformableBox` can use a controller if provided. This is the most flexible method and allows you to
-control the transformable box externally with proper state management.
+`TransformableBox` uses a controller pattern. This is the most flexible pattern and allows you to control the
+transformable box externally with proper state management.
 
 To create a controller, you can use the `TransformableBoxController` class. It mirrors a lot of the observed parameters
-in the constructor excluding `contentBuilder`, `handleBuilder`, `handleGestureResponseDiameter` and
-`handleRenderedDiameter` since these are accessibility and rendering specific features.
+in the constructor excluding `contentBuilder`, `handleBuilder`, and `handleTapSize` since these are accessibility and
+rendering features.
 
-<Warning>When using a controller, you should not use the following parameters: **_box_**, **_flip_**, **_clampingBox_**, **_constraints_**,
-and **_resolveResizeModeCallback_**. These are all intrinsically managed by the controller.</Warning>
+<Warning>When using a controller, you should move these parameters from your `TransformableBox` to the constructor of
+the `TransformableBoxController`: **_box_**, **_flip_**, **_clampingBox_**, **_constraints_**, and
+**_resolveResizeModeCallback_**. These are all intrinsically managed by the controller.
 
-Initialize a controller and provide.
+There must always be only one source of truth, either the `TransformableBox` or the `TransformableBoxController`, not both.</Warning>
+
+Initialize a controller like so:
 
 ```dart title="Initializing a controller"
   late final TransformableBoxController controller;
@@ -57,7 +60,7 @@ Remove the listener when no longer needed.
 
 ```dart title="Removing a listener"
   controller.removeListener(onControllerChanged);
-``` 
+```
 ### Setting constraints
 
 You can set constraints on the controller using the `setConstraints` method.
@@ -81,8 +84,8 @@ You can limit the movements of the controller using the `setClampingBox` method.
 
 ### Other things you can do with a controller
 
-Controller almost mirrors the constructor parameters. You can do things like setting rect, flip, constraints, 
-clampingRect, disabling resizing or moving, etc.
+The `TransformableBoxController` almost mirrors the constructor parameters of the `TransformableBox`. You can do things
+like setting a rect, flip, constraints, clampingRect, disabling resizing or moving, etc...
 
 ```dart title="Things controller can do"
 // Change current rect

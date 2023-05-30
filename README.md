@@ -5,26 +5,26 @@
 [![melos](https://img.shields.io/badge/maintained%20with-melos-f700ff.svg?style=flat-square)](https://github.com/invertase/melos) [![Codemagic build status](https://api.codemagic.io/apps/63dd4d4ae6be1d561b8f45d2/63dd4d4ae6be1d561b8f45d1/status_badge.svg)](https://codemagic.io/apps/63dd4d4ae6be1d561b8f45d2/63dd4d4ae6be1d561b8f45d1/latest_build) [![Tests](https://github.com/hyper-designed/box_transform/workflows/Tests/badge.svg?branch=main)](https://github.com/hyper-designed/box_transform/actions) [![codecov](https://codecov.io/gh/BirjuVachhani/box_transform/branch/main/graph/badge.svg?token=SX5FXDUD7A)](https://codecov.io/gh/BirjuVachhani/box_transform)
 
 [Box Transform][github] provides packages that allows you to programmatically handle box resizing and dragging. 
-It provides highly flexible, programmatically resizable and draggable boxes that can be used in any Dart or Flutter 
-project. A library for advanced resizing of rect in UI.
+It provides a highly flexible, programmatically resizable and draggable boxes that can be used in any Dart or Flutter 
+project.
 
 ## Packages
 
-| Package               | Pub                                                                                                                            | Description                                                                                                                              |
-|-----------------------|--------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
-| box_transform         | [![Pub Version](https://img.shields.io/pub/v/box_transform?label=Pub)](https://pub.dev/packages/box_transform)                 | A pure Dart implementation of transformation operations that doesn't rely on Flutter.                                                    |
-| flutter_box_transform | [![Pub Version](https://img.shields.io/pub/v/flutter_box_transform?label=Pub)](https://pub.dev/packages/flutter_box_transform) | A Flutter implementation of Box Transform that provides flexible, customization and easy to use interface tailored for Flutter projects. |
+| Package               | Pub                                                                                                                            | Description                                                                                                              |
+|-----------------------|--------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
+| box_transform         | [![Pub Version](https://img.shields.io/pub/v/box_transform?label=Pub)](https://pub.dev/packages/box_transform)                 | A pure Dart implementation for box transformation operations that does not rely on Flutter.                              |
+| flutter_box_transform | [![Pub Version](https://img.shields.io/pub/v/flutter_box_transform?label=Pub)](https://pub.dev/packages/flutter_box_transform) | A Flutter implementation that provides a flexible, customizable and easy to use interface tailored for Flutter projects. |
 
 
 ## Features
 
 * 📏 **Dimension Constraining:** Set maximum and minimum constraints to keep boxes within specific boundaries while resizing.
 * 🔁 **Flipping Mechanics:** Advanced positional-flipping when resizing hits extreme values with hard constraints.
-* 🔒 **Drag Clamping:** Clamp boxes inside a parent box to contain them within a specific area.
+* 🔒 **Drag Clamping:** Specify clamping boxes to keep your transformable boxes within a specific region.
 * 🎨 **Flexible Resizing Modes:** Choose from four different resizing modes for more flexibility in how boxes are resized.
 * 📍 **Customizable Anchor Points:** Define resizing corner-handles to anchor different parts of the box when resizing.
 * 🎨 **Customizable Handles:** Use default resizing handles or define your own custom handles.
-* 🚀 **Easy Integration:** Integrate Box Transform into your dart or flutter project with ease.
+* 🚀 **Easy Integration:** Integrate Box Transform into your Dart or Flutter project with ease.
 
 ## Getting Started
 
@@ -51,6 +51,8 @@ See [DEVELOPMENT.md][development] for development setup.
     <td align="center"><a href="https://github.com/SaadArdati"><img src="https://avatars.githubusercontent.com/u/7407478?v=4" width="100px;" alt=""/><br /><sub><b>Saad Ardati</b></sub></a></td>
   </tr>
 </table>
+
+Feel free to join our Discord server for any inquiries or support: https://discord.gg/yrahEhCqTJ
 
 ## License
 

@@ -19,24 +19,27 @@ when no modifier keys are pressed.
 <Image alt="Scale Resize Mode" caption="Resizing while preserving aspect ratio" src="assets/resize_scale.gif" />
 
 This mode is similar to `ResizeMode.freeform`, but it preserves the **aspect ratio** of the rectangle.
-This means that if you resize the rectangle from the right edge, it will also resize from the left edge, but the aspect
-ratio will be preserved. This mode is usually activated when the `SHIFT` key is pressed.
+This means that if you resize the rectangle from the right edge, it will also resize from the top and bottom edge so
+that the aspect ratio stays exactly the same.
+
+This mode is usually activated when the `SHIFT` key is pressed.
 
 ## ResizeMode.symmetric
 
 <Image alt="Symmetric Resize Mode" caption="Resizing w.r.t the center" src="assets/resize_symmetric.gif" />
 
-
 This mode is similar to `ResizeMode.freeform`, but it is symmetric with respect to the **center**
 of the rectangle. This means that if you resize the rectangle from the right edge, it will also resize from the left
-edge. This mode is useful when you want to resize the rectangle from the center. This mode is usually activated when
-the `ALT` key is pressed.
+edge. This mode is useful when you want to resize the rectangle from the center.
+
+This mode is usually activated when the `ALT` or `OPTION` key is pressed.
 
 ## ResizeMode.symmetricScale
 
 <Image alt="Symmetric Scale Resize Mode" caption="Resizing w.r.t the center while preserving aspect ratio" src="assets/resize_symmetric_scale.gif" />
 
-This mode is similar to `ResizeMode.scale`, but it is symmetric with respect to the **center**
-of the rectangle. This means that if you resize the rectangle from the bottom-right corner, it will also resize from the
-top-left corner while preserving the **aspect ratio**. This mode is usually activated when both the `ALT` and `SHIFT` keys are
-pressed.
+This mode is similar to `ResizeMode.scale`, but it is symmetric with respect to the **center** of the rectangle. This
+means that if you resize the rectangle from the bottom-right corner, it will also resize from the top-left corner while
+also preserving the **aspect ratio**.
+
+This mode is usually activated when both the `ALT`/`OPTION` and `SHIFT` keys are pressed.

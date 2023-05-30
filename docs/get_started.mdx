@@ -6,7 +6,7 @@ title: Getting Started
 
 ## Installation
 
-Add this package as dependency in your `pubspec.yaml` file:
+Add this package to your dependencies in your `pubspec.yaml` file:
 
 ```dart
   dependencies:
@@ -35,7 +35,7 @@ You can call the `BoxTransformer.resize` method to resize a box. The method take
 
 ```dart title="Resizing a Box"
   final Box rect = Box.fromLTWH(50, 50, 100, 100);
-  
+
   final ResizeResult result = BoxTransformer.resize(
     handle: HandlePosition.bottomRight, // handle that is being dragged
     initialRect: rect,
@@ -44,10 +44,10 @@ You can call the `BoxTransformer.resize` method to resize a box. The method take
     resizeMode: ResizeMode.freeform,
     initialFlip: Flip.none,
   );
-  
+
   result.rect; // the new rect
 ```
-<Info>You can also use an **_isolates_** for these simultaneous resizing operations since this is a pure dart implementation.</Info>
+<Info>You can also use a **_isolates_** for these simultaneous resizing operations since this is a pure dart implementation.</Info>
 
 You can use `BoxTransformer.move` to move a box.
 
@@ -58,6 +58,6 @@ You can use `BoxTransformer.move` to move a box.
     initialLocalPosition: Vector2.zero(),
     localPosition: Vector2.zero(),
   );
-  
+
   result.position; // the new position of the box
 ```

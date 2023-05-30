@@ -4,12 +4,13 @@ title: Resize Handles
 
 # Resize Handles
 
-By default, circular resize handles are used to resize the box. These handles ideal for are highly customizable and
-can be used to create any type of resize handles.
+By default, circular resize handles are used to resize the box. These handles are ideal for accessibility and can be
+modified to create any type of resize handles.
 
-Use `handleTapSize` to change the size of the invisible interactive handle area that is used to resize the box.
+Use `handleTapSize` to change the size of the invisible interactive gesture area that is used to resize the box.
+The handle tap size is always larger than the handle to improve accessibility.
 
-<Warning>Changing `handleTapSize` doesn't change the size of the default handle UI.</Warning>
+<Warning>Changing `handleTapSize` does not change the size of the handle UI.</Warning>
 
 ```dart title="Custom sized default handles"
   TransformableBox(
@@ -21,9 +22,9 @@ Use `handleTapSize` to change the size of the invisible interactive handle area 
   );
 ```
 
-You can customize the default handles or build your own handles using `cornerHandleBuilder` and `sideHandleBuilder` 
-properties in `TransformableBox` constructor. It provides access to the `Buildcontext` and `HandlePosition` of 
-the handle.
+You can customize the default handles or build your own handles using the `cornerHandleBuilder` and `sideHandleBuilder`
+properties in the `TransformableBox` constructor. They both provide access to the `BuildContext` and `HandlePosition`
+of the appropriate handle.
 
 You can use `handleAlign` on `TransformableBox` to change the position of the handle's interactive area. By default,
 the interactive area is aligned to the center of box corner/side.
@@ -89,7 +90,7 @@ customize the default handles by providing a custom `decoration` and `size` to t
   );
 ```
 
-Since, side handles are not square, you can use `length` and `thickness` properties to customize the size of the
+Since, side handles are not square, you can use the `length` and `thickness` properties to customize the size of the
 side handles.
 
 ## Custom Handles
@@ -107,12 +108,12 @@ to build the handles.
     onChanged: (event) {...},
     contentBuilder: (context, rect, flip) {...},
   );
-``` 
+```
 ## Angular Handles
 
 You can use `AngularHandle` to build angular handles that look like corner brackets.
 
-<Image alt="Angular Handles" src="assets/angular_handles.png" />
+<Image alt="Angular Handles" src="assets/angular_handles.png"/>
 
 <Info>`AngularHandle` can render both corner handles and side handles.</Info>
 
@@ -123,7 +124,7 @@ You can use `AngularHandle` to build angular handles that look like corner brack
     handleAlign: HandleAlign.inside,
     cornerHandleBuilder: (context, handle) {
       return AngularCornerHandle(
-        handle: handle, 
+        handle: handle,
         handleAlign: HandleAlign.inside,
       );
     },
@@ -140,4 +141,4 @@ You can use `AngularHandle` to build angular handles that look like corner brack
 
 Use `handleAlign` to align `AngularHandle` to the inside, outside or in the center of the box.
 
-<Image alt="Angular Handle Alignements" src="assets/angular_handle_alignments.png" />
+<Image alt="Angular Handle Alignements" src="assets/angular_handle_alignments.png"/>

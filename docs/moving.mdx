@@ -4,7 +4,7 @@ title: Moving
 
 # Moving/Dragging
 
-You can use `BoxTransformer.move` to move a box.
+You can use `BoxTransformer.move` to translate a box by some amount of pixels.
 
 ```dart title="Moving a box"
   final Box rect = Box.fromLTWH(50, 50, 100, 100);
@@ -13,10 +13,10 @@ You can use `BoxTransformer.move` to move a box.
     initialLocalPosition: Vector2.zero(),
     localPosition: Vector2.zero(),
   );
-  
+
   result.position; // the new position of the box
 ```
-`BoxTransformer.move` returns a `MoveResult` that contains information about the new position of the box. 
+`BoxTransformer.move` returns a `MoveResult` that contains information about the new position of the box.
 `result.position` is a `Vector2` that defines the new position of the box.
 
 ## Limiting movements
@@ -32,6 +32,6 @@ area.
     localPosition: Vector2.zero(),
     clampingRect: Box.fromLTWH(0, 0, 1000, 1000),
   );
-  
+
   result.position; // the new position of the box
 ```
