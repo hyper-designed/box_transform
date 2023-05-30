@@ -20,7 +20,7 @@ class UIBoxTransform {
     required transform.Flip initialFlip,
     ui.Rect clampingRect = ui.Rect.largest,
     widgets.BoxConstraints constraints = const widgets.BoxConstraints(),
-    bool flipRect = true,
+    bool allowFlipping = true,
   }) =>
       transform.BoxTransformer.resize(
         initialBox: initialRect.toBox(),
@@ -31,7 +31,7 @@ class UIBoxTransform {
         initialFlip: initialFlip,
         clampingRect: clampingRect.toBox(),
         constraints: constraints.toConstraints(),
-        allowFlipping: flipRect,
+        allowFlipping: allowFlipping,
       ).toUI();
 
   /// The Flutter wrapper for [transform.BoxTransformer.move].
