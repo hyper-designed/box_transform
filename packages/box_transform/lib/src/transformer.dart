@@ -119,7 +119,7 @@ class BoxTransformer {
 
     if (resizeMode.hasSymmetry) delta = Vector2(delta.x * 2, delta.y * 2);
 
-    (Box, Box, bool) result = _calculateNewBox(
+    ({Box rect, Box largest, bool hasValidFlip}) result = _calculateNewBox(
       initialBox: initialBox,
       handle: handle,
       delta: delta,
@@ -132,8 +132,8 @@ class BoxTransformer {
       flipRect: allowBoxFlipping,
     );
 
-    final Box newRect = result.$1;
-    final Box largestRect = result.$2;
+    final Box newRect = result.rect;
+    final Box largestRect = result.largest;
 
     // Detect terminal resizing, where the resizing reached a hard limit.
     bool minWidthReached = false;
@@ -240,7 +240,7 @@ class BoxTransformer {
     );
   }
 
-  static (Box, Box, bool) _calculateNewBox({
+  static ({Box rect, Box largest, bool hasValidFlip}) _calculateNewBox({
     required Box initialBox,
     required HandlePosition handle,
     required Vector2 delta,
@@ -262,50 +262,14 @@ class BoxTransformer {
       flipRect: flipRect,
     );
 
-    (Box rect, Box largestRect, bool isValid) result;
-    switch (resizeMode) {
-      case ResizeMode.freeform:
-        result = const FreeformResizeHandler().resize(
-          explodedRect: explodedRect,
-          clampingRect: clampingRect,
-          handle: handle,
-          constraints: constraints,
-          initialRect: initialBox,
-          flip: flip,
-        );
-        break;
-      case ResizeMode.symmetric:
-        result = const SymmetricResizeHandler().resize(
-          explodedRect: explodedRect,
-          clampingRect: clampingRect,
-          handle: handle,
-          constraints: constraints,
-          initialRect: initialBox,
-          flip: flip,
-        );
-        break;
-      case ResizeMode.scale:
-        result = const ScaleResizeHandler().resize(
-          explodedRect: explodedRect,
-          clampingRect: clampingRect,
-          handle: handle,
-          constraints: constraints,
-          initialRect: initialBox,
-          flip: flip,
-        );
-        break;
-      case ResizeMode.symmetricScale:
-        result = const SymmetricScaleResizeHandler().resize(
-          explodedRect: explodedRect,
-          clampingRect: clampingRect,
-          handle: handle,
-          constraints: constraints,
-          initialRect: initialBox,
-          flip: flip,
-        );
-        break;
-    }
-
-    return result;
+    final ResizeHandler resizer = ResizeHandler.from(resizeMode);
+    return resizer.resize(
+      explodedRect: explodedRect,
+      clampingRect: clampingRect,
+      handle: handle,
+      constraints: constraints,
+      initialRect: initialBox,
+      flip: flip,
+    );
   }
 }

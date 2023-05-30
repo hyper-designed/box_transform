@@ -6,7 +6,7 @@ final class SymmetricScaleResizeHandler extends ResizeHandler {
   const SymmetricScaleResizeHandler();
 
   @override
-  (Box, Box, bool) resize({
+  ({Box rect, Box largest, bool hasValidFlip}) resize({
     required Box initialRect,
     required Box explodedRect,
     required Box clampingRect,
@@ -43,7 +43,7 @@ final class SymmetricScaleResizeHandler extends ResizeHandler {
   }
 
   /// Handles the symmetric resize mode for corner handles.
-  (Box, Box, bool) handleScaleSymmetricCorner(
+  ({Box rect, Box largest, bool hasValidFlip}) handleScaleSymmetricCorner(
     Box rect,
     Box initialRect,
     Box clampingRect,
@@ -115,16 +115,16 @@ final class SymmetricScaleResizeHandler extends ResizeHandler {
 
     if (rect.width > maxRect.width || rect.height > maxRect.height) {
       rect = maxRect;
-      return (maxRect, maxRect, true);
+      return (rect: maxRect, largest: maxRect, hasValidFlip: true);
     } else if (rect.width < minRect.width || rect.height < minRect.height) {
-      return (minRect, maxRect, true);
+      return (rect: minRect, largest: maxRect, hasValidFlip: true);
     }
 
-    return (rect, maxRect, true);
+    return (rect: rect, largest: maxRect, hasValidFlip: true);
   }
 
   /// Handles the symmetric resize mode for side handles.
-  (Box, Box, bool) handleScaleSymmetricSide(
+  ({Box rect, Box largest, bool hasValidFlip}) handleScaleSymmetricSide(
     Box rect,
     Box initialRect,
     Box clampingRect,
@@ -194,11 +194,11 @@ final class SymmetricScaleResizeHandler extends ResizeHandler {
 
     if (rect.width > maxRect.width || rect.height > maxRect.height) {
       rect = maxRect;
-      return (maxRect, maxRect, true);
+      return (rect: maxRect, largest: maxRect, hasValidFlip: true);
     } else if (rect.width < minRect.width || rect.height < minRect.height) {
-      return (minRect, maxRect, true);
+      return (rect: minRect, largest: maxRect, hasValidFlip: true);
     }
 
-    return (rect, maxRect, true);
+    return (rect: rect, largest: maxRect, hasValidFlip: true);
   }
 }

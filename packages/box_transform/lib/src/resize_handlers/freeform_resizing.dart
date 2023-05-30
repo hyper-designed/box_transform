@@ -6,7 +6,7 @@ final class FreeformResizeHandler extends ResizeHandler {
   const FreeformResizeHandler();
 
   @override
-  (Box rect, Box largest, bool hasValidFlip) resize({
+  ({Box rect, Box largest, bool hasValidFlip}) resize({
     required Box initialRect,
     required Box explodedRect,
     required Box clampingRect,
@@ -60,6 +60,6 @@ final class FreeformResizeHandler extends ResizeHandler {
       clampingRect: clampingRect,
     );
 
-    return (newRect, area, isValid);
+    return (rect: newRect, largest: area, hasValidFlip: isValid);
   }
 }

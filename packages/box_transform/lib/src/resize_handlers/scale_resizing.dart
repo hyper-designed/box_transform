@@ -6,7 +6,7 @@ final class ScaleResizeHandler extends ResizeHandler {
   const ScaleResizeHandler();
 
   @override
-  (Box, Box, bool) resize({
+  ({Box rect, Box largest, bool hasValidFlip}) resize({
     required Box initialRect,
     required Box explodedRect,
     required Box clampingRect,
@@ -17,7 +17,7 @@ final class ScaleResizeHandler extends ResizeHandler {
     final flippedHandle = handle.flip(flip);
     final effectiveInitialRect = flipBox(initialRect, flip, handle);
 
-    (Box, Box, bool) result;
+    ({Box rect, Box largest, bool hasValidFlip}) result;
 
     switch (flippedHandle) {
       case HandlePosition.none:
@@ -56,15 +56,13 @@ final class ScaleResizeHandler extends ResizeHandler {
         break;
     }
 
-    final bool hasValidFlip = result.$3;
-    if (!hasValidFlip) {
+    if (!result.hasValidFlip) {
       // Since we can't flip the box, explodedRect (which is a raw rect with delta applied)
       // would be flipped so we can't use that because it would make the size
       // calculations wrong. Instead we use box from the result which is the
       // flipped box but with correct constraints applied. (min rect always).
-      final Box explodedRect = result.$1;
       return resize(
-        explodedRect: explodedRect,
+        explodedRect: result.rect,
         initialRect: initialRect,
         clampingRect: clampingRect,
         handle: handle,
@@ -78,7 +76,7 @@ final class ScaleResizeHandler extends ResizeHandler {
 
   /// Handle resizing for [HandlePosition.bottomRight] handle
   /// for [ResizeMode.scale].
-  (Box, Box, bool) handleBottomRight(
+  ({Box rect, Box largest, bool hasValidFlip}) handleBottomRight(
     Box rect,
     Box initialRect,
     Box clampingRect,
@@ -143,11 +141,11 @@ final class ScaleResizeHandler extends ResizeHandler {
 
     final isValid = isValidBox(rect, constraints, clampingRect);
 
-    return (rect, largest, isValid);
+    return (rect: rect, largest: largest, hasValidFlip: isValid);
   }
 
   /// Handle resizing for the right handle.
-  (Box, Box, bool) handleRight(
+  ({Box rect, Box largest, bool hasValidFlip}) handleRight(
     Box rect,
     Box initialRect,
     Box clampingRect,
@@ -219,11 +217,11 @@ final class ScaleResizeHandler extends ResizeHandler {
 
     final isValid = isValidBox(rect, constraints, clampingRect);
 
-    return (rect, largest, isValid);
+    return (rect: rect, largest: largest, hasValidFlip: isValid);
   }
 
   /// handle resizing for the left handle
-  (Box, Box, bool) handleLeft(
+  ({Box rect, Box largest, bool hasValidFlip}) handleLeft(
     Box rect,
     Box initialRect,
     Box clampingRect,
@@ -295,11 +293,11 @@ final class ScaleResizeHandler extends ResizeHandler {
 
     final isValid = isValidBox(rect, constraints, clampingRect);
 
-    return (rect, largest, isValid);
+    return (rect: rect, largest: largest, hasValidFlip: isValid);
   }
 
   /// handle resizing for the bottom handle.
-  (Box, Box, bool) handleBottom(
+  ({Box rect, Box largest, bool hasValidFlip}) handleBottom(
     Box rect,
     Box initialRect,
     Box clampingRect,
@@ -371,11 +369,11 @@ final class ScaleResizeHandler extends ResizeHandler {
 
     final isValid = isValidBox(rect, constraints, clampingRect);
 
-    return (rect, largest, isValid);
+    return (rect: rect, largest: largest, hasValidFlip: isValid);
   }
 
   /// handle resizing for the top handle.
-  (Box, Box, bool) handleTop(
+  ({Box rect, Box largest, bool hasValidFlip}) handleTop(
     Box rect,
     Box initialRect,
     Box clampingRect,
@@ -447,12 +445,12 @@ final class ScaleResizeHandler extends ResizeHandler {
 
     final isValid = isValidBox(rect, constraints, clampingRect);
 
-    return (rect, largest, isValid);
+    return (rect: rect, largest: largest, hasValidFlip: isValid);
   }
 
   /// Handle resizing for [HandlePosition.topLeft] handle
   /// for [ResizeMode.scale].
-  (Box, Box, bool) handleTopLeft(
+  ({Box rect, Box largest, bool hasValidFlip}) handleTopLeft(
     Box rect,
     Box initialRect,
     Box clampingRect,
@@ -517,12 +515,12 @@ final class ScaleResizeHandler extends ResizeHandler {
 
     final isValid = isValidBox(rect, constraints, clampingRect);
 
-    return (rect, largest, isValid);
+    return (rect: rect, largest: largest, hasValidFlip: isValid);
   }
 
   /// Handle resizing for [HandlePosition.bottomLeft] handle
   /// for [ResizeMode.scale].
-  (Box, Box, bool) handleBottomLeft(
+  ({Box rect, Box largest, bool hasValidFlip}) handleBottomLeft(
     Box rect,
     Box initialRect,
     Box clampingRect,
@@ -587,12 +585,12 @@ final class ScaleResizeHandler extends ResizeHandler {
 
     final isValid = isValidBox(rect, constraints, clampingRect);
 
-    return (rect, largest, isValid);
+    return (rect: rect, largest: largest, hasValidFlip: isValid);
   }
 
   /// Handle resizing for [HandlePosition.topRight] handle
   /// for [ResizeMode.scale].
-  (Box, Box, bool) handleTopRight(
+  ({Box rect, Box largest, bool hasValidFlip}) handleTopRight(
     Box rect,
     Box initialRect,
     Box clampingRect,
@@ -657,6 +655,6 @@ final class ScaleResizeHandler extends ResizeHandler {
 
     final isValid = isValidBox(rect, constraints, clampingRect);
 
-    return (rect, largest, isValid);
+    return (rect: rect, largest: largest, hasValidFlip: isValid);
   }
 }
