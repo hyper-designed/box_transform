@@ -6,7 +6,7 @@ final class SymmetricResizeHandler extends ResizeHandler {
   const SymmetricResizeHandler();
 
   @override
-  (Box, Box, bool) resize({
+  ({Box rect, Box largest, bool hasValidFlip}) resize({
     required Box initialRect,
     required Box explodedRect,
     required Box clampingRect,
@@ -55,6 +55,6 @@ final class SymmetricResizeHandler extends ResizeHandler {
       height: min(area.height, max(explodedRect.height, minRect.height)),
     );
 
-    return (newRect, area, true);
+    return (rect: newRect, largest: area, hasValidFlip: true);
   }
 }
