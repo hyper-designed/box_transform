@@ -261,7 +261,7 @@ class TransformableBoxController extends ChangeNotifier {
       initialFlip: initialFlip,
       clampingRect: clampingRect,
       constraints: constraints,
-      flipRect: flipWhileResizing,
+      allowFlipping: flipWhileResizing,
     );
 
     rect = result.rect;
@@ -307,7 +307,7 @@ class TransformableBoxController extends ChangeNotifier {
       resizeMode: ResizeMode.scale,
       initialFlip: initialFlip,
       constraints: constraints,
-      flipRect: flipWhileResizing,
+      allowFlipping: flipWhileResizing,
     );
 
     rect = result.rect;
