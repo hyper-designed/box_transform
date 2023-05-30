@@ -11,7 +11,7 @@ void main() {
       initialBox: Box.fromLTWH(301, 351, 280, 160),
       handle: HandlePosition.topLeft,
       initialLocalPosition: Vector2(13, 14),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(223, 24),
     );
 
@@ -25,7 +25,7 @@ void main() {
       initialBox: Box.fromLTWH(510, 361, 70, 150),
       handle: HandlePosition.topLeft,
       initialLocalPosition: Vector2(13, 13),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(-268, -82),
     );
 
@@ -40,7 +40,7 @@ void main() {
       initialBox: Box.fromLTWH(230, 266, 350, 245),
       handle: HandlePosition.topLeft,
       initialLocalPosition: Vector2(14, 13),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(482, 462),
     );
 
@@ -55,7 +55,7 @@ void main() {
       initialBox: Box.fromLTWH(580, 511, 119, 205),
       handle: HandlePosition.bottomRight,
       initialLocalPosition: Vector2(14, 12),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(-424, 57),
     );
 
@@ -70,7 +70,7 @@ void main() {
       initialBox: Box.fromLTWH(261, 511, 320, 250),
       handle: HandlePosition.bottomLeft,
       initialLocalPosition: Vector2(16, 14),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(463, -504),
     );
 
@@ -85,7 +85,7 @@ void main() {
       initialBox: Box.fromLTWH(580, 243, 127, 268),
       handle: HandlePosition.topRight,
       initialLocalPosition: Vector2(16, 14),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(-298, 395),
     );
 
@@ -100,7 +100,7 @@ void main() {
       initialBox: Box.fromLTWH(394, 511, 186, 113),
       handle: HandlePosition.bottomLeft,
       initialLocalPosition: Vector2(6, 11),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(320, -2),
     );
 
@@ -115,7 +115,7 @@ void main() {
       initialBox: Box.fromLTWH(580, 511, 128, 100),
       handle: HandlePosition.bottomRight,
       initialLocalPosition: Vector2(5, 11),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(-323, -224),
     );
 
@@ -130,7 +130,7 @@ void main() {
       initialBox: Box.fromLTWH(380, 375, 200, 136),
       handle: HandlePosition.topLeft,
       initialLocalPosition: Vector2(12, 16),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(-309, -235),
     );
 
@@ -144,7 +144,7 @@ void main() {
       initialBox: Box.fromLTWH(60, 125, 521, 386),
       handle: HandlePosition.topLeft,
       initialLocalPosition: Vector2(10, 10),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(618, 651),
     );
 
@@ -160,7 +160,7 @@ void main() {
       initialBox: Box.fromLTWH(327, 272, 283, 186),
       handle: HandlePosition.topRight,
       initialLocalPosition: Vector2(14, 11),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(-185, 139),
     );
 
@@ -174,7 +174,7 @@ void main() {
       initialBox: Box.fromLTWH(327, 400, 84, 58),
       handle: HandlePosition.topRight,
       initialLocalPosition: Vector2(13, 10),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(273, -234),
     );
 
@@ -189,7 +189,7 @@ void main() {
       initialBox: Box.fromLTWH(327, 156, 344, 303),
       handle: HandlePosition.topRight,
       initialLocalPosition: Vector2(16, 12),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(-605, 144),
     );
 
@@ -203,7 +203,7 @@ void main() {
       initialBox: Box.fromLTWH(51, 287, 277, 171),
       handle: HandlePosition.topLeft,
       initialLocalPosition: Vector2(15, 12),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(201, 39),
     );
 
@@ -217,7 +217,7 @@ void main() {
       initialBox: Box.fromLTWH(236, 313, 91, 145),
       handle: HandlePosition.topLeft,
       initialLocalPosition: Vector2(13, 12),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(-172, 415),
     );
 
@@ -231,7 +231,7 @@ void main() {
       initialBox: Box.fromLTWH(51, 459, 276, 258),
       handle: HandlePosition.bottomLeft,
       initialLocalPosition: Vector2(13, 13),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(71, -139),
     );
 
@@ -246,7 +246,7 @@ void main() {
       initialBox: Box.fromLTWH(109, 459, 218, 105),
       handle: HandlePosition.bottomLeft,
       initialLocalPosition: Vector2(12, 10),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(586, 143),
     );
 
@@ -261,7 +261,7 @@ void main() {
       initialBox: Box.fromLTWH(327, 459, 356, 238),
       handle: HandlePosition.bottomRight,
       initialLocalPosition: Vector2(11, 15),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(-184, -119),
     );
 
@@ -276,7 +276,7 @@ void main() {
       initialBox: Box.fromLTWH(327, 459, 160, 103),
       handle: HandlePosition.bottomRight,
       initialLocalPosition: Vector2(16, 17),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(-10, -207),
     );
 
@@ -291,7 +291,7 @@ void main() {
       initialBox: Box.fromLTWH(327, 339, 134, 120),
       handle: HandlePosition.topRight,
       initialLocalPosition: Vector2(16, 17),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(206, -110),
     );
 
@@ -308,7 +308,7 @@ void main() {
       initialBox: Box.fromLTWH(138, 431, 238, 166),
       handle: HandlePosition.bottomLeft,
       initialLocalPosition: Vector2(11, 13),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(113, -66),
     );
 
@@ -322,7 +322,7 @@ void main() {
       initialBox: Box.fromLTWH(240, 431, 136, 88),
       handle: HandlePosition.bottomLeft,
       initialLocalPosition: Vector2(13, 15),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(-147, 166),
     );
 
@@ -336,7 +336,7 @@ void main() {
       initialBox: Box.fromLTWH(80, 431, 296, 239),
       handle: HandlePosition.bottomLeft,
       initialLocalPosition: Vector2(10, 11),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(-15, -534),
     );
 
@@ -350,7 +350,7 @@ void main() {
       initialBox: Box.fromLTWH(55, 126, 321, 305),
       handle: HandlePosition.topLeft,
       initialLocalPosition: Vector2(13, 13),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(170, 208),
     );
 
@@ -365,7 +365,7 @@ void main() {
       initialBox: Box.fromLTWH(213, 321, 163, 110),
       handle: HandlePosition.topLeft,
       initialLocalPosition: Vector2(16, 15),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(360, -4),
     );
 
@@ -380,7 +380,7 @@ void main() {
       initialBox: Box.fromLTWH(376, 302, 181, 129),
       handle: HandlePosition.topRight,
       initialLocalPosition: Vector2(18, 13),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(127, -172),
     );
 
@@ -395,7 +395,7 @@ void main() {
       initialBox: Box.fromLTWH(376, 117, 290, 314),
       handle: HandlePosition.topRight,
       initialLocalPosition: Vector2(18, 13),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(-105, 427),
     );
 
@@ -409,7 +409,7 @@ void main() {
       initialBox: Box.fromLTWH(376, 431, 166, 99),
       handle: HandlePosition.bottomRight,
       initialLocalPosition: Vector2(12, 7),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(143, 142),
     );
 
@@ -424,7 +424,7 @@ void main() {
       initialBox: Box.fromLTWH(376, 431, 297, 234),
       handle: HandlePosition.bottomRight,
       initialLocalPosition: Vector2(11, 8),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(-636, 62),
     );
 
@@ -438,7 +438,7 @@ void main() {
       initialBox: Box.fromLTWH(27, 431, 350, 288),
       handle: HandlePosition.bottomLeft,
       initialLocalPosition: Vector2(13, 10),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(243, -181),
     );
 
@@ -454,7 +454,7 @@ void main() {
       initialBox: Box.fromLTWH(257, 431, 120, 97),
       handle: HandlePosition.bottomRight,
       initialLocalPosition: Vector2(14, 14),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(272, 171),
     );
 
@@ -469,7 +469,7 @@ void main() {
       initialBox: Box.fromLTWH(257, 431, 377, 255),
       handle: HandlePosition.bottomRight,
       initialLocalPosition: Vector2(14, 14),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(-213, -127),
     );
 
@@ -484,7 +484,7 @@ void main() {
       initialBox: Box.fromLTWH(257, 431, 151, 114),
       handle: HandlePosition.bottomRight,
       initialLocalPosition: Vector2(14, 14),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(-373, 22),
     );
 
@@ -498,7 +498,7 @@ void main() {
       initialBox: Box.fromLTWH(21, 431, 236, 123),
       handle: HandlePosition.bottomLeft,
       initialLocalPosition: Vector2(14, 14),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(155, 6),
     );
 
@@ -512,7 +512,7 @@ void main() {
       initialBox: Box.fromLTWH(162, 431, 94, 115),
       handle: HandlePosition.bottomLeft,
       initialLocalPosition: Vector2(14, 13),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(10, -253),
     );
 
@@ -526,7 +526,7 @@ void main() {
       initialBox: Box.fromLTWH(157, 281, 99, 151),
       handle: HandlePosition.topLeft,
       initialLocalPosition: Vector2(13, 13),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(-118, -20),
     );
 
@@ -540,7 +540,7 @@ void main() {
       initialBox: Box.fromLTWH(26, 248, 231, 183),
       handle: HandlePosition.topLeft,
       initialLocalPosition: Vector2(13, 12),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(647, -64),
     );
 
@@ -555,7 +555,7 @@ void main() {
       initialBox: Box.fromLTWH(257, 172, 403, 259),
       handle: HandlePosition.topRight,
       initialLocalPosition: Vector2(17, 9),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(-248, 124),
     );
 
@@ -570,7 +570,7 @@ void main() {
       initialBox: Box.fromLTWH(257, 287, 138, 144),
       handle: HandlePosition.topRight,
       initialLocalPosition: Vector2(17, 15),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(27, 258),
     );
 
@@ -584,7 +584,7 @@ void main() {
       initialBox: Box.fromLTWH(257, 431, 148, 99),
       handle: HandlePosition.bottomRight,
       initialLocalPosition: Vector2(15, 14),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(197, 136),
     );
 
@@ -601,7 +601,7 @@ void main() {
       initialBox: Box.fromLTWH(318, 373, 232, 165),
       handle: HandlePosition.right,
       initialLocalPosition: Vector2(15, 72),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(-152, 71),
     );
 
@@ -615,7 +615,7 @@ void main() {
       initialBox: Box.fromLTWH(318, 373, 66, 165),
       handle: HandlePosition.right,
       initialLocalPosition: Vector2(13, 73),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(311, 57),
     );
 
@@ -630,7 +630,7 @@ void main() {
       initialBox: Box.fromLTWH(318, 373, 363, 165),
       handle: HandlePosition.right,
       initialLocalPosition: Vector2(13, 71),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(-626, 68),
     );
 
@@ -644,7 +644,7 @@ void main() {
       initialBox: Box.fromLTWH(42, 373, 276, 165),
       handle: HandlePosition.left,
       initialLocalPosition: Vector2(11, 69),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(180, 63),
     );
 
@@ -659,7 +659,7 @@ void main() {
       initialBox: Box.fromLTWH(211, 373, 107, 165),
       handle: HandlePosition.left,
       initialLocalPosition: Vector2(12, 67),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(238, 87),
     );
 
@@ -674,7 +674,7 @@ void main() {
       initialBox: Box.fromLTWH(318, 373, 119, 165),
       handle: HandlePosition.right,
       initialLocalPosition: Vector2(8, 79),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(194, 71),
     );
 
@@ -691,7 +691,7 @@ void main() {
       initialBox: Box.fromLTWH(271, 398, 178, 126),
       handle: HandlePosition.left,
       initialLocalPosition: Vector2(12, 51),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(-176, 39),
     );
 
@@ -705,7 +705,7 @@ void main() {
       initialBox: Box.fromLTWH(83, 398, 366, 126),
       handle: HandlePosition.left,
       initialLocalPosition: Vector2(13, 49),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(289, 42),
     );
 
@@ -719,7 +719,7 @@ void main() {
       initialBox: Box.fromLTWH(359, 398, 90, 126),
       handle: HandlePosition.left,
       initialLocalPosition: Vector2(12, 50),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(172, 54),
     );
 
@@ -733,7 +733,7 @@ void main() {
       initialBox: Box.fromLTWH(450, 398, 69, 126),
       handle: HandlePosition.right,
       initialLocalPosition: Vector2(12, 53),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(188, 43),
     );
 
@@ -748,7 +748,7 @@ void main() {
       initialBox: Box.fromLTWH(450, 398, 245, 126),
       handle: HandlePosition.right,
       initialLocalPosition: Vector2(14, 53),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(-577, 64),
     );
 
@@ -763,7 +763,7 @@ void main() {
       initialBox: Box.fromLTWH(105, 398, 345, 126),
       handle: HandlePosition.left,
       initialLocalPosition: Vector2(12, 59),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(183, 64),
     );
 
@@ -780,7 +780,7 @@ void main() {
       initialBox: Box.fromLTWH(275, 398, 174, 126),
       handle: HandlePosition.bottom,
       initialLocalPosition: Vector2(78, 13),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(77, 251),
     );
 
@@ -795,7 +795,7 @@ void main() {
       initialBox: Box.fromLTWH(275, 398, 174, 364),
       handle: HandlePosition.bottom,
       initialLocalPosition: Vector2(80, 15),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(63, -224),
     );
 
@@ -810,7 +810,7 @@ void main() {
       initialBox: Box.fromLTWH(275, 398, 174, 124),
       handle: HandlePosition.bottom,
       initialLocalPosition: Vector2(79, 15),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(72, -472),
     );
 
@@ -824,7 +824,7 @@ void main() {
       initialBox: Box.fromLTWH(275, 35, 174, 363),
       handle: HandlePosition.top,
       initialLocalPosition: Vector2(74, 11),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(68, 243),
     );
 
@@ -839,7 +839,7 @@ void main() {
       initialBox: Box.fromLTWH(275, 266, 174, 132),
       handle: HandlePosition.top,
       initialLocalPosition: Vector2(77, 13),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(49, 549),
     );
 
@@ -854,7 +854,7 @@ void main() {
       initialBox: Box.fromLTWH(275, 398, 174, 405),
       handle: HandlePosition.bottom,
       initialLocalPosition: Vector2(71, 13),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(66, -257),
     );
 
@@ -871,7 +871,7 @@ void main() {
       initialBox: Box.fromLTWH(275, 398, 174, 135),
       handle: HandlePosition.top,
       initialLocalPosition: Vector2(78, 9),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(94, -307),
     );
 
@@ -885,7 +885,7 @@ void main() {
       initialBox: Box.fromLTWH(275, 81, 174, 452),
       handle: HandlePosition.top,
       initialLocalPosition: Vector2(82, 14),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(78, 317),
     );
 
@@ -900,7 +900,7 @@ void main() {
       initialBox: Box.fromLTWH(275, 384, 174, 149),
       handle: HandlePosition.top,
       initialLocalPosition: Vector2(82, 11),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(78, 276),
     );
 
@@ -915,7 +915,7 @@ void main() {
       initialBox: Box.fromLTWH(275, 533, 174, 116),
       handle: HandlePosition.bottom,
       initialLocalPosition: Vector2(78, 11),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(74, 258),
     );
 
@@ -930,7 +930,7 @@ void main() {
       initialBox: Box.fromLTWH(275, 533, 174, 363),
       handle: HandlePosition.bottom,
       initialLocalPosition: Vector2(76, 13),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(89, -833),
     );
 
@@ -944,7 +944,7 @@ void main() {
       initialBox: Box.fromLTWH(275, 50, 174, 483),
       handle: HandlePosition.top,
       initialLocalPosition: Vector2(77, 13),
-      allowBoxFlipping: true,
+      allowFlipping: true,
       localPosition: Vector2(86, 380),
     );
 

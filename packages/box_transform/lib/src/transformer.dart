@@ -77,8 +77,7 @@ class BoxTransformer {
     required Flip initialFlip,
     Box clampingRect = Box.largest,
     Constraints constraints = const Constraints.unconstrained(),
-    bool allowBoxFlipping = true,
-    bool allowResizeOverflow = false,
+    bool allowFlipping = true,
   }) {
     if (handle == HandlePosition.none) {
       log('Using bottomRight handle instead of none.');
@@ -89,12 +88,12 @@ class BoxTransformer {
 
     // getFlipForBox uses delta instead of localPosition to know exactly when
     // to flip based on the current local position of the mouse cursor.
-    final Flip currentFlip = !allowBoxFlipping
+    final Flip currentFlip = !allowFlipping
         ? Flip.none
         : getFlipForBox(initialBox, delta, handle, resizeMode);
 
     // This sets the constraints such that it reflects flipRect state.
-    if (allowBoxFlipping &&
+    if (allowFlipping &&
         (constraints.minWidth == 0 || constraints.minHeight == 0)) {
       // Rect flipping is enabled, but minWidth or minHeight is 0 which
       // means it won't be able to flip. So we update the constraints
@@ -109,7 +108,7 @@ class BoxTransformer {
         maxWidth: constraints.maxWidth,
         maxHeight: constraints.maxHeight,
       );
-    } else if (!allowBoxFlipping && constraints.isUnconstrained) {
+    } else if (!allowFlipping && constraints.isUnconstrained) {
       // Rect flipping is disabled, but the constraints are unconstrained.
       // So we update the constraints to prevent flipping.
       constraints = Constraints(
@@ -120,19 +119,28 @@ class BoxTransformer {
       );
     }
 
+    // Symmetric resizing requires the delta to be doubled since it grows or
+    // shrinks in all directions from center.
     if (resizeMode.hasSymmetry) delta = Vector2(delta.x * 2, delta.y * 2);
 
-    ({Box rect, Box largest, bool hasValidFlip}) result = _calculateNewBox(
+    // No constraints or clamping is done. Only delta is applied to the
+    // initial box.
+    Box explodedRect = _applyDelta(
       initialBox: initialBox,
       handle: handle,
       delta: delta,
-      flip: currentFlip,
       resizeMode: resizeMode,
+      allowFlipping: allowFlipping,
+    );
+
+    final Resizer resizer = Resizer.from(resizeMode);
+    final ({Box rect, Box largest, bool hasValidFlip}) result = resizer.resize(
+      explodedRect: explodedRect,
       clampingRect: clampingRect,
+      handle: handle,
       constraints: constraints,
-      allowResizeOverflow: allowResizeOverflow,
-      localPosition: localPosition,
-      flipRect: allowBoxFlipping,
+      initialRect: initialBox,
+      flip: currentFlip,
     );
 
     final Box newRect = result.rect;
@@ -187,7 +195,7 @@ class BoxTransformer {
     required HandlePosition handle,
     required Vector2 delta,
     required ResizeMode resizeMode,
-    required bool flipRect,
+    required bool allowFlipping,
   }) {
     double left;
     double top;
@@ -202,7 +210,7 @@ class BoxTransformer {
     double width = right - left;
     double height = bottom - top;
 
-    if (flipRect) {
+    if (allowFlipping) {
       width = width.abs();
       height = height.abs();
     } else {
@@ -223,7 +231,7 @@ class BoxTransformer {
       top = initialBox.top + heightDelta;
       right = initialBox.right - widthDelta;
       bottom = initialBox.bottom - heightDelta;
-    } else if (!flipRect) {
+    } else if (!allowFlipping) {
       // If not flipping, then we know that handles are not allowed to
       // cross the opposite one. So we use handle with width and height
       // instead of left, top, right, bottom to construct the new box.
@@ -240,39 +248,6 @@ class BoxTransformer {
       min(top, bottom),
       max(left, right),
       max(top, bottom),
-    );
-  }
-
-  static ({Box rect, Box largest, bool hasValidFlip}) _calculateNewBox({
-    required Box initialBox,
-    required HandlePosition handle,
-    required Vector2 delta,
-    required Flip flip,
-    required ResizeMode resizeMode,
-    Box clampingRect = Box.largest,
-    Constraints constraints = const Constraints.unconstrained(),
-    bool allowResizeOverflow = true,
-    required Vector2 localPosition,
-    required bool flipRect,
-  }) {
-    // No constraints or clamping is done. Only delta is applied to the
-    // initial box.
-    Box explodedRect = _applyDelta(
-      initialBox: initialBox,
-      handle: handle,
-      delta: delta,
-      resizeMode: resizeMode,
-      flipRect: flipRect,
-    );
-
-    final Resizer resizer = Resizer.from(resizeMode);
-    return resizer.resize(
-      explodedRect: explodedRect,
-      clampingRect: clampingRect,
-      handle: handle,
-      constraints: constraints,
-      initialRect: initialBox,
-      flip: flip,
     );
   }
 }
