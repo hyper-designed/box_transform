@@ -101,14 +101,16 @@ void main() {
   });
 
   test('InternalResizeResult equality tests', () {
-    final result1 = InternalResizeResult(
-      rect: Box.fromLTRB(100, 100, 500, 400),
-      largest: Box.fromLTRB(100, 100, 1000, 1000),
+    final result1 = (
+      Box.fromLTRB(100, 100, 500, 400),
+      Box.fromLTRB(100, 100, 1000, 1000),
+      true,
     );
 
-    final result2 = InternalResizeResult(
-      rect: Box.fromLTRB(100, 100, 500, 400),
-      largest: Box.fromLTRB(100, 100, 1000, 1000),
+    final result2 = (
+      Box.fromLTRB(100, 100, 500, 400),
+      Box.fromLTRB(100, 100, 1000, 1000),
+      true,
     );
 
     expect(result1, result2);
