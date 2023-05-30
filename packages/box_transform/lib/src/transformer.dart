@@ -3,8 +3,11 @@ import 'dart:math' hide log;
 
 import 'package:vector_math/vector_math.dart';
 
-import '../box_transform.dart';
-import 'resize_handlers/resize_handler.dart';
+import 'enums.dart';
+import 'geometry.dart';
+import 'helpers.dart';
+import 'resizers/resizer.dart';
+import 'result.dart';
 
 /// A class that transforms a [Box] in several different supported forms.
 class BoxTransformer {
@@ -262,7 +265,7 @@ class BoxTransformer {
       flipRect: flipRect,
     );
 
-    final ResizeHandler resizer = ResizeHandler.from(resizeMode);
+    final Resizer resizer = Resizer.from(resizeMode);
     return resizer.resize(
       explodedRect: explodedRect,
       clampingRect: clampingRect,

@@ -1,9 +1,9 @@
-part of 'resize_handler.dart';
+part of 'resizer.dart';
 
 /// Handles resizing for [ResizeMode.freeform].
-final class FreeformResizeHandler extends ResizeHandler {
-  /// A default constructor for [FreeformResizeHandler].
-  const FreeformResizeHandler();
+final class FreeformResizer extends Resizer {
+  /// A default constructor for [FreeformResizer].
+  const FreeformResizer();
 
   @override
   ({Box rect, Box largest, bool hasValidFlip}) resize({

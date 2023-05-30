@@ -1,9 +1,9 @@
-part of 'resize_handler.dart';
+part of 'resizer.dart';
 
 /// Handles resizing for [ResizeMode.symmetric].
-final class SymmetricResizeHandler extends ResizeHandler {
-  /// A default constructor for [SymmetricResizeHandler].
-  const SymmetricResizeHandler();
+final class SymmetricResizer extends Resizer {
+  /// A default constructor for [SymmetricResizer].
+  const SymmetricResizer();
 
   @override
   ({Box rect, Box largest, bool hasValidFlip}) resize({
