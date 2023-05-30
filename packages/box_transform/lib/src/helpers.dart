@@ -234,18 +234,18 @@ Vector2? intersectionBetweenTwoLines(
 
 /// Extends given line to the given rectangle such that it touches the
 /// rectangle.
-List<Vector2>? extendLineToRect(Box rect, Vector2 p1, Vector2 p2) {
-  final result = extendLinePointsToRectPoints(
+(Vector2, Vector2)? extendLineToRect(Box rect, Vector2 p1, Vector2 p2) {
+  final (double, double, double, double)? result = extendLinePointsToRectPoints(
       rect.left, rect.top, rect.right, rect.bottom, p1.x, p1.y, p2.x, p2.y);
 
   if (result == null) return null;
 
-  return [Vector2(result[0], result[1]), Vector2(result[2], result[3])];
+  return (Vector2(result.$1, result.$2), Vector2(result.$3, result.$4));
 }
 
 /// Extends given line to the given rectangle such that it touches the
 /// rectangle points.
-List<double>? extendLinePointsToRectPoints(
+(double, double, double, double)? extendLinePointsToRectPoints(
   double left,
   double top,
   double right,
@@ -256,10 +256,10 @@ List<double>? extendLinePointsToRectPoints(
   double y2,
 ) {
   if (y1 == y2) {
-    return [left, y1, right, y1];
+    return (left, y1, right, y1);
   }
   if (x1 == x2) {
-    return [x1, top, x1, bottom];
+    return (x1, top, x1, bottom);
   }
 
   double yForLeft = y1 + (y2 - y1) * (left - x1) / (x2 - x1);
@@ -272,25 +272,25 @@ List<double>? extendLinePointsToRectPoints(
       yForLeft <= bottom &&
       top <= yForRight &&
       yForRight <= bottom) {
-    return [left, yForLeft, right, yForRight];
+    return (left, yForLeft, right, yForRight);
   } else if (top <= yForLeft && yForLeft <= bottom) {
     if (left <= xForBottom && xForBottom <= right) {
-      return [left, yForLeft, xForBottom, bottom];
+      return (left, yForLeft, xForBottom, bottom);
     } else if (left <= xForTop && xForTop <= right) {
-      return [left, yForLeft, xForTop, top];
+      return (left, yForLeft, xForTop, top);
     }
   } else if (top <= yForRight && yForRight <= bottom) {
     if (left <= xForTop && xForTop <= right) {
-      return [xForTop, top, right, yForRight];
+      return (xForTop, top, right, yForRight);
     }
     if (left <= xForBottom && xForBottom <= right) {
-      return [xForBottom, bottom, right, yForRight];
+      return (xForBottom, bottom, right, yForRight);
     }
   } else if (left <= xForTop &&
       xForTop <= right &&
       left <= xForBottom &&
       xForBottom <= right) {
-    return [xForTop, top, xForBottom, bottom];
+    return (xForTop, top, xForBottom, bottom);
   }
   return null;
 }
@@ -311,8 +311,8 @@ HandlePosition intersectionBetweenRects({
       extendLineToRect(outerRect, innerRect.center, innerRect.topRight)!;
 
   final intersections1 = findLineIntersection(
-    line1[0],
-    line1[1],
+    line1.$1,
+    line1.$2,
     outerRect,
     innerRect,
   );
@@ -320,8 +320,8 @@ HandlePosition intersectionBetweenRects({
   intersections1.remove(excludeHandle);
 
   final intersections2 = findLineIntersection(
-    line2[0],
-    line2[1],
+    line2.$1,
+    line2.$2,
     outerRect,
     innerRect,
   );
