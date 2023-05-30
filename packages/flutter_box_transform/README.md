@@ -5,7 +5,7 @@
 [![melos](https://img.shields.io/badge/maintained%20with-melos-f700ff.svg?style=flat-square)](https://github.com/invertase/melos) [![Codemagic build status](https://api.codemagic.io/apps/63dd4d4ae6be1d561b8f45d2/63dd4d4ae6be1d561b8f45d1/status_badge.svg)](https://codemagic.io/apps/63dd4d4ae6be1d561b8f45d2/63dd4d4ae6be1d561b8f45d1/latest_build) [![Pub Version](https://img.shields.io/pub/v/box_transform?label=Pub)](https://pub.dev/packages/box_transform)
 
 [Flutter Box Transform](https://github.com/hyper-designed/box_transform) is a [Flutter](https://flutter.dev) package
-that allows you to programmatically handle box resizing and dragging using Flutter widgets. It provides a highly
+that allows you to programmatically handle box resizing and dragging using Flutter widgets. It provides highly
 flexible, programmatically resizable and draggable boxes that can be used in any Flutter project.
 
 This package uses [Box Transform](https://pub.dev/packages/box_transform) APIs internally.
