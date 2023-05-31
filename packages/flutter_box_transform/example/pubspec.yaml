@@ -1,23 +1,19 @@
 name: example
 description: A new Flutter project.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: 'none'
 
-version: 0.1.0+1
+version: 1.0.0+1
 
 environment:
-  sdk: '>=2.18.0 <3.0.0'
-  flutter: ">=3.3.0"
+  sdk: '>=3.0.2 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
-  adaptive_theme: ^3.2.0
-  url_launcher: ^6.1.10
+  adaptive_theme: ^3.2.1
+  url_launcher: ^6.1.11
   provider: ^6.0.5
-  equatable: ^2.0.5
-  dart_style: ^2.3.0
   vector_math: ^2.1.4
-  file_picker: ^5.2.11
   flutter_box_transform:
     path: ../
   box_transform:
@@ -31,15 +27,3 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  assets:
-    - assets/icons/ic_flip.png
-    - assets/images/image1.jpg
-    - assets/images/image2.jpg
-    - assets/images/image3.jpg
-    - assets/images/image4.jpg
-    - assets/images/image5.jpg
-    - assets/images/image6.jpg
-    - assets/images/image7.jpg
-    - assets/images/image8.jpg
-    - assets/images/image9.jpg
-    - assets/images/image10.jpg

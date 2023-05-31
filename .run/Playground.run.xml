@@ -1,6 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Test Recorder" type="FlutterRunConfigurationType" factoryName="Flutter">
-    <option name="additionalArgs" value="--dart-define=test_recorder=true" />
+  <configuration default="false" name="Playground" type="FlutterRunConfigurationType" factoryName="Flutter">
     <option name="filePath" value="$PROJECT_DIR$/packages/flutter_box_transform/playground/lib/main.dart" />
     <method v="2" />
   </configuration>
