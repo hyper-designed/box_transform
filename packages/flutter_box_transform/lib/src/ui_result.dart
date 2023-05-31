@@ -1,7 +1,6 @@
 import 'dart:ui';
 
 import 'package:box_transform/box_transform.dart';
-import 'package:flutter/gestures.dart';
 
 /// A convenient type alias for a [ResizeResult] with Flutter's [Rect], [Offset]
 /// and [Size] types.
