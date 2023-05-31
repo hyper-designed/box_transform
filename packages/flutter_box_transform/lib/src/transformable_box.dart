@@ -19,42 +19,76 @@ typedef TransformableChildBuilder = Widget Function(
 );
 
 /// A callback that is called when the box is moved or resized.
-typedef OnBoxChanged = void Function(UITransformResult result);
+typedef RectChangeEvent = void Function(
+  UITransformResult result,
+  PointerMoveEvent event,
+);
 
-/// A callback that is called when the box is moved.
-typedef OnBoxMoved = void Function(UIMoveResult result);
+/// A callback that is called when the box begins a drag operation.
+typedef RectDragStartEvent = void Function(
+  UIMoveResult result,
+  PointerMoveEvent event,
+);
 
-/// A callback that is called when the box is resized.
-typedef OnBoxResized = void Function(UIResizeResult result);
+/// A callback that is called when the box is being dragged.
+typedef RectDragUpdateEvent = void Function(
+  UIMoveResult result,
+  PointerMoveEvent event,
+);
+
+/// A callback that is called when the box ends a drag operation.
+/// [event] is either [PointerUpEvent] or [PointerCancelEvent].
+typedef RectDragEndEvent = void Function(
+  UIMoveResult result,
+  PointerEvent event,
+);
+
+/// A callback that is called when the box begins a resize operation.
+typedef RectResizeStart = void Function(
+  HandlePosition handle,
+  PointerDownEvent event,
+);
+
+/// A callback that is called when the box is being resized.
+typedef RectResizeUpdateEvent = void Function(
+  UIResizeResult result,
+  PointerMoveEvent event,
+);
+
+/// A callback that is called when the box ends a resize operation.
+/// [event] is either [PointerUpEvent] or [PointerCancelEvent].
+typedef RectResizeEnd = void Function(
+  HandlePosition handle,
+  PointerEvent event,
+);
 
 /// A callback that is called when the box reaches a terminal edge when
 /// resizing.
-typedef TerminalEdgeEvent = void Function(bool reached);
+/// [event] is either [PointerUpEvent] or [PointerCancelEvent].
+typedef TerminalEdgeEvent = void Function(
+  bool reached,
+  PointerEvent event,
+);
 
 /// A callback that is called when the box reaches a minimum or maximum size
 /// when resizing a specific axis.
-typedef TerminalAxisEvent = void Function(bool reachedMin, bool reachedMax);
+/// [event] is either [PointerUpEvent] or [PointerCancelEvent].
+typedef TerminalAxisEvent = void Function(
+  bool reachedMin,
+  bool reachedMax,
+  PointerEvent event,
+);
 
 /// A callback that is called when the box reaches a minimum or maximum size
 /// when resizing.
+/// [event] is either [PointerUpEvent] or [PointerCancelEvent].
 typedef TerminalEvent = void Function(
   bool reachedMinWidth,
   bool reachedMaxWidth,
   bool reachedMinHeight,
   bool reachedMaxHeight,
+  PointerEvent event,
 );
-
-/// A callback for pointer down events.
-typedef PointerDownCallback = void Function(Offset localPosition);
-
-/// A callback for pointer update events.
-typedef PointerUpdateCallback = void Function(
-  Offset localPosition,
-  HandlePosition handlePosition,
-);
-
-/// A callback for pointer up events.
-typedef PointerUpCallback = ValueChanged<Offset>;
 
 /// A default implementation of the corner [HandleBuilder] callback.
 Widget _defaultCornerHandleBuilder(
@@ -121,7 +155,7 @@ class TransformableBox extends StatefulWidget {
   ///
   /// [Rect] is immutable, so a new [Rect] instance will be created every time
   /// the [TransformableBoxController] mutates the box. You can acquire your
-  /// updated box through the [onChanged] callback or through an externally
+  /// updated box through the [onChangeUpdate] callback or through an externally
   /// provided [TransformableBoxController] instance.
   final Rect rect;
 
@@ -152,30 +186,69 @@ class TransformableBox extends StatefulWidget {
   /// resized by the [TransformableBoxController].
   final BoxConstraints constraints;
 
+  /// Whether the box is resizable or not. Setting this to false will disable
+  /// all resizing operations.
+  final bool resizable;
+
+  /// Whether the box should hide the corner/side resize controls when [resizable] is
+  /// false.
+  final bool hideHandlesWhenNotResizable;
+
+  /// Whether the box is movable or not. Setting this to false will disable
+  /// all moving operations.
+  final bool movable;
+
+  /// Whether to allow flipping of the box while resizing. If this is set to
+  /// true, the box will flip when the user drags the handles to opposite
+  /// corners of the rect.
+  final bool allowFlippingWhileResizing;
+
+  /// Decides whether to flip the contents of the box when the box is flipped.
+  /// If this is set to true, the contents will be flipped when the box is
+  /// flipped.
+  final bool allowContentFlipping;
+
+  /// How to align the handles.
+  final HandleAlignment handleAlignment;
+
+  /// The callback function that is used to resolve the [ResizeMode] based on
+  /// the pressed keys on the keyboard.
+  final ResizeModeResolver? resizeModeResolver;
+
   /// A callback that is called every time the [TransformableBox] is updated.
   /// This is called every time the [TransformableBoxController] mutates the box
   /// or the flip.
-  final OnBoxChanged? onChanged;
+  final RectChangeEvent? onChangeUpdate;
+
+  /// A callback that is called when [TransformableBox] triggers a pointer down
+  /// event to begin a drag operation.
+  final RectDragStartEvent? onDragStart;
 
   /// A callback that is called every time the [TransformableBox] is moved.
   /// This is called every time the [TransformableBoxController] mutates the
-  /// box.
+  /// box through a drag operation.
   ///
-  /// This is different from [onChanged] in that it is only called when the box
-  /// is moved, not when the box is resized.
-  final OnBoxMoved? onMoved;
+  /// This is different from [onChangeUpdate] in that it is only called when the
+  /// box is moved, not when the box is resized.
+  final RectDragUpdateEvent? onDragUpdate;
+
+  /// A callback that is called every time the [TransformableBox] is completes
+  /// its drag operation via pointer up or cancel events.
+  final RectDragEndEvent? onDragEnd;
+
+  /// A callback function that triggers when the box is about to start resizing.
+  final RectResizeStart? onResizeStart;
 
   /// A callback that is called every time the [TransformableBox] is resized.
   /// This is called every time the [TransformableBoxController] mutates the
   /// box.
   ///
-  /// This is different from [onChanged] in that it is only called when the box
+  /// This is different from [onChangeUpdate] in that it is only called when the box
   /// is resized, not when the box is moved.
-  final OnBoxResized? onResized;
+  final RectResizeUpdateEvent? onResizeUpdate;
 
-  /// The callback function that is used to resolve the [ResizeMode] based on
-  /// the pressed keys on the keyboard.
-  final ResolveResizeModeCallback? resolveResizeModeCallback;
+  /// A callback function that triggers when the box is about to end resizing.
+  final RectResizeEnd? onResizeEnd;
 
   /// A callback function that triggers when the box reaches its minimum width
   /// when resizing.
@@ -217,74 +290,29 @@ class TransformableBox extends StatefulWidget {
   /// [onTerminalHeightReached] into one callback function.
   final TerminalEvent? onTerminalSizeReached;
 
-  /// Whether the box is resizable or not. Setting this to false will disable
-  /// all resizing operations.
-  final bool resizable;
-
-  /// Whether the box should hide the corner/side resize controls when [resizable] is
-  /// false.
-  final bool hideHandlesWhenNotResizable;
-
-  /// Whether the box is movable or not. Setting this to false will disable
-  /// all moving operations.
-  final bool movable;
-
-  /// Whether to allow flipping of the box while resizing. If this is set to
-  /// true, the box will flip when the user drags the handles to opposite
-  /// corners of the rect.
-  final bool flipWhileResizing;
-
-  /// Decides whether to flip the contents of the box when the box is flipped.
-  /// If this is set to true, the contents will be flipped when the box is
-  /// flipped.
-  final bool allowContentFlipping;
-
-  /// How to align the handles.
-  final HandleAlign handleAlign;
-
-  /// Whether to allow the box to overflow the resize operation to its opposite
-  /// side to continue the resize operation until its constrained on both sides.
-  ///
-  /// If this is set to false, the box will cease the resize operation the
-  /// instant it hits an edge of the [clampingRect].
-  ///
-  /// If this is set to true, the box will continue the resize operation until
-  /// it is constrained to both sides of the [clampingRect].
-  final bool allowResizeOverflow;
-
-  /// A callback function that triggers when the box is about to start resizing.
-  final ValueChanged<ResizeStartEvent>? onResizeStart;
-
-  /// A callback function that triggers when the box is about to end resizing.
-  final ValueChanged<ResizeEndEvent>? onResizeEnd;
-
   /// Creates a [TransformableBox] widget.
   const TransformableBox({
     super.key,
     required this.contentBuilder,
-    this.onChanged,
-    this.onMoved,
-    this.onResized,
     this.controller,
     this.cornerHandleBuilder = _defaultCornerHandleBuilder,
     this.sideHandleBuilder = _defaultSideHandleBuilder,
     this.handleTapSize = 24,
-
-    // Additional controls.
-    this.resizable = true,
-    this.movable = true,
-    this.flipWhileResizing = true,
     this.allowContentFlipping = true,
-    this.handleAlign = HandleAlign.center,
     this.hideHandlesWhenNotResizable = true,
-    this.allowResizeOverflow = true,
+    this.handleAlignment = HandleAlignment.center,
 
     // Raw values.
     Rect? rect,
     Flip? flip,
     Rect? clampingRect,
     BoxConstraints? constraints,
-    ResolveResizeModeCallback? resolveResizeModeCallback,
+    ResizeModeResolver? resizeModeResolver,
+
+    // Additional controls.
+    this.resizable = true,
+    this.movable = true,
+    this.allowFlippingWhileResizing = true,
 
     // Terminal update events.
     this.onMinWidthReached,
@@ -294,26 +322,42 @@ class TransformableBox extends StatefulWidget {
     this.onTerminalWidthReached,
     this.onTerminalHeightReached,
     this.onTerminalSizeReached,
+
+    // Resize events
     this.onResizeStart,
+    this.onResizeUpdate,
     this.onResizeEnd,
+
+    // Drag Events.
+    this.onDragStart,
+    this.onDragUpdate,
+    this.onDragEnd,
+    this.onChangeUpdate,
   })  : assert(
-          controller == null ||
-              (rect == null &&
-                  flip == null &&
-                  clampingRect == null &&
-                  constraints == null &&
-                  resolveResizeModeCallback == null),
-          'You can either provide a [controller] OR a [box], [flip], '
-          '[clampingRect], [constraints], and [resolveResizeModeCallback]. '
-          'You cannot use any of those properties when providing a controller '
-          'and vice versa.',
+          (controller == null) != (rect == null),
+          'Either provide a controller or a rect, not both. If you wish to use a controller, you cannot use the other parameters.',
+        ),
+        assert(
+          (controller == null) != (flip == null),
+          'Either provide a controller or a flip, not both. If you wish to use a controller, you cannot use the other parameters.',
+        ),
+        assert(
+          (controller == null) != (clampingRect == null),
+          'Either provide a controller or a clampingRect, not both. If you wish to use a controller, you cannot use the other parameters.',
+        ),
+        assert(
+          (controller == null) != (constraints == null),
+          'Either provide a controller or a constraints, not both. If you wish to use a controller, you cannot use the other parameters.',
+        ),
+        assert(
+          (controller == null) != (resizeModeResolver == null),
+          'Either provide a controller or a resizeModeResolver, not both. If you wish to use a controller, you cannot use the other parameters.',
         ),
         rect = rect ?? Rect.zero,
         flip = flip ?? Flip.none,
         clampingRect = clampingRect ?? Rect.largest,
         constraints = constraints ?? const BoxConstraints.expand(),
-        resolveResizeModeCallback =
-            resolveResizeModeCallback ?? defaultResolveResizeModeCallback;
+        resizeModeResolver = resizeModeResolver ?? defaultResizeModeResolver;
 
   @override
   State<TransformableBox> createState() => _TransformableBoxState();
@@ -332,17 +376,16 @@ class _TransformableBoxState extends State<TransformableBox> {
       controller.addListener(onControllerUpdate);
     } else {
       // If it is provided internally, we should not listen to it.
-      controller = TransformableBoxController()
-        ..rect = widget.rect
-        ..flip = widget.flip
-        ..clampingRect = widget.clampingRect
-        ..constraints = widget.constraints
-        ..resolveResizeModeCallback = widget.resolveResizeModeCallback
-        ..movable = widget.movable
-        ..resizable = widget.resizable
-        ..flipWhileResizing = widget.flipWhileResizing
-        ..flipChild = widget.allowContentFlipping
-        ..allowResizeOverflow = widget.allowResizeOverflow;
+      controller = TransformableBoxController(
+        rect: widget.rect,
+        flip: widget.flip,
+        clampingRect: widget.clampingRect,
+        constraints: widget.constraints,
+        resizeModeResolver: widget.resizeModeResolver,
+        allowFlippingWhileResizing: widget.allowFlippingWhileResizing,
+        resizable: widget.resizable,
+        movable: widget.movable,
+      );
     }
   }
 
@@ -359,72 +402,78 @@ class _TransformableBoxState extends State<TransformableBox> {
     } else if (oldWidget.controller != null && widget.controller == null) {
       // Explicit controller removed.
       controller.removeListener(onControllerUpdate);
-      controller = TransformableBoxController()
-        ..rect = widget.rect
-        ..flip = widget.flip
-        ..clampingRect = widget.clampingRect
-        ..constraints = widget.constraints
-        ..resolveResizeModeCallback = widget.resolveResizeModeCallback
-        ..resizable = widget.resizable
-        ..hideHandlesWhenNotResizable = widget.hideHandlesWhenNotResizable
-        ..movable = widget.movable
-        ..flipWhileResizing = widget.flipWhileResizing
-        ..flipChild = widget.allowContentFlipping
-        ..allowResizeOverflow = widget.allowResizeOverflow;
+      controller = TransformableBoxController(
+        rect: widget.rect,
+        flip: widget.flip,
+        clampingRect: widget.clampingRect,
+        constraints: widget.constraints,
+        resizeModeResolver: widget.resizeModeResolver,
+        allowFlippingWhileResizing: widget.allowFlippingWhileResizing,
+        resizable: widget.resizable,
+        movable: widget.movable,
+      );
     }
 
     // Return if the controller is external.
     if (widget.controller != null) return;
 
     // Below code should only be executed if the controller is internal.
+    bool shouldRecalculatePosition = false;
+    bool shouldRecalculateSize = false;
 
     if (oldWidget.rect != widget.rect) {
-      controller.rect = widget.rect;
+      controller.setRect(widget.rect, notify: false);
     }
 
     if (oldWidget.flip != widget.flip) {
-      controller.flip = widget.flip;
+      controller.setFlip(widget.flip, notify: false);
     }
 
-    if (oldWidget.resolveResizeModeCallback !=
-        widget.resolveResizeModeCallback) {
-      controller.resolveResizeModeCallback = widget.resolveResizeModeCallback;
+    if (oldWidget.resizeModeResolver != widget.resizeModeResolver) {
+      controller.setResizeModeResolver(widget.resizeModeResolver,
+          notify: false);
     }
 
     if (oldWidget.clampingRect != widget.clampingRect) {
-      controller.clampingRect = widget.clampingRect;
-      controller.recalculatePosition(notify: false);
+      controller.setClampingRect(widget.clampingRect, notify: false);
+      shouldRecalculatePosition = true;
     }
 
     if (oldWidget.constraints != widget.constraints) {
-      controller.constraints = widget.constraints;
-      controller.recalculateSize(notify: false);
+      controller.setConstraints(widget.constraints, notify: false);
+      shouldRecalculateSize = true;
     }
 
     if (oldWidget.resizable != widget.resizable) {
-      controller.resizable = widget.resizable;
+      controller.setResizable(widget.resizable, notify: false);
     }
 
     if (oldWidget.hideHandlesWhenNotResizable !=
         widget.hideHandlesWhenNotResizable) {
-      controller.hideHandlesWhenNotResizable =
-          widget.hideHandlesWhenNotResizable;
+      controller.setHideHandlesWhenNotResizable(
+        widget.hideHandlesWhenNotResizable,
+        notify: false,
+      );
     }
 
     if (oldWidget.movable != widget.movable) {
-      controller.movable = widget.movable;
+      controller.setMovable(widget.movable, notify: false);
     }
 
-    if (oldWidget.allowContentFlipping != widget.allowContentFlipping) {
-      controller.flipChild = widget.allowContentFlipping;
+    if (oldWidget.allowFlippingWhileResizing !=
+        widget.allowFlippingWhileResizing) {
+      controller.setAllowFlippingWhileResizing(
+        widget.allowFlippingWhileResizing,
+        notify: false,
+      );
     }
 
-    if (oldWidget.flipWhileResizing != widget.flipWhileResizing) {
-      controller.flipWhileResizing = widget.flipWhileResizing;
+    if (shouldRecalculatePosition) {
+      controller.recalculatePosition(notify: false);
     }
 
-    if (oldWidget.allowResizeOverflow != widget.allowResizeOverflow) {
-      controller.allowResizeOverflow = widget.allowResizeOverflow;
+    if (shouldRecalculateSize) {
+      controller.recalculateSize(notify: false);
     }
   }
 
@@ -443,59 +492,56 @@ class _TransformableBoxState extends State<TransformableBox> {
   }
 
   /// Called when the handle drag starts.
-  void onHandlePanStart(Offset localPosition, HandlePosition handle) {
-    controller.onResizeStart(localPosition);
-    widget.onResizeStart?.call(ResizeStartEvent(
-      localPosition: localPosition,
-      handle: handle,
-    ));
+  void onPointerDown(PointerDownEvent event, HandlePosition handle) {
+    controller.onResizeStart(event.localPosition);
+    widget.onResizeStart?.call(handle, event);
   }
 
   /// Called when the handle drag updates.
-  void onHandlePanUpdate(Offset localPosition, HandlePosition handlePosition) {
+  void onPointerUpdate(PointerMoveEvent event, HandlePosition handlePosition) {
     if (!controller.resizable) return;
     final UIResizeResult result = controller.onResizeUpdate(
-      localPosition,
+      event.localPosition,
       handlePosition,
       notify: false,
     );
 
-    widget.onChanged?.call(result);
-    widget.onResized?.call(result);
-    widget.onMinWidthReached?.call(result.minWidthReached);
-    widget.onMaxWidthReached?.call(result.maxWidthReached);
-    widget.onMinHeightReached?.call(result.minHeightReached);
-    widget.onMaxHeightReached?.call(result.maxHeightReached);
+    widget.onChangeUpdate?.call(result, event);
+    widget.onResizeUpdate?.call(result, event);
+    widget.onMinWidthReached?.call(result.minWidthReached, event);
+    widget.onMaxWidthReached?.call(result.maxWidthReached, event);
+    widget.onMinHeightReached?.call(result.minHeightReached, event);
+    widget.onMaxHeightReached?.call(result.maxHeightReached, event);
     widget.onTerminalWidthReached?.call(
       result.minWidthReached,
       result.maxWidthReached,
+      event,
     );
     widget.onTerminalHeightReached?.call(
       result.minHeightReached,
       result.maxHeightReached,
+      event,
     );
     widget.onTerminalSizeReached?.call(
       result.minWidthReached,
       result.maxWidthReached,
       result.minHeightReached,
       result.maxHeightReached,
+      event,
     );
   }
 
   /// Called when the handle drag ends.
-  void onHandlePanEnd(HandlePosition handle, Offset localPosition) {
+  void onPointerUp(PointerEvent event, HandlePosition handle) {
     controller.onResizeEnd();
-    widget.onMinWidthReached?.call(false);
-    widget.onMaxWidthReached?.call(false);
-    widget.onMinHeightReached?.call(false);
-    widget.onMaxHeightReached?.call(false);
-    widget.onTerminalWidthReached?.call(false, false);
-    widget.onTerminalHeightReached?.call(false, false);
-    widget.onTerminalSizeReached?.call(false, false, false, false);
-    widget.onResizeEnd?.call(ResizeEndEvent(
-      localPosition: localPosition,
-      handle: handle,
-    ));
+    widget.onMinWidthReached?.call(false, event);
+    widget.onMaxWidthReached?.call(false, event);
+    widget.onMinHeightReached?.call(false, event);
+    widget.onMaxHeightReached?.call(false, event);
+    widget.onTerminalWidthReached?.call(false, false, event);
+    widget.onTerminalHeightReached?.call(false, false, event);
+    widget.onTerminalSizeReached?.call(false, false, false, false, event);
+    widget.onResizeEnd?.call(handle, event);
   }
 
   @override
@@ -503,14 +549,14 @@ class _TransformableBoxState extends State<TransformableBox> {
     final Flip flip = controller.flip;
     final Rect box = controller.rect;
     return Positioned.fromRect(
-      rect: box.inflate(widget.handleAlign.offset(widget.handleTapSize)),
+      rect: box.inflate(widget.handleAlignment.offset(widget.handleTapSize)),
       child: Stack(
         clipBehavior: Clip.none,
         fit: StackFit.expand,
         children: [
           Positioned(
-            left: widget.handleAlign.offset(widget.handleTapSize),
-            top: widget.handleAlign.offset(widget.handleTapSize),
+            left: widget.handleAlignment.offset(widget.handleTapSize),
+            top: widget.handleAlignment.offset(widget.handleTapSize),
             width: box.width,
             height: box.height,
             child: Listener(
@@ -523,14 +569,15 @@ class _TransformableBoxState extends State<TransformableBox> {
                   event.localPosition,
                   notify: false,
                 );
-                widget.onChanged?.call(result);
-                widget.onMoved?.call(result);
+                widget.onChangeUpdate?.call(result, event);
+                widget.onDragUpdate?.call(result, event);
               },
               onPointerUp: (event) => controller.onDragEnd(),
               onPointerCancel: (event) => controller.onDragEnd(),
               child: Transform.scale(
-                scaleX: controller.flipChild && flip.isHorizontal ? -1 : 1,
-                scaleY: controller.flipChild && flip.isVertical ? -1 : 1,
+                scaleX:
+                    widget.allowContentFlipping && flip.isHorizontal ? -1 : 1,
+                scaleY: widget.allowContentFlipping && flip.isVertical ? -1 : 1,
                 child: widget.contentBuilder(context, box, flip),
               ),
             ),
@@ -542,11 +589,10 @@ class _TransformableBoxState extends State<TransformableBox> {
                 handlePosition: handle,
                 handleTapSize: widget.handleTapSize,
                 builder: widget.cornerHandleBuilder,
-                onPointerDown: (localPosition) =>
-                    onHandlePanStart(localPosition, handle),
-                onPointerUpdate: onHandlePanUpdate,
-                onPointerUp: (localPosition) =>
-                    onHandlePanEnd(handle, localPosition),
+                onPointerDown: (event) => onPointerDown(event, handle),
+                onPointerUpdate: (event) => onPointerUpdate(event, handle),
+                onPointerUp: (event) => onPointerUp(event, handle),
+                onPointerCancel: (event) => onPointerUp(event, handle),
               ),
           if (controller.resizable || !controller.hideHandlesWhenNotResizable)
             for (final handle in HandlePosition.sides)
@@ -555,11 +601,10 @@ class _TransformableBoxState extends State<TransformableBox> {
                 handlePosition: handle,
                 handleTapSize: widget.handleTapSize,
                 builder: widget.sideHandleBuilder,
-                onPointerDown: (localPosition) =>
-                    onHandlePanStart(localPosition, handle),
-                onPointerUpdate: onHandlePanUpdate,
-                onPointerUp: (localPosition) =>
-                    onHandlePanEnd(handle, localPosition),
+                onPointerDown: (event) => onPointerDown(event, handle),
+                onPointerUpdate: (event) => onPointerUpdate(event, handle),
+                onPointerUp: (event) => onPointerUp(event, handle),
+                onPointerCancel: (event) => onPointerUp(event, handle),
               ),
         ],
       ),
@@ -580,13 +625,16 @@ class _CornerHandleWidget extends StatelessWidget {
   final double handleTapSize;
 
   /// Called when the handle dragging starts.
-  final PointerDownCallback onPointerDown;
+  final PointerDownEventListener onPointerDown;
 
   /// Called when the handle dragging is updated.
-  final PointerUpdateCallback onPointerUpdate;
+  final PointerMoveEventListener onPointerUpdate;
 
   /// Called when the handle dragging ends.
-  final PointerUpCallback onPointerUp;
+  final PointerUpEventListener onPointerUp;
+
+  /// Called when the handle dragging is canceled.
+  final PointerCancelEventListener onPointerCancel;
 
   /// Creates a new handle widget.
   _CornerHandleWidget({
@@ -597,6 +645,7 @@ class _CornerHandleWidget extends StatelessWidget {
     required this.onPointerDown,
     required this.onPointerUpdate,
     required this.onPointerUp,
+    required this.onPointerCancel,
   }) : assert(handlePosition.isDiagonal, 'A corner handle must be diagonal.');
 
   @override
@@ -610,18 +659,10 @@ class _CornerHandleWidget extends StatelessWidget {
       height: handleTapSize,
       child: Listener(
         behavior: HitTestBehavior.opaque,
-        onPointerDown: (event) {
-          onPointerDown(event.localPosition);
-        },
-        onPointerMove: (event) {
-          onPointerUpdate(event.localPosition, handlePosition);
-        },
-        onPointerUp: (event) {
-          onPointerUp(event.localPosition);
-        },
-        onPointerCancel: (event) {
-          onPointerUp(event.localPosition);
-        },
+        onPointerDown: onPointerDown,
+        onPointerMove: onPointerUpdate,
+        onPointerUp: onPointerUp,
+        onPointerCancel: onPointerCancel,
         child: MouseRegion(
           cursor: getCursorForHandle(handlePosition),
           child: builder(context, handlePosition),
@@ -658,13 +699,16 @@ class _SideHandleWidget extends StatelessWidget {
   final double handleTapSize;
 
   /// Called when the handle dragging starts.
-  final PointerDownCallback onPointerDown;
+  final PointerDownEventListener onPointerDown;
 
   /// Called when the handle dragging is updated.
-  final PointerUpdateCallback onPointerUpdate;
+  final PointerMoveEventListener onPointerUpdate;
 
   /// Called when the handle dragging ends.
-  final PointerUpCallback onPointerUp;
+  final PointerUpEventListener onPointerUp;
+
+  /// Called when the handle dragging is canceled.
+  final PointerCancelEventListener onPointerCancel;
 
   /// Creates a new handle widget.
   _SideHandleWidget({
@@ -675,6 +719,7 @@ class _SideHandleWidget extends StatelessWidget {
     required this.onPointerDown,
     required this.onPointerUpdate,
     required this.onPointerUp,
+    required this.onPointerCancel,
   }) : assert(handlePosition.isSide, 'A cardinal handle must be cardinal.');
 
   @override
@@ -704,18 +749,10 @@ class _SideHandleWidget extends StatelessWidget {
       height: handlePosition.isVertical ? handleTapSize : null,
       child: Listener(
         behavior: HitTestBehavior.opaque,
-        onPointerDown: (event) {
-          onPointerDown(event.localPosition);
-        },
-        onPointerMove: (event) {
-          onPointerUpdate(event.localPosition, handlePosition);
-        },
-        onPointerUp: (event) {
-          onPointerUp(event.localPosition);
-        },
-        onPointerCancel: (event) {
-          onPointerUp(event.localPosition);
-        },
+        onPointerDown: onPointerDown,
+        onPointerMove: onPointerUpdate,
+        onPointerUp: onPointerUp,
+        onPointerCancel: onPointerCancel,
         child: MouseRegion(
           cursor: getCursorForHandle(handlePosition),
           child: builder(context, handlePosition),
@@ -737,34 +774,4 @@ class _SideHandleWidget extends StatelessWidget {
         throw Exception('Invalid handle position.');
     }
   }
-}
-
-/// Represents a resize start event.
-class ResizeStartEvent {
-  /// The position of the handle that was used to start the resize.
-  final Offset localPosition;
-
-  /// The handle that was used to start the resize.
-  final HandlePosition handle;
-
-  /// Creates a new resize start event.
-  ResizeStartEvent({
-    required this.localPosition,
-    required this.handle,
-  });
-}
-
-/// Represents a resize update event.
-class ResizeEndEvent {
-  /// The position of the handle that was used to end the resize.
-  final Offset localPosition;
-
-  /// The handle that was used to end the resize.
-  final HandlePosition handle;
-
-  /// Creates a new resize update event.
-  ResizeEndEvent({
-    required this.handle,
-    required this.localPosition,
-  });
 }

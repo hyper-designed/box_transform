@@ -723,7 +723,7 @@ class _ImageBoxState extends State<ImageBox> {
           flip: box.flip,
           clampingRect: model.clampingEnabled ? model.clampingRect : null,
           constraints: box.constraintsEnabled ? box.constraints : null,
-          onChanged: (result) {
+          onChangeUpdate: (result, event) {
             widget.onChanged?.call(result);
             largestClampingBox = result.largestRect;
             setState(() {});
@@ -735,9 +735,8 @@ class _ImageBoxState extends State<ImageBox> {
               !widget.selected || box.hideHandlesWhenNotResizable,
           movable: widget.selected && box.movable,
           allowContentFlipping: box.flipChild,
-          flipWhileResizing: box.flipRectWhileResizing,
-          allowResizeOverflow: false,
-          onResizeStart: (event) {
+          allowFlippingWhileResizing: box.flipRectWhileResizing,
+          onResizeStart: (handle, event) {
             if (!showTestRecorder || !recorder.isRecording) return;
 
             log('Recording resize action');
@@ -745,14 +744,14 @@ class _ImageBoxState extends State<ImageBox> {
               resizeMode: currentResizeMode,
               flip: box.flip,
               rect: box.rect,
-              handle: event.handle,
+              handle: handle,
               cursorPosition: event.localPosition,
               clampingRect: model.clampingEnabled ? model.clampingRect : null,
               constraints: box.constraintsEnabled ? box.constraints : null,
               flipRect: box.flipRectWhileResizing,
             );
           },
-          onResizeEnd: (event) {
+          onResizeEnd: (handle, event) {
             if (!showTestRecorder ||
                 currentAction == null ||
                 !recorder.isRecording ||
@@ -771,6 +770,7 @@ class _ImageBoxState extends State<ImageBox> {
             bool reachedMaxWidth,
             bool reachedMinHeight,
             bool reachedMaxHeight,
+            event,
           ) {
             if (minWidthReached == reachedMinWidth &&
                 minHeightReached == reachedMinHeight &&
@@ -909,12 +909,13 @@ class _ClampingRectState extends State<ClampingRect> {
       flip: Flip.none,
       clampingRect: model.playgroundArea!,
       constraints: BoxConstraints(minWidth: minWidth, minHeight: minHeight),
-      onChanged: (result) => model.setClampingRect(result.rect),
+      onChangeUpdate: (result, event) => model.setClampingRect(result.rect),
       onTerminalSizeReached: (
         bool reachedMinWidth,
         bool reachedMaxWidth,
         bool reachedMinHeight,
         bool reachedMaxHeight,
+        event,
       ) {
         if (minWidthReached == reachedMinWidth &&
             minHeightReached == reachedMinHeight &&
@@ -928,18 +929,18 @@ class _ClampingRectState extends State<ClampingRect> {
           maxHeightReached = reachedMaxHeight;
         });
       },
-      handleAlign: HandleAlign.inside,
+      handleAlignment: HandleAlignment.inside,
       cornerHandleBuilder: (context, handle) => AngularHandle(
         handle: handle,
         color: mainColor,
         hasShadow: false,
-        handleAlign: HandleAlign.inside,
+        handleAlign: HandleAlignment.inside,
       ),
       sideHandleBuilder: (context, handle) => AngularHandle(
         handle: handle,
         color: mainColor,
         hasShadow: false,
-        handleAlign: HandleAlign.inside,
+        handleAlign: HandleAlignment.inside,
       ),
       contentBuilder: (context, _, flip) => Container(
         width: model.clampingRect.width,
