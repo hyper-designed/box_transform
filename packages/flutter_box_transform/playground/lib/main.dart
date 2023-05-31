@@ -60,7 +60,7 @@ class MyApp extends StatelessWidget {
         ),
         initial: AdaptiveThemeMode.system,
         builder: (theme, darkTheme) => MaterialApp(
-          title: 'Box Transform demo',
+          title: 'Box Transform Playground',
           debugShowCheckedModeBanner: false,
           theme: theme,
           darkTheme: darkTheme,
