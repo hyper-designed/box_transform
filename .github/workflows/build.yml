@@ -29,9 +29,23 @@ jobs:
         run: |
           cd packages/flutter_box_transform/example
           flutter build web --release
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+      - name: Deploy example
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_BOX_TRANSFORM_EXAMPLE }}'
           channelId: live
           projectId: box-transform-example
+          target: example
+      - name: Build Playground
+        run: |
+          cd packages/flutter_box_transform/playground
+          flutter build web --release
+      - name: Deploy playground
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_BOX_TRANSFORM_EXAMPLE }}'
+          channelId: live
+          projectId: box-transform-example
+          target: playground
