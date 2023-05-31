@@ -14,62 +14,61 @@ class BoxTransformer {
   /// A private constructor to prevent instantiation.
   const BoxTransformer._();
 
-  /// Calculates the new position of the [initialBox] based on the
+  /// Calculates the new position of the [initialRect] based on the
   /// [initialLocalPosition] of the mouse cursor and wherever [localPosition]
   /// of the mouse cursor is currently at.
   ///
-  /// The [clampingRect] is the box that the [initialBox] is not allowed
+  /// The [clampingRect] is the rect that the [initialRect] is not allowed
   /// to go outside of when dragging or resizing.
   static RawMoveResult move({
-    required Box initialBox,
+    required Box initialRect,
     required Vector2 initialLocalPosition,
     required Vector2 localPosition,
     Box clampingRect = Box.largest,
   }) {
     final Vector2 delta = localPosition - initialLocalPosition;
 
-    final Box unclampedBox = initialBox.translate(delta.x, delta.y);
-    final Box clampedBox = clampingRect.containOther(unclampedBox,
-        handle: HandlePosition.bottomRight);
-    final Vector2 clampedDelta = clampedBox.topLeft - initialBox.topLeft;
+    final Box unclampedRect = initialRect.translate(delta.x, delta.y);
+    final Box clampedRect = clampingRect.containOther(unclampedRect);
+    final Vector2 clampedDelta = clampedRect.topLeft - initialRect.topLeft;
 
-    final Box newRect = initialBox.translate(clampedDelta.x, clampedDelta.y);
+    final Box newRect = initialRect.translate(clampedDelta.x, clampedDelta.y);
 
     return MoveResult(
       rect: newRect,
-      oldRect: initialBox,
+      oldRect: initialRect,
       delta: delta,
       rawSize: newRect.size,
       largestRect: clampingRect,
     );
   }
 
-  /// Resizes the given [initialBox] with given [initialLocalPosition] of
+  /// Resizes the given [initialRect] with given [initialLocalPosition] of
   /// the mouse cursor and wherever [localPosition] of the mouse cursor is
   /// currently at.
   ///
   /// Specifying the [handle] and [resizeMode] will determine how the
-  /// [initialBox] will be resized.
+  /// [initialRect] will be resized.
   ///
   /// The [initialFlip] helps determine the initial state of the rectangle.
   ///
-  /// The [clampingRect] is the box that the [initialBox] is not allowed
+  /// The [clampingRect] is the rect that the [initialRect] is not allowed
   /// to go outside of when dragging or resizing.
   ///
-  /// The [constraints] is the constraints that the [initialBox] is not allowed
+  /// The [constraints] is the constraints that the [initialRect] is not allowed
   /// to shrink or grow beyond.
   ///
-  /// [allowResizeOverflow] decides whether to allow the box to overflow the
+  /// [allowResizeOverflow] decides whether to allow the rect to overflow the
   /// resize operation to its opposite side to continue the resize operation
   /// until its constrained on both sides.
   ///
-  /// If this is set to false, the box will cease the resize operation the
+  /// If this is set to false, the rect will cease the resize operation the
   /// instant it hits an edge of the [clampingRect].
   ///
-  /// If this is set to true, the box will continue the resize operation until
+  /// If this is set to true, the rect will continue the resize operation until
   /// it is constrained to both sides of the [clampingRect].
   static RawResizeResult resize({
-    required Box initialBox,
+    required Box initialRect,
     required Vector2 initialLocalPosition,
     required Vector2 localPosition,
     required HandlePosition handle,
@@ -86,11 +85,11 @@ class BoxTransformer {
 
     Vector2 delta = localPosition - initialLocalPosition;
 
-    // getFlipForBox uses delta instead of localPosition to know exactly when
+    // getFlipForRect uses delta instead of localPosition to know exactly when
     // to flip based on the current local position of the mouse cursor.
     final Flip currentFlip = !allowFlipping
         ? Flip.none
-        : getFlipForBox(initialBox, delta, handle, resizeMode);
+        : getFlipForRect(initialRect, delta, handle, resizeMode);
 
     // This sets the constraints such that it reflects flipRect state.
     if (allowFlipping &&
@@ -124,9 +123,9 @@ class BoxTransformer {
     if (resizeMode.hasSymmetry) delta = Vector2(delta.x * 2, delta.y * 2);
 
     // No constraints or clamping is done. Only delta is applied to the
-    // initial box.
+    // initial rect.
     Box explodedRect = _applyDelta(
-      initialBox: initialBox,
+      initialRect: initialRect,
       handle: handle,
       delta: delta,
       resizeMode: resizeMode,
@@ -134,12 +133,12 @@ class BoxTransformer {
     );
 
     final Resizer resizer = Resizer.from(resizeMode);
-    final ({Box rect, Box largest, bool hasValidFlip}) result = resizer.resize(
+    final result = resizer.resize(
       explodedRect: explodedRect,
       clampingRect: clampingRect,
       handle: handle,
       constraints: constraints,
-      initialRect: initialBox,
+      initialRect: initialRect,
       flip: currentFlip,
     );
 
@@ -147,51 +146,82 @@ class BoxTransformer {
     final Box largestRect = result.largest;
 
     // Detect terminal resizing, where the resizing reached a hard limit.
-    bool minWidthReached = false;
-    bool maxWidthReached = false;
-    bool minHeightReached = false;
-    bool maxHeightReached = false;
-    if (delta.x != 0) {
-      if (newRect.width <= initialBox.width &&
-          newRect.width == constraints.minWidth) {
-        minWidthReached = true;
-      }
-      if (newRect.width >= initialBox.width &&
-          (newRect.width == constraints.maxWidth ||
-              newRect.width == clampingRect.width)) {
-        maxWidthReached = true;
-      }
-    }
-    if (delta.y != 0) {
-      if (newRect.height <= initialBox.height &&
-          newRect.height == constraints.minHeight) {
-        minHeightReached = true;
-      }
-      if (newRect.height >= initialBox.height &&
-              newRect.height == constraints.maxHeight ||
-          newRect.height == clampingRect.height) {
-        maxHeightReached = true;
-      }
-    }
+    final terminalResult = checkForTerminalSizes(
+      rect: newRect,
+      initialRect: initialRect,
+      clampingRect: clampingRect,
+      constraints: constraints,
+      delta: delta,
+    );
 
     return ResizeResult(
       rect: newRect,
-      oldRect: initialBox,
+      oldRect: initialRect,
       flip: currentFlip * initialFlip,
       resizeMode: resizeMode,
       delta: delta,
       rawSize: newRect.size,
-      minWidthReached: minWidthReached,
-      maxWidthReached: maxWidthReached,
-      minHeightReached: minHeightReached,
-      maxHeightReached: maxHeightReached,
+      minWidthReached: terminalResult.minWidthReached,
+      maxWidthReached: terminalResult.maxWidthReached,
+      minHeightReached: terminalResult.minHeightReached,
+      maxHeightReached: terminalResult.maxHeightReached,
       largestRect: largestRect,
       handle: handle,
     );
   }
 
+  /// Checks if the [rect] has reached a terminal size.
+  /// Terminal size is when the rect has reached the min or max size according
+  /// to the constraints defined by the [constraints] and [clampingRect].
+  static ({
+    bool minWidthReached,
+    bool maxWidthReached,
+    bool minHeightReached,
+    bool maxHeightReached
+  }) checkForTerminalSizes({
+    required Box rect,
+    required Box initialRect,
+    required Box clampingRect,
+    required Constraints constraints,
+    required Vector2 delta,
+  }) {
+    bool minWidthReached = false;
+    bool maxWidthReached = false;
+    bool minHeightReached = false;
+    bool maxHeightReached = false;
+    if (delta.x != 0) {
+      if (rect.width <= initialRect.width &&
+          rect.width == constraints.minWidth) {
+        minWidthReached = true;
+      }
+      if (rect.width >= initialRect.width &&
+          (rect.width == constraints.maxWidth ||
+              rect.width == clampingRect.width)) {
+        maxWidthReached = true;
+      }
+    }
+    if (delta.y != 0) {
+      if (rect.height <= initialRect.height &&
+          rect.height == constraints.minHeight) {
+        minHeightReached = true;
+      }
+      if (rect.height >= initialRect.height &&
+              rect.height == constraints.maxHeight ||
+          rect.height == clampingRect.height) {
+        maxHeightReached = true;
+      }
+    }
+
+    return (
+      minWidthReached: minWidthReached,
+      maxWidthReached: maxWidthReached,
+      minHeightReached: minHeightReached,
+      maxHeightReached: maxHeightReached,
+    );
+  }
+
   static Box _applyDelta({
-    required Box initialBox,
+    required Box initialRect,
     required HandlePosition handle,
     required Vector2 delta,
     required ResizeMode resizeMode,
@@ -202,10 +232,10 @@ class BoxTransformer {
     double right;
     double bottom;
 
-    left = initialBox.left + (handle.influencesLeft ? delta.x : 0);
-    top = initialBox.top + (handle.influencesTop ? delta.y : 0);
-    right = initialBox.right + (handle.influencesRight ? delta.x : 0);
-    bottom = initialBox.bottom + (handle.influencesBottom ? delta.y : 0);
+    left = initialRect.left + (handle.influencesLeft ? delta.x : 0);
+    top = initialRect.top + (handle.influencesTop ? delta.y : 0);
+    right = initialRect.right + (handle.influencesRight ? delta.x : 0);
+    bottom = initialRect.bottom + (handle.influencesBottom ? delta.y : 0);
 
     double width = right - left;
     double height = bottom - top;
@@ -222,21 +252,21 @@ class BoxTransformer {
     }
 
     // If in symmetric scaling mode, utilize width and height to constructor
-    // the new box from its center.
+    // the new rect from its center.
     if (resizeMode.hasSymmetry) {
       // symmetric resizing is not affected if flipping is disabled.
-      final widthDelta = (initialBox.width - width) / 2;
-      final heightDelta = (initialBox.height - height) / 2;
-      left = initialBox.left + widthDelta;
-      top = initialBox.top + heightDelta;
-      right = initialBox.right - widthDelta;
-      bottom = initialBox.bottom - heightDelta;
+      final widthDelta = (initialRect.width - width) / 2;
+      final heightDelta = (initialRect.height - height) / 2;
+      left = initialRect.left + widthDelta;
+      top = initialRect.top + heightDelta;
+      right = initialRect.right - widthDelta;
+      bottom = initialRect.bottom - heightDelta;
     } else if (!allowFlipping) {
       // If not flipping, then we know that handles are not allowed to
       // cross the opposite one. So we use handle with width and height
-      // instead of left, top, right, bottom to construct the new box.
+      // instead of left, top, right, bottom to construct the new rect.
       return Box.fromHandle(
-        handle.anchor(initialBox),
+        handle.anchor(initialRect),
         handle,
         width,
         height,

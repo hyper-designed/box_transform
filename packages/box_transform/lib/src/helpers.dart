@@ -6,7 +6,7 @@ import '../box_transform.dart';
 
 /// Flips the given [rect] with given [flip] with [handle] being the
 /// pivot point.
-Box flipBox(Box rect, Flip flip, HandlePosition handle) {
+Box flipRect(Box rect, Flip flip, HandlePosition handle) {
   switch (handle) {
     case HandlePosition.none:
       throw ArgumentError('HandlePosition.none is not supported!');
@@ -56,7 +56,7 @@ Box flipBox(Box rect, Flip flip, HandlePosition handle) {
 /// Calculates flip state of the given [rect] w.r.t [localPosition] and
 /// [handle]. It uses [handle] and [localPosition] to determine the quadrant
 /// of the [rect] and then checks if the [rect] is flipped in that quadrant.
-Flip getFlipForBox(
+Flip getFlipForRect(
   Box rect,
   Vector2 localPosition,
   HandlePosition handle,
@@ -77,8 +77,8 @@ Flip getFlipForBox(
   return Flip.fromValue(posX, posY);
 }
 
-/// Returns a clamping box for [ResizeMode.scaledSymmetric].
-Box scaledSymmetricClampingBox(Box initialRect, Box clampingRect) {
+/// Returns a clamping rect for [ResizeMode.scaledSymmetric].
+Box scaledSymmetricClampingRect(Box initialRect, Box clampingRect) {
   final closestHandle = getClosestEdge(initialRect, clampingRect);
 
   final initialAspectRatio = initialRect.width / initialRect.height;
@@ -385,25 +385,22 @@ Box getAvailableAreaForHandle({
   required HandlePosition handle,
   Constraints constraints = const Constraints.unconstrained(),
 }) {
-  Box box;
   if (handle.isSide) {
     final opposite = handle.opposite;
-    box = Box.fromLTRB(
+    return Box.fromLTRB(
       opposite.influencesLeft ? rect.left : clampingRect.left,
       opposite.influencesTop ? rect.top : clampingRect.top,
       opposite.influencesRight ? rect.right : clampingRect.right,
       opposite.influencesBottom ? rect.bottom : clampingRect.bottom,
     );
   } else {
-    box = Box.fromLTRB(
+    return Box.fromLTRB(
       handle.influencesLeft ? clampingRect.left : rect.left,
       handle.influencesTop ? clampingRect.top : rect.top,
       handle.influencesRight ? clampingRect.right : rect.right,
       handle.influencesBottom ? clampingRect.bottom : rect.bottom,
     );
   }
-
-  return box;
 }
 
 /// Returns the clamping rect for the given handle for [ResizeMode.scale].
@@ -499,7 +496,7 @@ Box constrainAvailableAreaForScaling({
   final maxWidth = min(constraints.maxWidth, area.width);
   final maxHeight = min(constraints.maxHeight, area.height);
 
-  final constrainedBox = Box.fromHandle(
+  final constrainedRect = Box.fromHandle(
     handle.anchor(initialRect),
     handle,
     maxWidth,
@@ -507,10 +504,10 @@ Box constrainAvailableAreaForScaling({
   );
 
   return Box.fromLTRB(
-    max(constrainedBox.left, area.left),
-    max(constrainedBox.top, area.top),
-    min(constrainedBox.right, area.right),
-    min(constrainedBox.bottom, area.bottom),
+    max(constrainedRect.left, area.left),
+    max(constrainedRect.top, area.top),
+    min(constrainedRect.right, area.right),
+    min(constrainedRect.bottom, area.bottom),
   );
 }
 
@@ -546,7 +543,7 @@ Box getMinRectForScaling({
 
 /// [returns] whether the given [rect] is properly confined within its
 /// [constraints] but at the same time is not outside of the [clampingRect].
-bool isValidBox(Box rect, Constraints constraints, Box clampingRect) {
+bool isValidRect(Box rect, Constraints constraints, Box clampingRect) {
   if (clampingRect.left.roundToPrecision(4) > rect.left.roundToPrecision(4) ||
       clampingRect.top.roundToPrecision(4) > rect.top.roundToPrecision(4) ||
       clampingRect.right.roundToPrecision(4) < rect.right.roundToPrecision(4) ||

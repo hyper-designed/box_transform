@@ -552,7 +552,7 @@ class _ImageBoxState extends State<ImageBox> {
           flip: box.flip,
           clampingRect: model.clampingEnabled ? model.clampingRect : null,
           constraints: box.constraintsEnabled ? box.constraints : null,
-          onChange: (result, event) {
+          onChanged: (result, event) {
             widget.onChanged?.call(result);
             largestClampingBox = result.largestRect;
             setState(() {});
@@ -737,8 +737,9 @@ class _ClampingRectState extends State<ClampingRect> {
       rect: model.clampingRect,
       flip: Flip.none,
       clampingRect: model.playgroundArea!,
+      allowFlippingWhileResizing: false,
       constraints: BoxConstraints(minWidth: minWidth, minHeight: minHeight),
-      onChange: (result, event) => model.setClampingRect(result.rect),
+      onChanged: (result, event) => model.setClampingRect(result.rect),
       onTerminalSizeReached: (
         bool reachedMinWidth,
         bool reachedMaxWidth,

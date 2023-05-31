@@ -8,7 +8,7 @@ void main() {
     var result = BoxTransformer.resize(
       resizeMode: ResizeMode.scale,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(450.95, 371.58, 328.86, 252.52),
+      initialRect: Box.fromLTWH(450.95, 371.58, 328.86, 252.52),
       handle: HandlePosition.bottomRight,
       initialLocalPosition: Vector2(16.10, 12.83),
       allowFlipping: false,
@@ -28,7 +28,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.scale,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(450.95, 371.58, 130.23, 100.00),
+      initialRect: Box.fromLTWH(450.95, 371.58, 130.23, 100.00),
       handle: HandlePosition.topLeft,
       initialLocalPosition: Vector2(10.69, 10.06),
       allowFlipping: false,
@@ -48,7 +48,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.scale,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(285.35, 244.41, 295.84, 227.17),
+      initialRect: Box.fromLTWH(285.35, 244.41, 295.84, 227.17),
       handle: HandlePosition.topLeft,
       initialLocalPosition: Vector2(10.57, 13.09),
       allowFlipping: false,
@@ -68,7 +68,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.scale,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(450.95, 371.58, 130.23, 100.00),
+      initialRect: Box.fromLTWH(450.95, 371.58, 130.23, 100.00),
       handle: HandlePosition.right,
       initialLocalPosition: Vector2(15.19, 38.29),
       allowFlipping: false,
@@ -88,7 +88,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.scale,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(450.95, 282.19, 363.07, 278.79),
+      initialRect: Box.fromLTWH(450.95, 282.19, 363.07, 278.79),
       handle: HandlePosition.left,
       initialLocalPosition: Vector2(9.52, 125.38),
       allowFlipping: false,
@@ -108,7 +108,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.scale,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(683.79, 371.58, 130.23, 100.00),
+      initialRect: Box.fromLTWH(683.79, 371.58, 130.23, 100.00),
       handle: HandlePosition.bottom,
       initialLocalPosition: Vector2(56.42, 8.01),
       allowFlipping: false,
@@ -128,7 +128,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.scale,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(566.47, 371.58, 364.88, 280.18),
+      initialRect: Box.fromLTWH(566.47, 371.58, 364.88, 280.18),
       handle: HandlePosition.top,
       initialLocalPosition: Vector2(174.22, 11.41),
       allowFlipping: false,
@@ -148,7 +148,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.scale,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(683.79, 551.77, 130.23, 100.00),
+      initialRect: Box.fromLTWH(683.79, 551.77, 130.23, 100.00),
       handle: HandlePosition.topRight,
       initialLocalPosition: Vector2(11.36, 13.17),
       allowFlipping: false,
@@ -168,7 +168,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.scale,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(683.79, 428.12, 291.25, 223.64),
+      initialRect: Box.fromLTWH(683.79, 428.12, 291.25, 223.64),
       handle: HandlePosition.bottomLeft,
       initialLocalPosition: Vector2(7.92, 11.60),
       allowFlipping: false,
@@ -190,7 +190,7 @@ void main() {
     var result = BoxTransformer.resize(
       resizeMode: ResizeMode.symmetric,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(431.46, 362.78, 345.25, 245.42),
+      initialRect: Box.fromLTWH(431.46, 362.78, 345.25, 245.42),
       handle: HandlePosition.bottomRight,
       initialLocalPosition: Vector2(12.18, 12.49),
       allowFlipping: false,
@@ -210,7 +210,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.symmetric,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(554.09, 435.49, 100.00, 100.00),
+      initialRect: Box.fromLTWH(554.09, 435.49, 100.00, 100.00),
       handle: HandlePosition.bottomLeft,
       initialLocalPosition: Vector2(13.90, 12.66),
       allowFlipping: false,
@@ -230,7 +230,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.symmetric,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(402.90, 335.97, 402.38, 299.05),
+      initialRect: Box.fromLTWH(402.90, 335.97, 402.38, 299.05),
       handle: HandlePosition.topLeft,
       initialLocalPosition: Vector2(12.45, 11.09),
       allowFlipping: false,
@@ -250,7 +250,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.symmetric,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(554.09, 435.49, 100.00, 100.00),
+      initialRect: Box.fromLTWH(554.09, 435.49, 100.00, 100.00),
       handle: HandlePosition.right,
       initialLocalPosition: Vector2(16.83, 38.65),
       allowFlipping: false,
@@ -270,7 +270,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.symmetric,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(354.09, 435.49, 500.00, 100.00),
+      initialRect: Box.fromLTWH(354.09, 435.49, 500.00, 100.00),
       handle: HandlePosition.left,
       initialLocalPosition: Vector2(14.72, 34.89),
       allowFlipping: false,
@@ -290,7 +290,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.symmetric,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(554.09, 435.49, 100.00, 100.00),
+      initialRect: Box.fromLTWH(554.09, 435.49, 100.00, 100.00),
       handle: HandlePosition.topRight,
       initialLocalPosition: Vector2(12.82, 11.79),
       allowFlipping: false,
@@ -310,7 +310,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.symmetric,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(395.05, 324.07, 418.07, 322.84),
+      initialRect: Box.fromLTWH(395.05, 324.07, 418.07, 322.84),
       handle: HandlePosition.top,
       initialLocalPosition: Vector2(196.68, 12.56),
       allowFlipping: false,
@@ -330,7 +330,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.symmetric,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(395.05, 435.49, 418.07, 100.00),
+      initialRect: Box.fromLTWH(395.05, 435.49, 418.07, 100.00),
       handle: HandlePosition.bottom,
       initialLocalPosition: Vector2(196.66, 16.49),
       allowFlipping: false,
@@ -350,7 +350,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.symmetric,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(395.05, 331.19, 418.07, 308.61),
+      initialRect: Box.fromLTWH(395.05, 331.19, 418.07, 308.61),
       handle: HandlePosition.bottomLeft,
       initialLocalPosition: Vector2(10.48, 11.39),
       allowFlipping: false,
@@ -370,7 +370,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.symmetric,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(554.09, 435.49, 100.00, 100.00),
+      initialRect: Box.fromLTWH(554.09, 435.49, 100.00, 100.00),
       handle: HandlePosition.right,
       initialLocalPosition: Vector2(15.35, 45.34),
       allowFlipping: false,
@@ -392,7 +392,7 @@ void main() {
     var result = BoxTransformer.resize(
       resizeMode: ResizeMode.scale,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(389.22, 318.86, 358.98, 256.83),
+      initialRect: Box.fromLTWH(389.22, 318.86, 358.98, 256.83),
       handle: HandlePosition.bottomRight,
       initialLocalPosition: Vector2(14.00, 16.04),
       allowFlipping: false,
@@ -412,7 +412,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.scale,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(389.22, 318.86, 139.77, 100.00),
+      initialRect: Box.fromLTWH(389.22, 318.86, 139.77, 100.00),
       handle: HandlePosition.bottomLeft,
       initialLocalPosition: Vector2(9.74, 12.86),
       allowFlipping: false,
@@ -432,7 +432,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.scale,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(176.41, 318.86, 352.59, 252.25),
+      initialRect: Box.fromLTWH(176.41, 318.86, 352.59, 252.25),
       handle: HandlePosition.left,
       initialLocalPosition: Vector2(12.24, 116.04),
       allowFlipping: false,
@@ -452,7 +452,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.scale,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(389.22, 394.99, 139.77, 100.00),
+      initialRect: Box.fromLTWH(389.22, 394.99, 139.77, 100.00),
       handle: HandlePosition.topRight,
       initialLocalPosition: Vector2(15.98, 12.31),
       allowFlipping: false,
@@ -472,7 +472,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.scale,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(389.22, 215.47, 390.69, 279.52),
+      initialRect: Box.fromLTWH(389.22, 215.47, 390.69, 279.52),
       handle: HandlePosition.top,
       initialLocalPosition: Vector2(185.01, 9.94),
       allowFlipping: false,
@@ -492,7 +492,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.scale,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(514.68, 394.99, 139.77, 100.00),
+      initialRect: Box.fromLTWH(514.68, 394.99, 139.77, 100.00),
       handle: HandlePosition.bottom,
       initialLocalPosition: Vector2(51.65, 14.78),
       allowFlipping: false,
@@ -512,7 +512,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.scale,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(389.31, 394.99, 390.52, 279.39),
+      initialRect: Box.fromLTWH(389.31, 394.99, 390.52, 279.39),
       handle: HandlePosition.topLeft,
       initialLocalPosition: Vector2(9.53, 8.76),
       allowFlipping: false,
@@ -532,7 +532,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.scale,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(640.05, 574.38, 139.77, 100.00),
+      initialRect: Box.fromLTWH(640.05, 574.38, 139.77, 100.00),
       handle: HandlePosition.topLeft,
       initialLocalPosition: Vector2(9.28, 12.86),
       allowFlipping: false,
@@ -552,7 +552,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.scale,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(409.53, 409.45, 370.30, 264.93),
+      initialRect: Box.fromLTWH(409.53, 409.45, 370.30, 264.93),
       handle: HandlePosition.right,
       initialLocalPosition: Vector2(16.72, 123.00),
       allowFlipping: false,
@@ -574,7 +574,7 @@ void main() {
     var result = BoxTransformer.resize(
       resizeMode: ResizeMode.symmetricScale,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(406.06, 355.07, 382.37, 275.12),
+      initialRect: Box.fromLTWH(406.06, 355.07, 382.37, 275.12),
       handle: HandlePosition.bottomRight,
       initialLocalPosition: Vector2(14.67, 10.52),
       allowFlipping: false,
@@ -594,7 +594,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.symmetricScale,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(527.75, 442.63, 138.98, 100.00),
+      initialRect: Box.fromLTWH(527.75, 442.63, 138.98, 100.00),
       handle: HandlePosition.topLeft,
       initialLocalPosition: Vector2(13.68, 10.00),
       allowFlipping: false,
@@ -614,7 +614,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.symmetricScale,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(386.43, 340.95, 421.62, 303.36),
+      initialRect: Box.fromLTWH(386.43, 340.95, 421.62, 303.36),
       handle: HandlePosition.left,
       initialLocalPosition: Vector2(14.45, 135.09),
       allowFlipping: false,
@@ -634,7 +634,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.symmetricScale,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(527.75, 442.63, 138.98, 100.00),
+      initialRect: Box.fromLTWH(527.75, 442.63, 138.98, 100.00),
       handle: HandlePosition.right,
       initialLocalPosition: Vector2(13.52, 34.92),
       allowFlipping: false,
@@ -654,7 +654,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.symmetricScale,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(347.24, 312.76, 500.00, 359.75),
+      initialRect: Box.fromLTWH(347.24, 312.76, 500.00, 359.75),
       handle: HandlePosition.top,
       initialLocalPosition: Vector2(236.52, 7.31),
       allowFlipping: false,
@@ -674,7 +674,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.symmetricScale,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(527.75, 442.63, 138.98, 100.00),
+      initialRect: Box.fromLTWH(527.75, 442.63, 138.98, 100.00),
       handle: HandlePosition.bottom,
       initialLocalPosition: Vector2(60.19, 14.60),
       allowFlipping: false,
@@ -694,7 +694,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.symmetricScale,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(357.43, 320.09, 479.62, 345.09),
+      initialRect: Box.fromLTWH(357.43, 320.09, 479.62, 345.09),
       handle: HandlePosition.topLeft,
       initialLocalPosition: Vector2(12.52, 11.43),
       allowFlipping: false,
@@ -714,7 +714,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.symmetricScale,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(527.75, 442.63, 138.98, 100.00),
+      initialRect: Box.fromLTWH(527.75, 442.63, 138.98, 100.00),
       handle: HandlePosition.topRight,
       initialLocalPosition: Vector2(13.13, 13.41),
       allowFlipping: false,
@@ -734,7 +734,7 @@ void main() {
     result = BoxTransformer.resize(
       resizeMode: ResizeMode.symmetricScale,
       initialFlip: Flip.none,
-      initialBox: Box.fromLTWH(406.37, 355.30, 381.74, 274.67),
+      initialRect: Box.fromLTWH(406.37, 355.30, 381.74, 274.67),
       handle: HandlePosition.bottomLeft,
       initialLocalPosition: Vector2(13.34, 10.62),
       allowFlipping: false,

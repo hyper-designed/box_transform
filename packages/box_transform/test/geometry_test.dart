@@ -578,41 +578,6 @@ void main() {
           Box.fromLTRB(100, 100, 400, 400));
     });
 
-    test('Box.isOverflowing tests', () {
-      expect(
-          Box.fromLTRB(100, 100, 500, 400)
-              .isOverflowing(Box.fromLTRB(100, 100, 500, 400)),
-          isFalse);
-      expect(
-          Box.fromLTRB(100, 100, 500, 400)
-              .isOverflowing(Box.fromLTRB(100, 100, 400, 400)),
-          isFalse);
-      expect(
-          Box.fromLTRB(100, 100, 500, 400)
-              .isOverflowing(Box.fromLTRB(100, 100, 500, 300)),
-          isFalse);
-      expect(
-          Box.fromLTRB(100, 100, 500, 400)
-              .isOverflowing(Box.fromLTRB(100, 100, 400, 300)),
-          isFalse);
-      expect(
-          Box.fromLTRB(100, 100, 500, 400)
-              .isOverflowing(Box.fromLTRB(100, 100, 600, 500)),
-          isTrue);
-      expect(
-          Box.fromLTRB(100, 100, 500, 400)
-              .isOverflowing(Box.fromLTRB(100, 100, 600, 400)),
-          isTrue);
-      expect(
-          Box.fromLTRB(100, 100, 500, 400)
-              .isOverflowing(Box.fromLTRB(100, 100, 500, 500)),
-          isTrue);
-      expect(
-          Box.fromLTRB(100, 100, 500, 400)
-              .isOverflowing(Box.fromLTRB(100, 100, 400, 500)),
-          isTrue);
-    });
-
     test('Box.ceil tests', () {
       expect(Box.fromLTRB(100, 100, 500, 400).ceil(),
           Box.fromLTRB(100, 100, 500, 400));
@@ -667,41 +632,6 @@ void main() {
       expect(Box.lerp(null, null, 1), null);
       expect(Box.lerp(null, null, 0), null);
       expect(Box.lerp(null, null, 0.5), null);
-    });
-
-    test('Box.clampThisInsideParent tests', () {
-      expect(
-          Box.fromLTRB(100, 100, 500, 400)
-              .clampThisInsideParent(Box.fromLTRB(100, 100, 500, 400)),
-          Box.fromLTRB(100, 100, 500, 400));
-      expect(
-          Box.fromLTRB(100, 100, 500, 400)
-              .clampThisInsideParent(Box.fromLTRB(100, 100, 400, 400)),
-          Box.fromLTRB(100, 100, 400, 400));
-      expect(
-          Box.fromLTRB(100, 100, 500, 400)
-              .clampThisInsideParent(Box.fromLTRB(100, 100, 500, 300)),
-          Box.fromLTRB(100, 100, 500, 300));
-      expect(
-          Box.fromLTRB(100, 100, 500, 400)
-              .clampThisInsideParent(Box.fromLTRB(100, 100, 400, 300)),
-          Box.fromLTRB(100, 100, 400, 300));
-      expect(
-          Box.fromLTRB(100, 100, 500, 400)
-              .clampThisInsideParent(Box.fromLTRB(100, 100, 600, 500)),
-          Box.fromLTRB(100, 100, 500, 400));
-      expect(
-          Box.fromLTRB(100, 100, 500, 400)
-              .clampThisInsideParent(Box.fromLTRB(100, 100, 600, 400)),
-          Box.fromLTRB(100, 100, 500, 400));
-      expect(
-          Box.fromLTRB(100, 100, 500, 400)
-              .clampThisInsideParent(Box.fromLTRB(100, 100, 500, 500)),
-          Box.fromLTRB(100, 100, 500, 400));
-      expect(
-          Box.fromLTRB(100, 100, 500, 400)
-              .clampThisInsideParent(Box.fromLTRB(100, 100, 400, 500)),
-          Box.fromLTRB(100, 100, 400, 400));
     });
   });
 
@@ -816,43 +746,43 @@ void main() {
     });
 
     test('Constraints.constrainBox tests', () {
-      expect(Constraints().constrainBox(Box.fromLTRB(100, 100, 400, 300)),
+      expect(Constraints().constrainRect(Box.fromLTRB(100, 100, 400, 300)),
           Box.fromLTRB(100, 100, 400, 300));
       expect(
           Constraints(minWidth: 0, maxWidth: 0)
-              .constrainBox(Box.fromLTRB(100, 100, 400, 300)),
+              .constrainRect(Box.fromLTRB(100, 100, 400, 300)),
           Box.fromLTRB(100, 100, 100, 300));
       expect(
           Constraints(minWidth: 0, maxWidth: 100)
-              .constrainBox(Box.fromLTRB(100, 100, 400, 300)),
+              .constrainRect(Box.fromLTRB(100, 100, 400, 300)),
           Box.fromLTRB(100, 100, 200, 300));
       expect(
           Constraints(minWidth: 100, maxWidth: 100)
-              .constrainBox(Box.fromLTRB(100, 100, 400, 300)),
+              .constrainRect(Box.fromLTRB(100, 100, 400, 300)),
           Box.fromLTRB(100, 100, 200, 300));
       expect(
           Constraints(minWidth: 100, maxWidth: 200)
-              .constrainBox(Box.fromLTRB(100, 100, 400, 300)),
+              .constrainRect(Box.fromLTRB(100, 100, 400, 300)),
           Box.fromLTRB(100, 100, 300, 300));
       expect(
           Constraints(minWidth: 100, maxWidth: double.infinity)
-              .constrainBox(Box.fromLTRB(100, 100, 400, 300)),
+              .constrainRect(Box.fromLTRB(100, 100, 400, 300)),
           Box.fromLTRB(100, 100, 400, 300));
       expect(
           Constraints(minWidth: 0, maxWidth: double.infinity)
-              .constrainBox(Box.fromLTRB(100, 100, 400, 300)),
+              .constrainRect(Box.fromLTRB(100, 100, 400, 300)),
           Box.fromLTRB(100, 100, 400, 300));
       expect(
           Constraints(minWidth: 0, maxWidth: double.infinity)
-              .constrainBox(Box.fromLTRB(100, 100, 400, 300)),
+              .constrainRect(Box.fromLTRB(100, 100, 400, 300)),
           Box.fromLTRB(100, 100, 400, 300));
       expect(
           Constraints(minWidth: 0, maxWidth: double.infinity)
-              .constrainBox(Box.fromLTRB(100, 100, 400, 300)),
+              .constrainRect(Box.fromLTRB(100, 100, 400, 300)),
           Box.fromLTRB(100, 100, 400, 300));
       expect(
           Constraints.unconstrained()
-              .constrainBox(Box.fromLTRB(100, 100, 400, 300)),
+              .constrainRect(Box.fromLTRB(100, 100, 400, 300)),
           Box.fromLTRB(100, 100, 400, 300));
     });
   });

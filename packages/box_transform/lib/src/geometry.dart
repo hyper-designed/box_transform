@@ -59,19 +59,19 @@ class Constraints {
     );
   }
 
-  /// Constrains a given [box] by the [minWidth], [maxWidth], [minHeight], and
+  /// Constrains a given [rect] by the [minWidth], [maxWidth], [minHeight], and
   /// [maxHeight] values.
   ///
-  /// If [absolute] is true, the [box] will be constrained by the absolute
+  /// If [absolute] is true, the [rect] will be constrained by the absolute
   /// values of its width and height.
-  Box constrainBox(Box box, {bool absolute = false}) {
-    if (isUnconstrained) return box;
+  Box constrainRect(Box rect, {bool absolute = false}) {
+    if (isUnconstrained) return rect;
 
-    final double width = absolute ? box.width.abs() : box.width;
-    final double height = absolute ? box.height.abs() : box.height;
+    final double width = absolute ? rect.width.abs() : rect.width;
+    final double height = absolute ? rect.height.abs() : rect.height;
     return Box.fromLTWH(
-      box.left,
-      box.top,
+      rect.left,
+      rect.top,
       _clamp(width, minWidth, maxWidth).toDouble(),
       _clamp(height, minHeight, maxHeight).toDouble(),
     );
@@ -98,9 +98,7 @@ class Constraints {
 /// Linearly interpolate between two doubles.
 ///
 /// Same as [lerpDouble] but specialized for non-null `double` type.
-double _lerpDouble(double a, double b, double t) {
-  return a * (1.0 - t) + b * t;
-}
+double _lerpDouble(double a, double b, double t) => a * (1.0 - t) + b * t;
 
 /// A 2D size with [width] and [height].
 class Dimension {
@@ -153,25 +151,12 @@ class Dimension {
   /// If the [width] is zero, the result will be zero. If the [height] is zero
   /// (and the [width] is not), the result will be [double.infinity] or
   /// [double.negativeInfinity] as determined by the sign of [width].
-  ///
-  /// See also:
-  ///
-  ///  * [AspectRatio], a widget for giving a child widget a specific aspect
-  ///    ratio.
-  ///  * [FittedBox], a widget that (in most modes) attempts to maintain a
-  ///    child widget's aspect ratio while changing its size.
-  double get aspectRatio {
-    if (height != 0.0) {
-      return width / height;
-    }
-    if (width > 0.0) {
-      return double.infinity;
-    }
-    if (width < 0.0) {
-      return double.negativeInfinity;
-    }
-    return 0.0;
-  }
+  double get aspectRatio => switch (this) {
+        _ when height != 0 => width / height,
+        _ when width > 0 => double.infinity,
+        _ when width < 0 => double.negativeInfinity,
+        _ => 0,
+      };
 
   /// An empty size, one with a zero width and a zero height.
   static const Dimension zero = Dimension(0.0, 0.0);
@@ -305,14 +290,12 @@ class Dimension {
   ///
   /// Boxes include their top and left edges but exclude their bottom and
   /// right edges.
-  bool contains(Vector2 vec) {
-    return vec.x >= 0.0 && vec.x < width && vec.y >= 0.0 && vec.y < height;
-  }
+  bool contains(Vector2 vec) =>
+      vec.x >= 0.0 && vec.x < width && vec.y >= 0.0 && vec.y < height;
 
   /// Constrains this with given constraints.
-  Dimension constrainBy(Constraints constraints) {
-    return constraints.constrainDimension(this);
-  }
+  Dimension constrainBy(Constraints constraints) =>
+      constraints.constrainDimension(this);
 
   /// A [Dimension] with the [width] and [height] swapped.
   Dimension get flipped => Dimension(height, width);
@@ -493,12 +476,11 @@ class Box {
 
   /// Whether any of the coordinates of this rectangle are equal to positive infinity.
   // included for consistency with Vector2 and Dimension
-  bool get isInfinite {
-    return left >= double.infinity ||
-        top >= double.infinity ||
-        right >= double.infinity ||
-        bottom >= double.infinity;
-  }
+  bool get isInfinite =>
+      left >= double.infinity ||
+      top >= double.infinity ||
+      right >= double.infinity ||
+      bottom >= double.infinity;
 
   /// Whether all coordinates of this rectangle are finite.
   bool get isFinite =>
@@ -512,30 +494,24 @@ class Box {
   ///
   /// To translate a rectangle by separate x and y components rather than by an
   /// [Vector2], consider [translate].
-  Box shift(Vector2 vec) {
-    return Box.fromLTRB(
-        left + vec.x, top + vec.y, right + vec.x, bottom + vec.y);
-  }
+  Box shift(Vector2 vec) =>
+      Box.fromLTRB(left + vec.x, top + vec.y, right + vec.x, bottom + vec.y);
 
   /// Returns a new rectangle with translateX added to the x components and
   /// translateY added to the y components.
   ///
   /// To translate a rectangle by an [Vector2] rather than by separate x and y
   /// components, consider [shift].
-  Box translate(double translateX, double translateY) {
-    return Box.fromLTRB(
-      left + translateX,
-      top + translateY,
-      right + translateX,
-      bottom + translateY,
-    );
-  }
+  Box translate(double translateX, double translateY) => Box.fromLTRB(
+        left + translateX,
+        top + translateY,
+        right + translateX,
+        bottom + translateY,
+      );
 
   /// Returns a new rectangle with edges moved outwards by the given delta.
-  Box inflate(double delta) {
-    return Box.fromLTRB(
-        left - delta, top - delta, right + delta, bottom + delta);
-  }
+  Box inflate(double delta) =>
+      Box.fromLTRB(left - delta, top - delta, right + delta, bottom + delta);
 
   /// Returns a new rectangle with edges moved inwards by the given delta.
   Box deflate(double delta) => inflate(-delta);
@@ -544,30 +520,25 @@ class Box {
   /// rectangle and this rectangle. The two rectangles must overlap
   /// for this to be meaningful. If the two rectangles do not overlap,
   /// then the resulting Box will have a negative width or height.
-  Box intersect(Box other) {
-    return Box.fromLTRB(math.max(left, other.left), math.max(top, other.top),
-        math.min(right, other.right), math.min(bottom, other.bottom));
-  }
+  Box intersect(Box other) => Box.fromLTRB(
+      math.max(left, other.left),
+      math.max(top, other.top),
+      math.min(right, other.right),
+      math.min(bottom, other.bottom));
 
   /// Returns a new rectangle which is the bounding box containing this
   /// rectangle and the given rectangle.
-  Box expandToInclude(Box other) {
-    return Box.fromLTRB(
-      math.min(left, other.left),
-      math.min(top, other.top),
-      math.max(right, other.right),
-      math.max(bottom, other.bottom),
-    );
-  }
+  Box expandToInclude(Box other) => Box.fromLTRB(
+        math.min(left, other.left),
+        math.min(top, other.top),
+        math.max(right, other.right),
+        math.max(bottom, other.bottom),
+      );
 
   /// Whether `other` has a nonzero area of overlap with this rectangle.
   bool overlaps(Box other) {
-    if (right <= other.left || other.right <= left) {
-      return false;
-    }
-    if (bottom <= other.top || other.bottom <= top) {
-      return false;
-    }
+    if (right <= other.left || other.right <= left) return false;
+    if (bottom <= other.top || other.bottom <= top) return false;
     return true;
   }
 
@@ -630,12 +601,10 @@ class Box {
 
   /// Returns aspect ratio of this rectangle. Unlike [aspectRatio], it has a
   /// safe mechanism where if the width or height is zero, returns 1.
-  double get safeAspectRatio {
-    if (size.width == 0 || size.height == 0) {
-      return 1.0;
-    }
-    return size.aspectRatio;
-  }
+  double get safeAspectRatio => switch (size) {
+        _ when width == 0 || height == 0 => 1,
+        _ => size.aspectRatio,
+      };
 
   /// Whether the point specified by the given Vector2 (which is assumed to be
   /// relative to the origin) lies between the left and right and the top and
@@ -643,43 +612,15 @@ class Box {
   ///
   /// Boxes include their top and left edges but exclude their bottom and
   /// right edges.
-  bool contains(Vector2 vec) {
-    return vec.x >= left && vec.x < right && vec.y >= top && vec.y < bottom;
-  }
+  bool contains(Vector2 vec) =>
+      vec.x >= left && vec.x < right && vec.y >= top && vec.y < bottom;
 
   /// Constrains this box instance to the given [constraints].
   ///
   /// [constraints] the constraints to apply to this box.
   ///
   /// [returns] a new box instance.
-  Box constrainBy(Constraints constraints) {
-    return constraints.constrainBox(this);
-  }
-
-  /// Constrains this box instance to the given [parent] box.
-  ///
-  /// [parent] the parent box to clamp this box inside.
-  ///
-  /// [returns] a new box instance.
-  Box clampThisInsideParent(Box parent) {
-    return Box.fromLTRB(
-      math.max(parent.left, left),
-      math.max(parent.top, top),
-      math.min(parent.right, right),
-      math.min(parent.bottom, bottom),
-    );
-  }
-
-  /// Whether this box is overflowing the given [child] box. Returns true if
-  /// any of the child's edges are outside of this box.
-  bool isOverflowing(Box child) {
-    return child.left < left ||
-        child.top < top ||
-        child.right > right ||
-        child.bottom > bottom ||
-        child.width > width ||
-        child.height > height;
-  }
+  Box constrainBy(Constraints constraints) => constraints.constrainRect(this);
 
   /// Constrains the given [child] box instance within the bounds of this box.
   /// This function will preserve the sign of the child's width and height.
@@ -687,39 +628,7 @@ class Box {
   /// is specified.
   ///
   /// [child] the child box to clamp inside this box.
-  ///
-  /// [resizeMode] defines how to contain the child, whether it should keep its
-  ///              aspect ratio or not, or if it should be resized to fit.
-  ///
-  /// [allowResizeOverflow] decides whether to allow the box to overflow the
-  /// resize operation to its opposite side to continue the resize operation
-  /// until its constrained on both sides.
-  ///
-  /// If this is set to false, the box will cease the resize operation the
-  /// instant it hits an edge of the [clampingRect].
-  ///
-  /// If this is set to true, the box will continue the resize operation until
-  /// it is constrained to both sides of the [clampingRect].
-  ///
-  /// [handle] defines the handle that is being dragged to resize the box if
-  /// available. This only matters if [allowResizeOverflow] is set to false.
-  ///
-  /// [currentFlip] defines the current flip of the box if available.
-  ///
-  /// [aspectRatio] will allow the box to maintain its aspect ratio if
-  /// it overflows outside its clamping box and needs to be re-adjusted to
-  /// fit back inside. This will ensure that the correction operation will
-  /// maintain the aspect ratio of the box.
-  ///
-  /// [returns] a new box instance.
-  Box containOther(
-    Box child, {
-    ResizeMode resizeMode = ResizeMode.freeform,
-    required HandlePosition handle,
-    Flip currentFlip = Flip.none,
-    double? aspectRatio,
-    bool allowResizeOverflow = true,
-  }) {
+  Box containOther(Box child) {
     final double xSign = child.width.sign;
     final double ySign = child.height.sign;
     final double childWidth = child.width.abs();
@@ -734,20 +643,6 @@ class Box {
     final double newTop = math.max(top, clampedTop);
     double newWidth = math.min(width, childWidth);
     double newHeight = math.min(height, childHeight);
-
-    if (resizeMode.isScalable && aspectRatio != null) {
-      final double newAspectRatio = newWidth / newHeight;
-      final double widthAdjustment = newHeight * aspectRatio;
-      final double heightAdjustment = newWidth / aspectRatio;
-
-      if (aspectRatio < newAspectRatio) {
-        newHeight = math.min(height, heightAdjustment);
-        newWidth = newHeight * aspectRatio;
-      } else if (aspectRatio > newAspectRatio) {
-        newWidth = math.min(width, widthAdjustment);
-        newHeight = newWidth / aspectRatio;
-      }
-    }
 
     return Box.fromLTWH(
       newLeft,
@@ -812,12 +707,8 @@ class Box {
 
   @override
   bool operator ==(Object other) {
-    if (identical(this, other)) {
-      return true;
-    }
-    if (runtimeType != other.runtimeType) {
-      return false;
-    }
+    if (identical(this, other)) return true;
+    if (runtimeType != other.runtimeType) return false;
     return other is Box &&
         other.left == left &&
         other.top == top &&
