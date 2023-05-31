@@ -1,7 +1,7 @@
 name: box_transform
 description: A pure dart implementation of advanced 2D box transformation with easy and simple API.
 
-version: 0.2.1
+version: 0.3.0
 
 repository: https://github.com/hyper-designed/box_transform
 homepage: https://github.com/hyper-designed/box_transform

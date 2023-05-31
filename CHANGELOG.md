@@ -3,6 +3,52 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 2023-06-01
+
+### Changes
+
+---
+
+Packages with breaking changes:
+
+- [`box_transform` - `v0.3.0`](#box_transform---v030)
+- [`flutter_box_transform` - `v0.3.0`](#flutter_box_transform---v030)
+
+Packages with other changes:
+
+- There are no breaking changes in this release.
+
+---
+
+#### `box_transform` - `v0.3.0`
+
+- Refactored the core logic to make it more readable, cleaner and easier to maintain.
+- Fix issues with resizing, constraints, clamping and flipping.
+- [BREAKING]: Replace `flipRect` with `allowFlipping`.
+- [BREAKING]: Rename `initialBox` to `initialRect` in `BoxTransformer.move` and `BoxTransformer.resize` methods.
+- `ResizeResult` now exposes `laregest` rect and `handle` used.
+- Refactored code and performed some cleanup.
+- Bump up Dart sdk constraints to `3.0.0`.
+- Update all documentation to reflect the new changes.
+- Fix broken links in docs.
+- Add tests for resizing features.
+
+
+#### `flutter_box_transform` - `v0.3.0`
+
+- Bump up Dart sdk constraints to `3.0.0`.
+- Bump up box_transform version to `0.3.0`.
+- [BREAKING]: Replace `onResized` with `onResizeUpdate`.
+- [BREAKING]: Replace `flipWhileResizing` with `allowFlippingWhileResizing`.
+- [BREAKING]: Replace `onMoved` with `onDragUpdate`.
+- [BREAKING]: Rename `resolveResizeModeCallback` to `resizeModeResolver`.
+- [BREAKING]: `onChanged` callback now has two parameters: `UITransformResult` and `PointerMoveEvent`.
+- [BREAKING]: `onTerminalSizeReached` callback now also exposes underlying `PointerEvent`.
+- Add `onResizeStart` and `onResizeEnd` callbacks.
+- Add `onDragStart` and `onDragEnd` callbacks for move operation.
+- Add simple example alongside an advanced playground example.
+
+
 ## 2023-04-07
 
 ### Changes

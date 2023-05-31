@@ -1,3 +1,17 @@
+## 0.3.0
+
+- Bump up Dart sdk constraints to `3.0.0`.
+- Bump up box_transform version to `0.3.0`.
+- [BREAKING]: Replace `onResized` with `onResizeUpdate`.
+- [BREAKING]: Replace `flipWhileResizing` with `allowFlippingWhileResizing`.
+- [BREAKING]: Replace `onMoved` with `onDragUpdate`.
+- [BREAKING]: Rename `resolveResizeModeCallback` to `resizeModeResolver`.
+- [BREAKING]: `onChanged` callback now has two parameters: `UITransformResult` and `PointerMoveEvent`.
+- [BREAKING]: `onTerminalSizeReached` callback now also exposes underlying `PointerEvent`.
+- Add `onResizeStart` and `onResizeEnd` callbacks.
+- Add `onDragStart` and `onDragEnd` callbacks for move operation.
+- Add simple example alongside an advanced playground example.
+
 ## 0.2.1
 
 - Update license to Apache 2.0.
