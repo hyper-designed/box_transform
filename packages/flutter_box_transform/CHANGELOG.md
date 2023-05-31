@@ -1,7 +1,10 @@
+## 0.3.1
+
+- Bump up box_transform version to 0.3.0.
+
 ## 0.3.0
 
 - Bump up Dart sdk constraints to `3.0.0`.
-- Bump up box_transform version to `0.3.0`.
 - [BREAKING]: Replace `onResized` with `onResizeUpdate`.
 - [BREAKING]: Replace `flipWhileResizing` with `allowFlippingWhileResizing`.
 - [BREAKING]: Replace `onMoved` with `onDragUpdate`.

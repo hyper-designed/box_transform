@@ -11,6 +11,26 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 Packages with breaking changes:
 
+- There are no breaking changes in this release.
+
+Packages with other changes:
+
+- [`flutter_box_transform` - `v0.3.1`](#flutter_box_transform---v030)
+
+---
+
+#### `flutter_box_transform` - `v0.3.1`
+
+- Bump up box_transform version to `0.3.0`.
+
+## 2023-06-01
+
+### Changes
+
+---
+
+Packages with breaking changes:
+
 - [`box_transform` - `v0.3.0`](#box_transform---v030)
 - [`flutter_box_transform` - `v0.3.0`](#flutter_box_transform---v030)
 
@@ -47,7 +67,6 @@ Packages with other changes:
 - Add `onResizeStart` and `onResizeEnd` callbacks.
 - Add `onDragStart` and `onDragEnd` callbacks for move operation.
 - Add simple example alongside an advanced playground example.
-
 
 ## 2023-04-07
 
