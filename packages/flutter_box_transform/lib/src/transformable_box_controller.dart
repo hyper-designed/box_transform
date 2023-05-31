@@ -5,18 +5,18 @@ import '../flutter_box_transform.dart';
 
 /// A callback function type definition that is used to resolve the
 /// [ResizeMode] based on the pressed keys on the keyboard.
-typedef ResolveResizeModeCallback = ValueGetter<ResizeMode>;
+typedef ResizeModeResolver = ValueGetter<ResizeMode>;
 
-/// Default [ResolveResizeModeCallback] implementation. This implementation
+/// Default [ResizeModeResolver] implementation. This implementation
 /// doesn't rely on the focus system .It resolves the [ResizeMode] based on
 /// the pressed keys on the keyboard from the
 /// [WidgetsBinding.keyboard.logicalKeysPressed] hence it only works on
 /// hardware keyboards.
 ///
 /// If you want to use it on soft keyboards, you can
-/// implement your own [ResolveResizeModeCallback] and pass it to the
+/// implement your own [ResizeModeResolver] and pass it to the
 /// [TransformableBoxController] constructor.
-ResizeMode defaultResolveResizeModeCallback() {
+ResizeMode defaultResizeModeResolver() {
   final pressedKeys = WidgetsBinding.instance.keyboard.logicalKeysPressed;
 
   final isAltPressed = pressedKeys.contains(LogicalKeyboardKey.altLeft) ||
@@ -38,145 +38,206 @@ ResizeMode defaultResolveResizeModeCallback() {
 
 /// A controller class that is used to control the [TransformableBox] widget.
 class TransformableBoxController extends ChangeNotifier {
-  /// The callback function that is used to resolve the [ResizeMode] based on
-  /// the pressed keys on the keyboard.
-  ResolveResizeModeCallback? resolveResizeModeCallback;
-
   /// Creates a [TransformableBoxController] instance.
   TransformableBoxController({
-    this.resolveResizeModeCallback = defaultResolveResizeModeCallback,
-  });
+    Rect? rect,
+    Flip? flip,
+    Rect? clampingRect,
+    BoxConstraints? constraints,
+    ResizeModeResolver? resizeModeResolver,
+
+    // Additional controls.
+    bool resizable = true,
+    bool movable = true,
+    bool allowFlippingWhileResizing = true,
+  })  : _rect = rect ?? Rect.zero,
+        _flip = flip ?? Flip.none,
+        _clampingRect = clampingRect ?? Rect.largest,
+        _constraints = constraints ?? const BoxConstraints(),
+        _resizable = resizable,
+        _movable = movable,
+        _resizeModeResolver = resizeModeResolver,
+        _allowFlippingWhileResizing = allowFlippingWhileResizing;
+
+  /// The callback function that is used to resolve the [ResizeMode] based on
+  /// the pressed keys on the keyboard.
+  ResizeModeResolver? _resizeModeResolver;
+
+  /// The callback function that is used to resolve the [ResizeMode] based on
+  /// the pressed keys on the keyboard.
+  ResizeModeResolver? get resizeModeResolver => _resizeModeResolver;
 
   /// The current [Rect] of the [TransformableBox].
-  Rect rect = Rect.zero;
+  Rect _rect = Rect.zero;
+
+  /// The current [Rect] of the [TransformableBox].
+  Rect get rect => _rect;
 
   /// The current [Flip] of the [TransformableBox].
-  Flip flip = Flip.none;
+  Flip _flip = Flip.none;
+
+  /// The current [Flip] of the [TransformableBox].
+  Flip get flip => _flip;
 
   /// The initial [Offset] of the [TransformableBox] when the resizing starts.
-  Offset initialLocalPosition = Offset.zero;
+  Offset _initialLocalPosition = Offset.zero;
+
+  /// The initial [Offset] of the [TransformableBox] when the resizing starts.
+  Offset get initialLocalPosition => _initialLocalPosition;
 
   /// The initial [Rect] of the [TransformableBox] when the resizing starts.
-  Rect initialRect = Rect.zero;
+  Rect _initialRect = Rect.zero;
+
+  /// The initial [Rect] of the [TransformableBox] when the resizing starts.
+  Rect get initialRect => _initialRect;
 
   /// The initial [Flip] of the [TransformableBox] when the resizing starts.
-  Flip initialFlip = Flip.none;
+  Flip _initialFlip = Flip.none;
+
+  /// The initial [Flip] of the [TransformableBox] when the resizing starts.
+  Flip get initialFlip => _initialFlip;
 
   /// The box that limits the dragging and resizing of the [TransformableBox] inside
   /// its bounds.
-  Rect clampingRect = Rect.largest;
+  Rect _clampingRect = Rect.largest;
 
-  /// /// Whether the box is movable or not. Setting this to false will disable
+  /// The box that limits the dragging and resizing of the [TransformableBox] inside
+  /// its bounds.
+  Rect get clampingRect => _clampingRect;
+
+  /// Whether the box is movable or not. Setting this to false will disable
   /// all moving operations.
-  bool movable = true;
+  bool _movable = true;
+
+  /// Whether the box is movable or not. Setting this to false will disable
+  /// all moving operations.
+  bool get movable => _movable;
 
   /// Whether the box is resizable or not. Setting this to false will disable
   /// all resizing operations.
-  bool resizable = true;
+  bool _resizable = true;
+
+  /// Whether the box is resizable or not. Setting this to false will disable
+  /// all resizing operations.
+  bool get resizable => _resizable;
 
   /// Whether the box should hide the corner/side resize controls when [resizable] is
   /// false.
-  bool hideHandlesWhenNotResizable = true;
+  bool _hideHandlesWhenNotResizable = true;
+
+  /// Whether the box should hide the corner/side resize controls when [resizable] is
+  /// false.
+  bool get hideHandlesWhenNotResizable => _hideHandlesWhenNotResizable;
 
   /// Whether to allow flipping of the box while resizing. If this is set to
   /// true, the box will flip when the user drags the handles to opposite
   /// corners of the rect.
-  bool flipWhileResizing = false;
+  bool _allowFlippingWhileResizing = false;
 
-  /// Whether to flip the child of the box when the box is flipped. If this is
-  /// set to true, the child will be flipped when the box is flipped.
-  bool flipChild = false;
-
-  /// Whether to allow the box to overflow the resize operation to its opposite
-  /// side to continue the resize operation until its constrained on both sides.
-  ///
-  /// If this is set to false, the box will cease the resize operation the
-  /// instant it hits an edge of the [clampingRect].
-  ///
-  /// If this is set to true, the box will continue the resize operation until
-  /// it is constrained to both sides of the [clampingRect].
-  bool allowResizeOverflow = true;
+  /// Whether to allow flipping of the box while resizing. If this is set to
+  /// true, the box will flip when the user drags the handles to opposite
+  /// corners of the rect.
+  bool get allowFlippingWhileResizing => _allowFlippingWhileResizing;
 
   /// The constraints that limits the resizing of the [TransformableBox] inside its
   /// bounds.
-  BoxConstraints constraints = const BoxConstraints.expand();
+  BoxConstraints _constraints = const BoxConstraints.expand();
+
+  /// The constraints that limits the resizing of the [TransformableBox] inside its
+  /// bounds.
+  BoxConstraints get constraints => _constraints;
+
+  /// Sets the current [resizeModeResolver] of the [TransformableBox].
+  void setResizeModeResolver(ResizeModeResolver? resizeModeResolver,
+      {bool notify = true}) {
+    _resizeModeResolver = resizeModeResolver;
+
+    if (notify) notifyListeners();
+  }
 
   /// Sets the current [rect] of the [TransformableBox].
-  void setRect(Rect rect) {
-    this.rect = rect;
-    notifyListeners();
+  void setRect(Rect rect, {bool notify = true}) {
+    _rect = rect;
+
+    if (notify) notifyListeners();
   }
 
   /// Sets the current [flip] of the [TransformableBox].
-  void setFlip(Flip flip) {
-    this.flip = flip;
-    notifyListeners();
+  void setFlip(Flip flip, {bool notify = true}) {
+    _flip = flip;
+
+    if (notify) notifyListeners();
   }
 
   /// Sets the initial local position of the [TransformableBox].
-  void setInitialLocalPosition(Offset initialLocalPosition) {
-    this.initialLocalPosition = initialLocalPosition;
-    notifyListeners();
+  void setInitialLocalPosition(Offset initialLocalPosition,
+      {bool notify = true}) {
+    _initialLocalPosition = initialLocalPosition;
+
+    if (notify) notifyListeners();
   }
 
   /// Sets the initial [Rect] of the [TransformableBox].
-  void setInitialRect(Rect initialRect) {
-    this.initialRect = initialRect;
-    notifyListeners();
+  void setInitialRect(Rect initialRect, {bool notify = true}) {
+    _initialRect = initialRect;
+
+    if (notify) notifyListeners();
   }
 
   /// Sets the initial [Flip] of the [TransformableBox].
-  void setInitialFlip(Flip initialFlip) {
-    this.initialFlip = initialFlip;
-    notifyListeners();
+  void setInitialFlip(Flip initialFlip, {bool notify = true}) {
+    _initialFlip = initialFlip;
+
+    if (notify) notifyListeners();
   }
 
   /// Sets the current [clampingRect] of the [TransformableBox].
   void setClampingRect(Rect clampingRect, {bool notify = true}) {
-    this.clampingRect = clampingRect;
+    _clampingRect = clampingRect;
+
     if (notify) notifyListeners();
   }
 
   /// Sets the current [constraints] of the [TransformableBox].
   void setConstraints(BoxConstraints constraints, {bool notify = true}) {
-    this.constraints = constraints;
+    _constraints = constraints;
+
     if (notify) notifyListeners();
   }
 
   /// Whether the rect is movable or not. Setting this to false will disable
   /// all moving operations.
-  void setMovable(bool movable) {
-    this.movable = movable;
-    notifyListeners();
+  void setMovable(bool movable, {bool notify = true}) {
+    _movable = movable;
+
+    if (notify) notifyListeners();
   }
 
   /// Whether the rect is resizable or not. Setting this to false will disable
   /// all resizing operations.
-  void setResizable(bool resizable) {
-    this.resizable = resizable;
-    notifyListeners();
+  void setResizable(bool resizable, {bool notify = true}) {
+    _resizable = resizable;
+
+    if (notify) notifyListeners();
   }
 
   /// Whether the box should hide the corner/side resize controls when [resizable] is
   /// false.
-  void setHideHandlesWhenNotResizable(bool hideHandlesWhenNotResizable) {
-    this.hideHandlesWhenNotResizable = hideHandlesWhenNotResizable;
-    notifyListeners();
+  void setHideHandlesWhenNotResizable(bool hideHandlesWhenNotResizable,
+      {bool notify = true}) {
+    _hideHandlesWhenNotResizable = hideHandlesWhenNotResizable;
+
+    if (notify) notifyListeners();
   }
 
   /// Whether to allow flipping of the box while resizing. If this is set to
   /// true, the box will flip when the user drags the handles to opposite
   /// corners of the rect.
-  void setFlipWhileResizing(bool flipWhileResizing) {
-    this.flipWhileResizing = flipWhileResizing;
-    notifyListeners();
-  }
+  void setAllowFlippingWhileResizing(bool allowFlippingWhileResizing,
+      {bool notify = true}) {
+    _allowFlippingWhileResizing = allowFlippingWhileResizing;
 
-  /// Whether to flip the child of the box when the box is flipped. If this is
-  /// set to true, the child will be flipped when the box is flipped.
-  void setFlipChild(bool flipChild) {
-    this.flipChild = flipChild;
-    notifyListeners();
+    if (notify) notifyListeners();
   }
 
   /// Called when dragging of the [TransformableBox] starts.
@@ -184,8 +245,8 @@ class TransformableBoxController extends ChangeNotifier {
   /// [localPosition] is the position of the pointer relative to the
   ///               [TransformableBox] when the dragging starts.
   void onDragStart(Offset localPosition) {
-    initialLocalPosition = localPosition;
-    initialRect = rect;
+    _initialLocalPosition = localPosition;
+    _initialRect = rect;
   }
 
   /// Called when the [TransformableBox] is dragged.
@@ -195,8 +256,8 @@ class TransformableBoxController extends ChangeNotifier {
   ///
   /// [notify] is a boolean value that determines whether to notify the
   ///          listeners or not. It is set to `true` by default.
-  ///          If you want to update the [TransformableBox] without notifying the
-  ///          listeners, you can set it to `false`.
+  ///          If you want to update the [TransformableBox] without notifying
+  ///          the listeners, you can set it to `false`.
   UIMoveResult onDragUpdate(
     Offset localPosition, {
     bool notify = true,
@@ -208,7 +269,7 @@ class TransformableBoxController extends ChangeNotifier {
       clampingRect: clampingRect,
     );
 
-    rect = result.rect;
+    _rect = result.rect;
 
     if (notify) notifyListeners();
 
@@ -216,11 +277,11 @@ class TransformableBoxController extends ChangeNotifier {
   }
 
   /// Called when the dragging of the [TransformableBox] ends.
-  void onDragEnd() {
-    initialLocalPosition = Offset.zero;
-    initialRect = Rect.zero;
+  void onDragEnd({bool notify = true}) {
+    _initialLocalPosition = Offset.zero;
+    _initialRect = Rect.zero;
 
-    notifyListeners();
+    if (notify) notifyListeners();
   }
 
   /// Called when the resizing starts on [TransformableBox].
@@ -228,9 +289,9 @@ class TransformableBoxController extends ChangeNotifier {
   /// [localPosition] is the position of the pointer relative to the
   ///               [TransformableBox] when the resizing starts.
   void onResizeStart(Offset localPosition) {
-    initialLocalPosition = localPosition;
-    initialRect = rect;
-    initialFlip = flip;
+    _initialLocalPosition = localPosition;
+    _initialRect = rect;
+    _initialFlip = flip;
   }
 
   /// Called when the [TransformableBox] is being resized.
@@ -241,11 +302,6 @@ class TransformableBoxController extends ChangeNotifier {
   ///                 [TransformableBox].
   ///
   /// [handle] is the handle that is being dragged.
-  ///
-  /// [notify] is a boolean value that determines whether to notify the
-  ///          listeners or not. It is set to `true` by default.
-  ///          If you want to update the [TransformableBox] without notifying the
-  ///          listeners, you can set it to `false`.
   UIResizeResult onResizeUpdate(
     Offset localPosition,
     HandlePosition handle, {
@@ -257,27 +313,27 @@ class TransformableBoxController extends ChangeNotifier {
       handle: handle,
       initialRect: initialRect,
       initialLocalPosition: initialLocalPosition,
-      resizeMode: resolveResizeModeCallback!(),
+      resizeMode: resizeModeResolver!(),
       initialFlip: initialFlip,
       clampingRect: clampingRect,
       constraints: constraints,
-      allowFlipping: flipWhileResizing,
+      allowFlipping: allowFlippingWhileResizing,
     );
 
-    rect = result.rect;
-    flip = result.flip;
+    _rect = result.rect;
+    _flip = result.flip;
 
     if (notify) notifyListeners();
     return result;
   }
 
   /// Called when the resizing ends on [TransformableBox].
-  void onResizeEnd() {
-    initialLocalPosition = Offset.zero;
-    initialRect = Rect.zero;
-    initialFlip = Flip.none;
+  void onResizeEnd({bool notify = true}) {
+    _initialLocalPosition = Offset.zero;
+    _initialRect = Rect.zero;
+    _initialFlip = Flip.none;
 
-    notifyListeners();
+    if (notify) notifyListeners();
   }
 
   /// Recalculates the current state of this [rect] to ensure the position is
@@ -290,7 +346,7 @@ class TransformableBoxController extends ChangeNotifier {
       clampingRect: clampingRect,
     );
 
-    rect = result.rect;
+    _rect = result.rect;
 
     if (notify) notifyListeners();
   }
@@ -307,11 +363,16 @@ class TransformableBoxController extends ChangeNotifier {
       resizeMode: ResizeMode.scale,
       initialFlip: initialFlip,
       constraints: constraints,
-      allowFlipping: flipWhileResizing,
+      allowFlipping: allowFlippingWhileResizing,
     );
 
-    rect = result.rect;
+    _rect = result.rect;
 
     if (notify) notifyListeners();
+  }
+
+  /// Notifies the listeners of this [ChangeNotifier].
+  void notify() {
+    notifyListeners();
   }
 }

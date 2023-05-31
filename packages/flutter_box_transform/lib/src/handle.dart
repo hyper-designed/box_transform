@@ -8,7 +8,7 @@ import '../flutter_box_transform.dart';
 const kDefaultHandleBorderWidth = 1.5;
 
 /// Alignment of the handle.
-enum HandleAlign {
+enum HandleAlignment {
   /// The handle is completely inside the box corner/side.
   inside,
 
@@ -20,22 +20,22 @@ enum HandleAlign {
   center;
 
   /// Whether handle align is inside or not.
-  bool get isInside => this == HandleAlign.inside;
+  bool get isInside => this == HandleAlignment.inside;
 
   /// Whether handle align is outside or not.
-  bool get isOutside => this == HandleAlign.outside;
+  bool get isOutside => this == HandleAlignment.outside;
 
   /// Whether handle align is center or not.
-  bool get isCenter => this == HandleAlign.center;
+  bool get isCenter => this == HandleAlignment.center;
 
   /// Returns offset of the handle from the box corner/side.
   double offset(double handleSize) {
     switch (this) {
-      case HandleAlign.inside:
+      case HandleAlignment.inside:
         return 0;
-      case HandleAlign.outside:
+      case HandleAlignment.outside:
         return handleSize;
-      case HandleAlign.center:
+      case HandleAlignment.center:
         return handleSize / 2;
     }
   }
@@ -169,7 +169,7 @@ class AngularHandle extends StatelessWidget {
   final bool hasShadow;
 
   /// The alignment of the handle.
-  final HandleAlign handleAlign;
+  final HandleAlignment handleAlign;
 
   /// Creates a new angular corner handle.
   const AngularHandle({
@@ -179,7 +179,7 @@ class AngularHandle extends StatelessWidget {
     this.thickness = 5,
     this.color,
     this.hasShadow = true,
-    this.handleAlign = HandleAlign.inside,
+    this.handleAlign = HandleAlignment.inside,
   });
 
   @override
@@ -236,7 +236,7 @@ class AngularHandlePainter extends CustomPainter {
   final Paint shadowPaint;
 
   /// The alignment of the handle.
-  final HandleAlign handleAlign;
+  final HandleAlignment handleAlign;
 
   /// Creates a new handle painter.
   AngularHandlePainter({
@@ -245,7 +245,7 @@ class AngularHandlePainter extends CustomPainter {
     required this.handle,
     this.length = 32,
     this.hasShadow = true,
-    this.handleAlign = HandleAlign.inside,
+    this.handleAlign = HandleAlignment.inside,
   })  : strokePaint = Paint()
           ..color = color
           ..strokeWidth = thickness
@@ -319,7 +319,7 @@ class AngularHandlePainter extends CustomPainter {
   Offset getCenter(
     Size size,
     HandlePosition handle,
-    HandleAlign handleAlign,
+    HandleAlignment handleAlign,
     double thickness,
   ) {
     final multiplier = handleAlign.isInside
