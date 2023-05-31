@@ -165,11 +165,11 @@ class AngularHandle extends StatelessWidget {
   /// The thickness of the handle.
   final double thickness;
 
-  //// Whether the handle has a shadow.
+  /// Whether the handle has a shadow.
   final bool hasShadow;
 
   /// The alignment of the handle.
-  final HandleAlignment handleAlign;
+  final HandleAlignment handleAlignment;
 
   /// Creates a new angular corner handle.
   const AngularHandle({
@@ -179,7 +179,7 @@ class AngularHandle extends StatelessWidget {
     this.thickness = 5,
     this.color,
     this.hasShadow = true,
-    this.handleAlign = HandleAlignment.inside,
+    this.handleAlignment = HandleAlignment.inside,
   });
 
   @override
@@ -197,7 +197,7 @@ class AngularHandle extends StatelessWidget {
               thickness: thickness,
               handle: handle,
               hasShadow: hasShadow,
-              handleAlign: handleAlign,
+              handleAlign: handleAlignment,
               length: min(
                 length,
                 handle.isHorizontal
