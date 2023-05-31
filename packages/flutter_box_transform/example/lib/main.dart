@@ -12,8 +12,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Box Transform Demo',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.deepPurple,
+          brightness: Brightness.dark,
+        ),
         useMaterial3: true,
       ),
       home: const MyHomePage(),
@@ -31,8 +35,8 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   late Rect rect = Rect.fromCenter(
     center: MediaQuery.of(context).size.center(Offset.zero),
-    width: 200,
-    height: 200,
+    width: 400,
+    height: 300,
   );
 
   late Rect clampingRect = (Offset.zero & MediaQuery.of(context).size);
@@ -52,13 +56,16 @@ class _MyHomePageState extends State<MyHomePage> {
               });
             },
             contentBuilder: (context, rect, flip) {
-              return const DecoratedBox(
+              return DecoratedBox(
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.red, Colors.blue],
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  image: const DecorationImage(
+                    image: AssetImage('assets/image1.png'),
+                    fit: BoxFit.fill,
                   ),
                 ),
-                child: Placeholder(),
               );
             },
           ),
