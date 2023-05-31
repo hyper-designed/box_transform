@@ -1,10 +1,22 @@
 {
-  "hosting": {
-    "public": "packages/flutter_box_transform/example/build/web/",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ]
-  }
+  "hosting": [
+    {
+      "target": "example",
+      "public": "packages/flutter_box_transform/example/build/web/",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ]
+    },
+    {
+      "target": "playground",
+      "public": "packages/flutter_box_transform/playground/build/web/",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ]
+    }
+  ]
 }

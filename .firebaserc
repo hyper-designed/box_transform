@@ -1,5 +1,18 @@
 {
   "projects": {
     "default": "box-transform-example"
-  }
+  },
+  "targets": {
+    "box-transform-example": {
+      "hosting": {
+        "playground": [
+          "box-transform-playground"
+        ],
+        "example": [
+          "box-transform-example"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
