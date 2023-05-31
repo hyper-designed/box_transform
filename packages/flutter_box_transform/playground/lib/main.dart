@@ -764,13 +764,13 @@ class _ClampingRectState extends State<ClampingRect> {
         handle: handle,
         color: mainColor,
         hasShadow: false,
-        handleAlign: HandleAlignment.inside,
+        handleAlignment: HandleAlignment.inside,
       ),
       sideHandleBuilder: (context, handle) => AngularHandle(
         handle: handle,
         color: mainColor,
         hasShadow: false,
-        handleAlign: HandleAlignment.inside,
+        handleAlignment: HandleAlignment.inside,
       ),
       contentBuilder: (context, _, flip) => Container(
         width: model.clampingRect.width,

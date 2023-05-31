@@ -439,14 +439,6 @@ class _TransformableBoxState extends State<TransformableBox> {
       controller.setResizable(widget.resizable, notify: false);
     }
 
-    if (oldWidget.hideHandlesWhenNotResizable !=
-        widget.hideHandlesWhenNotResizable) {
-      controller.setHideHandlesWhenNotResizable(
-        widget.hideHandlesWhenNotResizable,
-        notify: false,
-      );
-    }
-
     if (oldWidget.movable != widget.movable) {
       controller.setMovable(widget.movable, notify: false);
     }
@@ -592,7 +584,7 @@ class _TransformableBoxState extends State<TransformableBox> {
             height: box.height,
             child: content,
           ),
-          if (controller.resizable || !controller.hideHandlesWhenNotResizable)
+          if (controller.resizable || !widget.hideHandlesWhenNotResizable)
             for (final handle in HandlePosition.corners)
               _CornerHandleWidget(
                 key: ValueKey(handle),
@@ -606,7 +598,7 @@ class _TransformableBoxState extends State<TransformableBox> {
                 onPointerCancel: (event) => onHandlePointerDone(event, handle),
                 builder: widget.cornerHandleBuilder,
               ),
-          if (controller.resizable || !controller.hideHandlesWhenNotResizable)
+          if (controller.resizable || !widget.hideHandlesWhenNotResizable)
             for (final handle in HandlePosition.sides)
               _SideHandleWidget(
                 key: ValueKey(handle),

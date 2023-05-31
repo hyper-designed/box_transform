@@ -8,12 +8,13 @@ title: Using a controller
 transformable box externally with proper state management.
 
 To create a controller, you can use the `TransformableBoxController` class. It mirrors a lot of the observed parameters
-in the constructor excluding `contentBuilder`, `handleBuilder`, and `handleTapSize` since these are accessibility and
-rendering features.
+in the constructor excluding `contentBuilder`, `handleBuilder`, `handleTapSize`, `allowFlippingWhileResizing`,
+`movable`, `resizable`, `handleAlignment`, `hideHandlesWhenNotResizable`, and `allowContentFlipping` since these are
+accessibility and rendering features that are controlled at the Widget level.
 
 <Warning>When using a controller, you should move these parameters from your `TransformableBox` to the constructor of
 the `TransformableBoxController`: **_box_**, **_flip_**, **_clampingBox_**, **_constraints_**, and
-**_resolveResizeModeCallback_**. These are all intrinsically managed by the controller.
+**_resizeModeResolver_**. These are all intrinsically managed by the controller.
 
 There must always be only one source of truth, either the `TransformableBox` or the `TransformableBoxController`, not both.</Warning>
 
@@ -100,9 +101,6 @@ controller.setConstraints(constraints);
 // Change clamping rect
 controller.setClampingRect(clampingRect);
 
-// Disable content/child flipping
-controller.setFlipChild(false);
-
 // Disable flipping the rect while resizing
-controller.setFlipRectWhileResizing(false);
+controller.setAllowFlippingWhileResizing(false);
 ```

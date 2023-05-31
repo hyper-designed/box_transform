@@ -26,14 +26,14 @@ You can customize the default handles or build your own handles using the `corne
 properties in the `TransformableBox` constructor. They both provide access to the `BuildContext` and `HandlePosition`
 of the appropriate handle.
 
-You can use `handleAlign` on `TransformableBox` to change the position of the handle's interactive area. By default,
+You can use `HandleAlignment` on `TransformableBox` to change the position of the handle's interactive area. By default,
 the interactive area is aligned to the center of box corner/side.
 
 ```dart title="Putting handle completely inside the box area"
   TransformableBox(
     rect: rect,
     flip: flip,
-    handleAlign: HandleAlign.inside,
+    handleAlignment: HandleAlignment.inside,
     onChanged: (event) {...},
     contentBuilder: (context, rect, flip) {...},
   );
@@ -121,7 +121,7 @@ You can use `AngularHandle` to build angular handles that look like corner brack
   TransformableBox(
     rect: rect,
     flip: flip,
-    handleAlign: HandleAlign.inside,
+    handleAlignment: HandleAlignment.inside,
     cornerHandleBuilder: (context, handle) {
       return AngularCornerHandle(
         handle: handle,
@@ -131,7 +131,7 @@ You can use `AngularHandle` to build angular handles that look like corner brack
     sideHandleBuilder: (context, handle) {
       return AngularSideHandle(
         handle: handle,
-        handleAlign: HandleAlign.inside,
+        handleAlignment: HandleAlignment.inside,
       );
     },
     onChanged: (event) {...},
@@ -139,6 +139,6 @@ You can use `AngularHandle` to build angular handles that look like corner brack
   );
 ```
 
-Use `handleAlign` to align `AngularHandle` to the inside, outside or in the center of the box.
+Use `handleAlignment` to align `AngularHandle` to the inside, outside or in the center of the box.
 
 <Image alt="Angular Handle Alignements" src="assets/angular_handle_alignments.png"/>

@@ -42,11 +42,11 @@ Resizing is freeform by default, meaning that the user can resize the box in any
 
 ## Controlling Resize Modes
 
-The `resolveResizeModeCallback` is a callback that is called whenever a resize operation is about to be performed on a
+The `resizeModeResolver` is a callback that is called whenever a resize operation is about to be performed on a
 given [Transformable Box][transformableBox]. This allows you to define the resize behavior at the time of the resize
 operation. This is useful when you want to change the resize behavior based on the state of the application.
 
-The most common use case for this is **keyboard shortcuts**. A `defaultResolveResizeModeCallback` function is used by
+The most common use case for this is **keyboard shortcuts**. A `defaultResizeModeResolver` function is used by
 default when resizing, and it's job is to listen to keyboard meta keys to change the `ResizeMode`.
 
 ### Default Resize Mode:
@@ -58,14 +58,14 @@ default when resizing, and it's job is to listen to keyboard meta keys to change
 
 See [ResizeModes](/resize_modes) page for more information on the different resize modes.
 
-Override this default behavior by providing `resolveResizeModeCallback` in `TransformableBox` constructor to customize
+Override this default behavior by providing `resizeModeResolver` in `TransformableBox` constructor to customize
 resizing to your liking. This can also be used to allow only certain resize modes.
 
 ```dart title="Resizing with preseving aspect ratio"
   TransformableBox(
     rect: rect,
     flip: flip,
-    resolveResizeModeCallback: () => ResizeMode.scale,
+    resizeModeResolver: () => ResizeMode.scale,
     onChanged: (event) {...},
     contentBuilder: (context, rect, flip) {...},
   );
