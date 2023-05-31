@@ -7,64 +7,64 @@ void main() {
     test('flipBox test with bottom-right handle', () {
       final box = Box.fromLTWH(500, 500, 400, 300);
 
-      Box flipped = flipBox(box, Flip.none, HandlePosition.bottomRight);
+      Box flipped = flipRect(box, Flip.none, HandlePosition.bottomRight);
       expect(box, flipped);
 
-      flipped = flipBox(box, Flip.horizontal, HandlePosition.bottomRight);
+      flipped = flipRect(box, Flip.horizontal, HandlePosition.bottomRight);
       expect(flipped.topLeft, Vector2(100, 500));
 
-      flipped = flipBox(box, Flip.vertical, HandlePosition.bottomRight);
+      flipped = flipRect(box, Flip.vertical, HandlePosition.bottomRight);
       expect(flipped.topLeft, Vector2(500, 200));
 
-      flipped = flipBox(box, Flip.diagonal, HandlePosition.bottomRight);
+      flipped = flipRect(box, Flip.diagonal, HandlePosition.bottomRight);
       expect(flipped.topLeft, Vector2(100, 200));
     });
 
     test('flipBox test with top-right handle', () {
       final box = Box.fromLTWH(500, 500, 400, 300);
 
-      Box flipped = flipBox(box, Flip.none, HandlePosition.topRight);
+      Box flipped = flipRect(box, Flip.none, HandlePosition.topRight);
       expect(box, flipped);
 
-      flipped = flipBox(box, Flip.horizontal, HandlePosition.topRight);
+      flipped = flipRect(box, Flip.horizontal, HandlePosition.topRight);
       expect(flipped.topLeft, Vector2(100, 500));
 
-      flipped = flipBox(box, Flip.vertical, HandlePosition.topRight);
+      flipped = flipRect(box, Flip.vertical, HandlePosition.topRight);
       expect(flipped.topLeft, Vector2(500, 800));
 
-      flipped = flipBox(box, Flip.diagonal, HandlePosition.topRight);
+      flipped = flipRect(box, Flip.diagonal, HandlePosition.topRight);
       expect(flipped.topLeft, Vector2(100, 800));
     });
 
     test('flipBox test with top-left handle', () {
       final box = Box.fromLTWH(500, 500, 400, 300);
 
-      Box flipped = flipBox(box, Flip.none, HandlePosition.topLeft);
+      Box flipped = flipRect(box, Flip.none, HandlePosition.topLeft);
       expect(box, flipped);
 
-      flipped = flipBox(box, Flip.horizontal, HandlePosition.topLeft);
+      flipped = flipRect(box, Flip.horizontal, HandlePosition.topLeft);
       expect(flipped.topLeft, Vector2(900, 500));
 
-      flipped = flipBox(box, Flip.vertical, HandlePosition.topLeft);
+      flipped = flipRect(box, Flip.vertical, HandlePosition.topLeft);
       expect(flipped.topLeft, Vector2(500, 800));
 
-      flipped = flipBox(box, Flip.diagonal, HandlePosition.topLeft);
+      flipped = flipRect(box, Flip.diagonal, HandlePosition.topLeft);
       expect(flipped.topLeft, Vector2(900, 800));
     });
 
     test('flipBox test with bottom-left handle', () {
       final box = Box.fromLTWH(500, 500, 400, 300);
 
-      Box flipped = flipBox(box, Flip.none, HandlePosition.bottomLeft);
+      Box flipped = flipRect(box, Flip.none, HandlePosition.bottomLeft);
       expect(box, flipped);
 
-      flipped = flipBox(box, Flip.horizontal, HandlePosition.bottomLeft);
+      flipped = flipRect(box, Flip.horizontal, HandlePosition.bottomLeft);
       expect(flipped.topLeft, Vector2(900, 500));
 
-      flipped = flipBox(box, Flip.vertical, HandlePosition.bottomLeft);
+      flipped = flipRect(box, Flip.vertical, HandlePosition.bottomLeft);
       expect(flipped.topLeft, Vector2(500, 200));
 
-      flipped = flipBox(box, Flip.diagonal, HandlePosition.bottomLeft);
+      flipped = flipRect(box, Flip.diagonal, HandlePosition.bottomLeft);
       expect(flipped.topLeft, Vector2(900, 200));
     });
   });
@@ -73,7 +73,7 @@ void main() {
     test('getFlipForBox test for bottom-right handle', () {
       final box = Box.fromLTWH(500, 500, 400, 300);
 
-      Flip flip = getFlipForBox(
+      Flip flip = getFlipForRect(
         box,
         Vector2(-500, -400),
         HandlePosition.bottomRight,
@@ -81,7 +81,7 @@ void main() {
       );
       expect(flip, Flip.diagonal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(-500, 10),
         HandlePosition.bottomRight,
@@ -89,7 +89,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(10, -400),
         HandlePosition.bottomRight,
@@ -97,7 +97,7 @@ void main() {
       );
       expect(flip, Flip.vertical);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(10, 10),
         HandlePosition.bottomRight,
@@ -105,7 +105,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(500, 500),
         HandlePosition.topLeft,
@@ -113,7 +113,7 @@ void main() {
       );
       expect(flip, Flip.diagonal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(500, -10),
         HandlePosition.topLeft,
@@ -121,7 +121,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(-10, 500),
         HandlePosition.topLeft,
@@ -129,7 +129,7 @@ void main() {
       );
       expect(flip, Flip.vertical);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(-10, -10),
         HandlePosition.topLeft,
@@ -137,7 +137,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(10, -10),
         HandlePosition.topRight,
@@ -145,7 +145,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(10, 500),
         HandlePosition.topRight,
@@ -153,7 +153,7 @@ void main() {
       );
       expect(flip, Flip.vertical);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(-500, 500),
         HandlePosition.topRight,
@@ -161,7 +161,7 @@ void main() {
       );
       expect(flip, Flip.diagonal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(-500, -10),
         HandlePosition.topRight,
@@ -169,7 +169,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(500, 10),
         HandlePosition.bottomLeft,
@@ -177,7 +177,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(-10, 10),
         HandlePosition.bottomLeft,
@@ -185,7 +185,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(-10, -500),
         HandlePosition.bottomLeft,
@@ -193,7 +193,7 @@ void main() {
       );
       expect(flip, Flip.vertical);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(500, -500),
         HandlePosition.bottomLeft,
@@ -205,7 +205,7 @@ void main() {
     test('getFlipForBox test for top-left handle', () {
       final box = Box.fromLTWH(0, 0, 400, 300);
 
-      Flip flip = getFlipForBox(
+      Flip flip = getFlipForRect(
         box,
         Vector2(500, 500),
         HandlePosition.topLeft,
@@ -213,7 +213,7 @@ void main() {
       );
       expect(flip, Flip.diagonal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(500, -10),
         HandlePosition.topLeft,
@@ -221,7 +221,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(-10, 500),
         HandlePosition.topLeft,
@@ -229,7 +229,7 @@ void main() {
       );
       expect(flip, Flip.vertical);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(-10, -10),
         HandlePosition.topLeft,
@@ -237,7 +237,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(-10, -10),
         HandlePosition.topLeft,
@@ -245,7 +245,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(500, 500),
         HandlePosition.topLeft,
@@ -253,7 +253,7 @@ void main() {
       );
       expect(flip, Flip.diagonal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(500, -10),
         HandlePosition.topLeft,
@@ -261,7 +261,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(-10, 500),
         HandlePosition.topLeft,
@@ -269,7 +269,7 @@ void main() {
       );
       expect(flip, Flip.vertical);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(-10, -10),
         HandlePosition.topLeft,
@@ -277,7 +277,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(300, 200),
         HandlePosition.topLeft,
@@ -285,7 +285,7 @@ void main() {
       );
       expect(flip, Flip.diagonal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(800, -10),
         HandlePosition.topLeft,
@@ -293,7 +293,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(-10, 500),
         HandlePosition.topLeft,
@@ -301,7 +301,7 @@ void main() {
       );
       expect(flip, Flip.vertical);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(-10, -10),
         HandlePosition.topLeft,
@@ -309,7 +309,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(800, 500),
         HandlePosition.topLeft,
@@ -317,7 +317,7 @@ void main() {
       );
       expect(flip, Flip.diagonal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(300, 0),
         HandlePosition.topLeft,
@@ -325,7 +325,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(0, 200),
         HandlePosition.topLeft,
@@ -337,7 +337,7 @@ void main() {
     test('getFlipForBox test for top-right handle', () {
       final box = Box.fromLTWH(0, 0, 400, 300);
 
-      Flip flip = getFlipForBox(
+      Flip flip = getFlipForRect(
         box,
         Vector2(500, 500),
         HandlePosition.topRight,
@@ -345,7 +345,7 @@ void main() {
       );
       expect(flip, Flip.vertical);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(-500, 500),
         HandlePosition.topRight,
@@ -353,7 +353,7 @@ void main() {
       );
       expect(flip, Flip.diagonal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(-500, 0),
         HandlePosition.topRight,
@@ -361,7 +361,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(-10, -10),
         HandlePosition.topRight,
@@ -369,7 +369,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(-10, -10),
         HandlePosition.topRight,
@@ -377,7 +377,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(500, 500),
         HandlePosition.topRight,
@@ -385,7 +385,7 @@ void main() {
       );
       expect(flip, Flip.vertical);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(-500, 500),
         HandlePosition.topRight,
@@ -393,7 +393,7 @@ void main() {
       );
       expect(flip, Flip.diagonal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(-500, 0),
         HandlePosition.topRight,
@@ -401,7 +401,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(-10, -10),
         HandlePosition.topRight,
@@ -409,7 +409,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(100, 200),
         HandlePosition.topRight,
@@ -417,7 +417,7 @@ void main() {
       );
       expect(flip, Flip.vertical);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(-300, 200),
         HandlePosition.topRight,
@@ -425,7 +425,7 @@ void main() {
       );
       expect(flip, Flip.diagonal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(-500, 0),
         HandlePosition.topRight,
@@ -433,7 +433,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(-10, -10),
         HandlePosition.topRight,
@@ -441,7 +441,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(500, 500),
         HandlePosition.topRight,
@@ -449,7 +449,7 @@ void main() {
       );
       expect(flip, Flip.vertical);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(-500, 0),
         HandlePosition.topRight,
@@ -457,7 +457,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(-20, 20),
         HandlePosition.topRight,
@@ -469,7 +469,7 @@ void main() {
     test('getFlipForBox test for bottom-left handle', () {
       final box = Box.fromLTWH(0, 0, 400, 300);
 
-      Flip flip = getFlipForBox(
+      Flip flip = getFlipForRect(
         box,
         Vector2(500, -400),
         HandlePosition.bottomLeft,
@@ -477,7 +477,7 @@ void main() {
       );
       expect(flip, Flip.diagonal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(500, 500),
         HandlePosition.bottomLeft,
@@ -485,7 +485,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(0, -400),
         HandlePosition.bottomLeft,
@@ -493,7 +493,7 @@ void main() {
       );
       expect(flip, Flip.vertical);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(20, -20),
         HandlePosition.bottomLeft,
@@ -501,7 +501,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(20, -20),
         HandlePosition.bottomLeft,
@@ -509,7 +509,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(500, -400),
         HandlePosition.bottomLeft,
@@ -517,7 +517,7 @@ void main() {
       );
       expect(flip, Flip.diagonal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(500, 500),
         HandlePosition.bottomLeft,
@@ -525,7 +525,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(0, -400),
         HandlePosition.bottomLeft,
@@ -533,7 +533,7 @@ void main() {
       );
       expect(flip, Flip.vertical);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(20, -20),
         HandlePosition.bottomLeft,
@@ -541,7 +541,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(300, -200),
         HandlePosition.bottomLeft,
@@ -549,7 +549,7 @@ void main() {
       );
       expect(flip, Flip.diagonal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(800, 500),
         HandlePosition.bottomLeft,
@@ -557,7 +557,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(0, -200),
         HandlePosition.bottomLeft,
@@ -565,7 +565,7 @@ void main() {
       );
       expect(flip, Flip.vertical);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(20, -20),
         HandlePosition.bottomLeft,
@@ -573,7 +573,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(300, -200),
         HandlePosition.bottomLeft,
@@ -581,7 +581,7 @@ void main() {
       );
       expect(flip, Flip.diagonal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(800, 500),
         HandlePosition.bottomLeft,
@@ -589,7 +589,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForBox(
+      flip = getFlipForRect(
         box,
         Vector2(0, -200),
         HandlePosition.bottomLeft,

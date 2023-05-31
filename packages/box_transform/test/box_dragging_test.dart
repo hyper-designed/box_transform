@@ -13,7 +13,7 @@ void main() {
 
     // Move the box to the same position. Nothing should change.
     final result1 = BoxTransformer.move(
-      initialBox: box,
+      initialRect: box,
       initialLocalPosition: Vector2.zero(),
       localPosition: Vector2.zero(),
     );
@@ -36,7 +36,7 @@ void main() {
 
     // Move the box to the right by 10px to the right with a centered cursor.
     final result2 = BoxTransformer.move(
-      initialBox: box,
+      initialRect: box,
       initialLocalPosition: Vector2(50, 50),
       localPosition: Vector2(60, 50),
     );
@@ -69,7 +69,7 @@ void main() {
 
     // Move the box to the same position. Nothing should change.
     final result1 = BoxTransformer.move(
-      initialBox: box,
+      initialRect: box,
       initialLocalPosition: Vector2.zero(),
       localPosition: Vector2.zero(),
       clampingRect: clampingRect,
@@ -93,7 +93,7 @@ void main() {
 
     // Move the box to the right by 10px to the right with a centered cursor.
     final result2 = BoxTransformer.move(
-      initialBox: box,
+      initialRect: box,
       initialLocalPosition: Vector2(75, 75),
       localPosition: Vector2(85, 75),
       clampingRect: clampingRect,
@@ -118,7 +118,7 @@ void main() {
     // Move the box to the right by 200px to the bottom right with a centered
     // cursor.
     final result3 = BoxTransformer.move(
-      initialBox: box,
+      initialRect: box,
       initialLocalPosition: Vector2(50, 50),
       localPosition: Vector2(200, 200),
       clampingRect: clampingRect,

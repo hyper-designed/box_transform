@@ -23,7 +23,7 @@ class UIBoxTransform {
     bool allowFlipping = true,
   }) =>
       transform.BoxTransformer.resize(
-        initialBox: initialRect.toBox(),
+        initialRect: initialRect.toBox(),
         initialLocalPosition: initialLocalPosition.toVector2(),
         localPosition: localPosition.toVector2(),
         handle: handle,
@@ -42,7 +42,7 @@ class UIBoxTransform {
     ui.Rect clampingRect = ui.Rect.largest,
   }) =>
       transform.BoxTransformer.move(
-        initialBox: initialRect.toBox(),
+        initialRect: initialRect.toBox(),
         initialLocalPosition: initialLocalPosition.toVector2(),
         localPosition: localPosition.toVector2(),
         clampingRect: clampingRect.toBox(),

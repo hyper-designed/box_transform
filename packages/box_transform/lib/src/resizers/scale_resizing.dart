@@ -15,7 +15,7 @@ final class ScaleResizer extends Resizer {
     required Flip flip,
   }) {
     final flippedHandle = handle.flip(flip);
-    final effectiveInitialRect = flipBox(initialRect, flip, handle);
+    final effectiveInitialRect = flipRect(initialRect, flip, handle);
 
     ({Box rect, Box largest, bool hasValidFlip}) result;
 
@@ -139,7 +139,7 @@ final class ScaleResizer extends Resizer {
       largest = maxRect;
     }
 
-    final isValid = isValidBox(rect, constraints, clampingRect);
+    final isValid = isValidRect(rect, constraints, clampingRect);
 
     return (rect: rect, largest: largest, hasValidFlip: isValid);
   }
@@ -215,7 +215,7 @@ final class ScaleResizer extends Resizer {
       largest = maxRect;
     }
 
-    final isValid = isValidBox(rect, constraints, clampingRect);
+    final isValid = isValidRect(rect, constraints, clampingRect);
 
     return (rect: rect, largest: largest, hasValidFlip: isValid);
   }
@@ -291,7 +291,7 @@ final class ScaleResizer extends Resizer {
       largest = maxRect;
     }
 
-    final isValid = isValidBox(rect, constraints, clampingRect);
+    final isValid = isValidRect(rect, constraints, clampingRect);
 
     return (rect: rect, largest: largest, hasValidFlip: isValid);
   }
@@ -367,7 +367,7 @@ final class ScaleResizer extends Resizer {
       largest = maxRect;
     }
 
-    final isValid = isValidBox(rect, constraints, clampingRect);
+    final isValid = isValidRect(rect, constraints, clampingRect);
 
     return (rect: rect, largest: largest, hasValidFlip: isValid);
   }
@@ -443,7 +443,7 @@ final class ScaleResizer extends Resizer {
       largest = maxRect;
     }
 
-    final isValid = isValidBox(rect, constraints, clampingRect);
+    final isValid = isValidRect(rect, constraints, clampingRect);
 
     return (rect: rect, largest: largest, hasValidFlip: isValid);
   }
@@ -513,7 +513,7 @@ final class ScaleResizer extends Resizer {
       largest = maxRect;
     }
 
-    final isValid = isValidBox(rect, constraints, clampingRect);
+    final isValid = isValidRect(rect, constraints, clampingRect);
 
     return (rect: rect, largest: largest, hasValidFlip: isValid);
   }
@@ -583,7 +583,7 @@ final class ScaleResizer extends Resizer {
       largest = maxRect;
     }
 
-    final isValid = isValidBox(rect, constraints, clampingRect);
+    final isValid = isValidRect(rect, constraints, clampingRect);
 
     return (rect: rect, largest: largest, hasValidFlip: isValid);
   }
@@ -653,7 +653,7 @@ final class ScaleResizer extends Resizer {
       largest = maxRect;
     }
 
-    final isValid = isValidBox(rect, constraints, clampingRect);
+    final isValid = isValidRect(rect, constraints, clampingRect);
 
     return (rect: rect, largest: largest, hasValidFlip: isValid);
   }

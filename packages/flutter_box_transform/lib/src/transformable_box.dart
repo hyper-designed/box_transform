@@ -153,7 +153,7 @@ class TransformableBox extends StatefulWidget {
   ///
   /// [Rect] is immutable, so a new [Rect] instance will be created every time
   /// the [TransformableBoxController] mutates the box. You can acquire your
-  /// updated box through the [onChange] callback or through an externally
+  /// updated box through the [onChanged] callback or through an externally
   /// provided [TransformableBoxController] instance.
   final Rect rect;
 
@@ -216,7 +216,7 @@ class TransformableBox extends StatefulWidget {
   /// A callback that is called every time the [TransformableBox] is updated.
   /// This is called every time the [TransformableBoxController] mutates the box
   /// or the flip.
-  final RectChangeEvent? onChange;
+  final RectChangeEvent? onChanged;
 
   /// A callback that is called when [TransformableBox] triggers a pointer down
   /// event to begin a drag operation.
@@ -226,7 +226,7 @@ class TransformableBox extends StatefulWidget {
   /// This is called every time the [TransformableBoxController] mutates the
   /// box through a drag operation.
   ///
-  /// This is different from [onChange] in that it is only called when the
+  /// This is different from [onChanged] in that it is only called when the
   /// box is moved, not when the box is resized.
   final RectDragUpdateEvent? onDragUpdate;
 
@@ -241,7 +241,7 @@ class TransformableBox extends StatefulWidget {
   /// This is called every time the [TransformableBoxController] mutates the
   /// box.
   ///
-  /// This is different from [onChange] in that it is only called when the box
+  /// This is different from [onChanged] in that it is only called when the box
   /// is resized, not when the box is moved.
   final RectResizeUpdateEvent? onResizeUpdate;
 
@@ -313,7 +313,7 @@ class TransformableBox extends StatefulWidget {
     this.allowFlippingWhileResizing = true,
 
     // Either resize or drag triggers.
-    this.onChange,
+    this.onChanged,
 
     // Resize events
     this.onResizeStart,
@@ -496,7 +496,7 @@ class _TransformableBoxState extends State<TransformableBox> {
       notify: false,
     );
 
-    widget.onChange?.call(result, event);
+    widget.onChanged?.call(result, event);
     widget.onResizeUpdate?.call(result, event);
     widget.onMinWidthReached?.call(result.minWidthReached, event);
     widget.onMaxWidthReached?.call(result.maxWidthReached, event);
@@ -547,7 +547,7 @@ class _TransformableBoxState extends State<TransformableBox> {
       notify: false,
     );
 
-    widget.onChange?.call(result, event);
+    widget.onChanged?.call(result, event);
     widget.onDragUpdate?.call(result, event);
   }
 

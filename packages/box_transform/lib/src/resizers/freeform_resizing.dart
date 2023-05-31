@@ -15,7 +15,7 @@ final class FreeformResizer extends Resizer {
     required Flip flip,
   }) {
     final flippedHandle = handle.flip(flip);
-    Box effectiveInitialRect = flipBox(initialRect, flip, handle);
+    Box effectiveInitialRect = flipRect(initialRect, flip, handle);
 
     Box newRect = Box.fromLTRB(
       max(explodedRect.left, clampingRect.left),
@@ -38,7 +38,7 @@ final class FreeformResizer extends Resizer {
         constrainedHeight,
       );
 
-      isValid = isValidBox(newRect, constraints, clampingRect);
+      isValid = isValidRect(newRect, constraints, clampingRect);
       if (!isValid) {
         newRect = Box.fromHandle(
           handle.anchor(initialRect),

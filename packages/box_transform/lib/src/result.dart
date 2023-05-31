@@ -41,7 +41,7 @@ abstract class RectResult {
 /// usually [Vector2] or [Offset]. It represents the delta of the transform.
 ///
 /// D is the type of the [Dimension] that is used by the [BoxTransformer]. This
-/// is usually [Dimension] or [Size]. It represents the size of the box.
+/// is usually [Dimension] or [Size]. It represents the size of the rect.
 class TransformResult<B extends Object, V extends Object, D extends Object>
     extends RectResult {
   /// The new [Box] of the node after the resize.
@@ -64,23 +64,23 @@ class TransformResult<B extends Object, V extends Object, D extends Object>
   /// the width of the [newSize] will be negative.
   final D rawSize;
 
-  /// Whether the resizing box hit its maximum possible width.
+  /// Whether the resizing rect hit its maximum possible width.
   final bool minWidthReached;
 
-  /// Whether the resizing box hit its minimum possible width.
+  /// Whether the resizing rect hit its minimum possible width.
   final bool maxWidthReached;
 
-  /// Whether the resizing box hit its maximum possible height.
+  /// Whether the resizing rect hit its maximum possible height.
   final bool minHeightReached;
 
-  /// Whether the resizing box hit its minimum possible height.
+  /// Whether the resizing rect hit its minimum possible height.
   final bool maxHeightReached;
 
-  /// Represents an area in which the box could grow. This may eventually be
-  /// the maximum state of size and position a box can reach.
+  /// Represents an area in which the rect could grow. This may eventually be
+  /// the maximum state of size and position a rect can reach.
   final B largestRect;
 
-  /// Handle used to resize the box.
+  /// Handle used to resize the rect.
   final HandlePosition handle;
 
   /// Creates a [ResizeResult] object.
@@ -136,7 +136,7 @@ class TransformResult<B extends Object, V extends Object, D extends Object>
 
   @override
   String toString() => 'TransformResult('
-      'box: $rect, '
+      'rect: $rect, '
       'oldBox: $oldRect, '
       'flip: $flip, '
       'resizeMode: $resizeMode, '
@@ -174,7 +174,7 @@ class MoveResult<B extends Object, V extends Object, D extends Object>
 
   @override
   String toString() => 'MoveResult('
-      'box: $rect, '
+      'rect: $rect, '
       'oldBox: $oldRect, '
       'delta: $delta, '
       'rawSize: $rawSize, '
@@ -204,7 +204,7 @@ class ResizeResult<B extends Object, V extends Object, D extends Object>
 
   @override
   String toString() => 'ResizeResult('
-      'box: $rect, '
+      'rect: $rect, '
       'oldBox: $oldRect, '
       'flip: $flip, '
       'resizeMode: $resizeMode, '
