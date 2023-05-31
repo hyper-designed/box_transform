@@ -9,9 +9,14 @@
   "zoomImagesDefault": true,
   "anchors": [
     {
-      "title": "Live Demo",
+      "title": "Example App",
       "icon": "arrow-up-right-from-square",
-      "link": "https://box-transform.codemagic.app"
+      "link": "https://box-transform-example.firebaseapp.com"
+    },
+    {
+      "title": "Playground",
+      "icon": "arrow-up-right-from-square",
+      "link": "https://box-transform-playground.firebaseapp.com"
     },
     {
       "title": "Report a bug",
@@ -25,31 +30,76 @@
     }
   ],
   "sidebar": [
-    ["Overview", "/"],
-    ["Motivation", "/motivation"],
     [
-      "Definitions", [
-      ["Resize Modes", "/resize_modes"]
-    ]
+      "Overview",
+      "/"
     ],
     [
-      "Using with Flutter", [
-      ["Getting Started", "/flutter_get_started"],
-      ["Moving", "/flutter_moving"],
-      ["Resizing", "/flutter_resizing"],
-      ["Handles", "/handles"],
-      ["Using a controller", "/flutter_controller"],
-      ["API Reference \uD83D\uDD17", "https://pub.dev/documentation/flutter_box_transform/latest/"]
-    ]
+      "Motivation",
+      "/motivation"
     ],
     [
-      "Using the Dart API", [
-      ["Getting Started", "/get_started"],
-      ["Moving", "/moving"],
-      ["Resizing", "/resizing"],
-      ["API Reference \uD83D\uDD17", "https://pub.dev/documentation/box_transform/latest/"]
-    ]
+      "Definitions",
+      [
+        [
+          "Resize Modes",
+          "/resize_modes"
+        ]
+      ]
     ],
-    ["License", "/license"]
+    [
+      "Using with Flutter",
+      [
+        [
+          "Getting Started",
+          "/flutter_get_started"
+        ],
+        [
+          "Moving",
+          "/flutter_moving"
+        ],
+        [
+          "Resizing",
+          "/flutter_resizing"
+        ],
+        [
+          "Handles",
+          "/handles"
+        ],
+        [
+          "Using a controller",
+          "/flutter_controller"
+        ],
+        [
+          "API Reference \uD83D\uDD17",
+          "https://pub.dev/documentation/flutter_box_transform/latest/"
+        ]
+      ]
+    ],
+    [
+      "Using the Dart API",
+      [
+        [
+          "Getting Started",
+          "/get_started"
+        ],
+        [
+          "Moving",
+          "/moving"
+        ],
+        [
+          "Resizing",
+          "/resizing"
+        ],
+        [
+          "API Reference \uD83D\uDD17",
+          "https://pub.dev/documentation/box_transform/latest/"
+        ]
+      ]
+    ],
+    [
+      "License",
+      "/license"
+    ]
   ]
 }

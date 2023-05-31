@@ -2,7 +2,7 @@
 
 # Flutter Box Transform
 
-[![melos](https://img.shields.io/badge/maintained%20with-melos-f700ff.svg?style=flat-square)](https://github.com/invertase/melos) [![Codemagic build status](https://api.codemagic.io/apps/63dd4d4ae6be1d561b8f45d2/63dd4d4ae6be1d561b8f45d1/status_badge.svg)](https://codemagic.io/apps/63dd4d4ae6be1d561b8f45d2/63dd4d4ae6be1d561b8f45d1/latest_build) [![Pub Version](https://img.shields.io/pub/v/box_transform?label=Pub)](https://pub.dev/packages/box_transform)
+[![melos](https://img.shields.io/badge/maintained%20with-melos-f700ff.svg?style=flat-square)](https://github.com/invertase/melos) [![Build](https://github.com/hyper-designed/box_transform/actions/workflows/build.yml/badge.svg)](https://github.com/hyper-designed/box_transform/actions/workflows/build.yml) [![Pub Version](https://img.shields.io/pub/v/box_transform?label=Pub)](https://pub.dev/packages/box_transform)
 
 [Flutter Box Transform](https://github.com/hyper-designed/box_transform) is a [Flutter](https://flutter.dev) package
 that allows you to programmatically handle box resizing and dragging using Flutter widgets. It provides highly
@@ -27,7 +27,8 @@ This package uses [Box Transform](https://pub.dev/packages/box_transform) APIs i
 Go to the [Getting Started](https://docs.page/hyper-designed/box_transform/flutter_get_started) page of the
 [documentation](https://boxtransform.hyperdesigned.dev/) to start using Flutter Box Transform.
 
-### Live Demo: [box-transform.codemagic.app](https://box-transform.codemagic.app)
+### Example App: [box-transform-example.firebaseapp.com](https://box-transform-example.firebaseapp.com)
+### Playground: [box-transform-playground.firebaseapp.com](https://box-transform-playground.firebaseapp.com)
 
 ## Documentation
 
