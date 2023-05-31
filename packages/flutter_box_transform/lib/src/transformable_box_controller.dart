@@ -3,10 +3,6 @@ import 'package:flutter/services.dart';
 
 import '../flutter_box_transform.dart';
 
-/// A callback function type definition that is used to resolve the
-/// [ResizeMode] based on the pressed keys on the keyboard.
-typedef ResizeModeResolver = ValueGetter<ResizeMode>;
-
 /// Default [ResizeModeResolver] implementation. This implementation
 /// doesn't rely on the focus system .It resolves the [ResizeMode] based on
 /// the pressed keys on the keyboard from the
@@ -44,7 +40,7 @@ class TransformableBoxController extends ChangeNotifier {
     Flip? flip,
     Rect? clampingRect,
     BoxConstraints? constraints,
-    ResizeModeResolver? resizeModeResolver,
+    ValueGetter<ResizeMode>? resizeModeResolver,
 
     // Additional controls.
     bool resizable = true,
@@ -61,11 +57,11 @@ class TransformableBoxController extends ChangeNotifier {
 
   /// The callback function that is used to resolve the [ResizeMode] based on
   /// the pressed keys on the keyboard.
-  ResizeModeResolver? _resizeModeResolver;
+  ValueGetter<ResizeMode>? _resizeModeResolver;
 
   /// The callback function that is used to resolve the [ResizeMode] based on
   /// the pressed keys on the keyboard.
-  ResizeModeResolver? get resizeModeResolver => _resizeModeResolver;
+  ValueGetter<ResizeMode>? get resizeModeResolver => _resizeModeResolver;
 
   /// The current [Rect] of the [TransformableBox].
   Rect _rect = Rect.zero;
@@ -148,7 +144,7 @@ class TransformableBoxController extends ChangeNotifier {
   BoxConstraints get constraints => _constraints;
 
   /// Sets the current [resizeModeResolver] of the [TransformableBox].
-  void setResizeModeResolver(ResizeModeResolver? resizeModeResolver,
+  void setResizeModeResolver(ValueGetter<ResizeMode>? resizeModeResolver,
       {bool notify = true}) {
     _resizeModeResolver = resizeModeResolver;
 
