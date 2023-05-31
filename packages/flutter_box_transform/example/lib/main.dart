@@ -546,184 +546,13 @@ class _ImageBoxState extends State<ImageBox> {
     return Stack(
       fit: StackFit.expand,
       children: [
-        // TODO: Remove
-        if (model.clampingEnabled)
-          Builder(
-            builder: (context) {
-              final rect = largestClampingBox;
-              final line1 = extendLineToRect(
-                model.clampingRect,
-                rect.center.toVector2(),
-                rect.bottomRight.toVector2(),
-              );
-
-              final line2 = extendLineToRect(
-                model.clampingRect,
-                rect.center.toVector2(),
-                rect.topRight.toVector2(),
-              );
-
-              if (line1 == null || line2 == null) {
-                return const SizedBox.shrink();
-              }
-
-              return IgnorePointer(
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Positioned.fromRect(
-                      rect: rect,
-                      child: IgnorePointer(
-                        child: Container(
-                          color: Colors.yellow.withOpacity(0.2),
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              const Placeholder(),
-                              Align(
-                                alignment: Alignment.center,
-                                child: Container(
-                                  width: 15,
-                                  height: 15,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.blue,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                              ),
-                              Align(
-                                alignment: Alignment.topLeft,
-                                child: FractionalTranslation(
-                                  translation: const Offset(-0.5, -0.5),
-                                  child: Container(
-                                    width: 20,
-                                    height: 20,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.blue,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Align(
-                                alignment: Alignment.topRight,
-                                child: FractionalTranslation(
-                                  translation: const Offset(0.5, -0.5),
-                                  child: Container(
-                                    width: 20,
-                                    height: 20,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.blue,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Align(
-                                alignment: Alignment.bottomRight,
-                                child: FractionalTranslation(
-                                  translation: const Offset(0.5, 0.5),
-                                  child: Container(
-                                    width: 20,
-                                    height: 20,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.blue,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Align(
-                                alignment: Alignment.bottomLeft,
-                                child: FractionalTranslation(
-                                  translation: const Offset(-0.5, 0.5),
-                                  child: Container(
-                                    width: 20,
-                                    height: 20,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.blue,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      left: line1[0].x,
-                      top: line1[0].y,
-                      child: FractionalTranslation(
-                        translation: const Offset(-0.5, -0.5),
-                        child: Container(
-                          width: 15,
-                          height: 15,
-                          decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(1),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      left: line2[0].x,
-                      top: line2[0].y,
-                      child: FractionalTranslation(
-                        translation: const Offset(-0.5, -0.5),
-                        child: Container(
-                          width: 15,
-                          height: 15,
-                          decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(1),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      left: line2[1].x,
-                      top: line2[1].y,
-                      child: FractionalTranslation(
-                        translation: const Offset(-0.5, -0.5),
-                        child: Container(
-                          width: 15,
-                          height: 15,
-                          decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(1),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      left: line1[1].x,
-                      top: line1[1].y,
-                      child: FractionalTranslation(
-                        translation: const Offset(-0.5, -0.5),
-                        child: Container(
-                          width: 15,
-                          height: 15,
-                          decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(1),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
         TransformableBox(
           key: ValueKey('image-box-${box.name}'),
           rect: box.rect,
           flip: box.flip,
           clampingRect: model.clampingEnabled ? model.clampingRect : null,
           constraints: box.constraintsEnabled ? box.constraints : null,
-          onChangeUpdate: (result, event) {
+          onChange: (result, event) {
             widget.onChanged?.call(result);
             largestClampingBox = result.largestRect;
             setState(() {});
@@ -909,7 +738,7 @@ class _ClampingRectState extends State<ClampingRect> {
       flip: Flip.none,
       clampingRect: model.playgroundArea!,
       constraints: BoxConstraints(minWidth: minWidth, minHeight: minHeight),
-      onChangeUpdate: (result, event) => model.setClampingRect(result.rect),
+      onChange: (result, event) => model.setClampingRect(result.rect),
       onTerminalSizeReached: (
         bool reachedMinWidth,
         bool reachedMaxWidth,

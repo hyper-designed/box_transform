@@ -26,8 +26,7 @@ typedef RectChangeEvent = void Function(
 
 /// A callback that is called when the box begins a drag operation.
 typedef RectDragStartEvent = void Function(
-  UIMoveResult result,
-  PointerMoveEvent event,
+  PointerDownEvent event,
 );
 
 /// A callback that is called when the box is being dragged.
@@ -39,7 +38,6 @@ typedef RectDragUpdateEvent = void Function(
 /// A callback that is called when the box ends a drag operation.
 /// [event] is either [PointerUpEvent] or [PointerCancelEvent].
 typedef RectDragEndEvent = void Function(
-  UIMoveResult result,
   PointerEvent event,
 );
 
@@ -155,7 +153,7 @@ class TransformableBox extends StatefulWidget {
   ///
   /// [Rect] is immutable, so a new [Rect] instance will be created every time
   /// the [TransformableBoxController] mutates the box. You can acquire your
-  /// updated box through the [onChangeUpdate] callback or through an externally
+  /// updated box through the [onChange] callback or through an externally
   /// provided [TransformableBoxController] instance.
   final Rect rect;
 
@@ -218,7 +216,7 @@ class TransformableBox extends StatefulWidget {
   /// A callback that is called every time the [TransformableBox] is updated.
   /// This is called every time the [TransformableBoxController] mutates the box
   /// or the flip.
-  final RectChangeEvent? onChangeUpdate;
+  final RectChangeEvent? onChange;
 
   /// A callback that is called when [TransformableBox] triggers a pointer down
   /// event to begin a drag operation.
@@ -228,7 +226,7 @@ class TransformableBox extends StatefulWidget {
   /// This is called every time the [TransformableBoxController] mutates the
   /// box through a drag operation.
   ///
-  /// This is different from [onChangeUpdate] in that it is only called when the
+  /// This is different from [onChange] in that it is only called when the
   /// box is moved, not when the box is resized.
   final RectDragUpdateEvent? onDragUpdate;
 
@@ -243,7 +241,7 @@ class TransformableBox extends StatefulWidget {
   /// This is called every time the [TransformableBoxController] mutates the
   /// box.
   ///
-  /// This is different from [onChangeUpdate] in that it is only called when the box
+  /// This is different from [onChange] in that it is only called when the box
   /// is resized, not when the box is moved.
   final RectResizeUpdateEvent? onResizeUpdate;
 
@@ -314,14 +312,8 @@ class TransformableBox extends StatefulWidget {
     this.movable = true,
     this.allowFlippingWhileResizing = true,
 
-    // Terminal update events.
-    this.onMinWidthReached,
-    this.onMaxWidthReached,
-    this.onMinHeightReached,
-    this.onMaxHeightReached,
-    this.onTerminalWidthReached,
-    this.onTerminalHeightReached,
-    this.onTerminalSizeReached,
+    // Either resize or drag triggers.
+    this.onChange,
 
     // Resize events
     this.onResizeStart,
@@ -332,26 +324,23 @@ class TransformableBox extends StatefulWidget {
     this.onDragStart,
     this.onDragUpdate,
     this.onDragEnd,
-    this.onChangeUpdate,
+
+    // Terminal update events.
+    this.onMinWidthReached,
+    this.onMaxWidthReached,
+    this.onMinHeightReached,
+    this.onMaxHeightReached,
+    this.onTerminalWidthReached,
+    this.onTerminalHeightReached,
+    this.onTerminalSizeReached,
   })  : assert(
-          (controller == null) != (rect == null),
-          'Either provide a controller or a rect, not both. If you wish to use a controller, you cannot use the other parameters.',
-        ),
-        assert(
-          (controller == null) != (flip == null),
-          'Either provide a controller or a flip, not both. If you wish to use a controller, you cannot use the other parameters.',
-        ),
-        assert(
-          (controller == null) != (clampingRect == null),
-          'Either provide a controller or a clampingRect, not both. If you wish to use a controller, you cannot use the other parameters.',
-        ),
-        assert(
-          (controller == null) != (constraints == null),
-          'Either provide a controller or a constraints, not both. If you wish to use a controller, you cannot use the other parameters.',
-        ),
-        assert(
-          (controller == null) != (resizeModeResolver == null),
-          'Either provide a controller or a resizeModeResolver, not both. If you wish to use a controller, you cannot use the other parameters.',
+          (controller == null) ||
+              ((rect == null) &&
+                  (flip == null) &&
+                  (clampingRect == null) &&
+                  (constraints == null) &&
+                  (resizeModeResolver == null)),
+          'If a controller is provided, the raw values should not be provided.',
         ),
         rect = rect ?? Rect.zero,
         flip = flip ?? Flip.none,
@@ -430,8 +419,10 @@ class _TransformableBoxState extends State<TransformableBox> {
     }
 
     if (oldWidget.resizeModeResolver != widget.resizeModeResolver) {
-      controller.setResizeModeResolver(widget.resizeModeResolver,
-          notify: false);
+      controller.setResizeModeResolver(
+        widget.resizeModeResolver,
+        notify: false,
+      );
     }
 
     if (oldWidget.clampingRect != widget.clampingRect) {
@@ -492,21 +483,20 @@ class _TransformableBoxState extends State<TransformableBox> {
   }
 
   /// Called when the handle drag starts.
-  void onPointerDown(PointerDownEvent event, HandlePosition handle) {
+  void onHandlePointerDown(PointerDownEvent event, HandlePosition handle) {
     controller.onResizeStart(event.localPosition);
     widget.onResizeStart?.call(handle, event);
   }
 
   /// Called when the handle drag updates.
-  void onPointerUpdate(PointerMoveEvent event, HandlePosition handlePosition) {
-    if (!controller.resizable) return;
+  void onHandlePointerUpdate(PointerMoveEvent event, HandlePosition handle) {
     final UIResizeResult result = controller.onResizeUpdate(
       event.localPosition,
-      handlePosition,
+      handle,
       notify: false,
     );
 
-    widget.onChangeUpdate?.call(result, event);
+    widget.onChange?.call(result, event);
     widget.onResizeUpdate?.call(result, event);
     widget.onMinWidthReached?.call(result.minWidthReached, event);
     widget.onMaxWidthReached?.call(result.maxWidthReached, event);
@@ -532,8 +522,9 @@ class _TransformableBoxState extends State<TransformableBox> {
   }
 
   /// Called when the handle drag ends.
-  void onPointerUp(PointerEvent event, HandlePosition handle) {
+  void onHandlePointerDone(PointerEvent event, HandlePosition handle) {
     controller.onResizeEnd();
+    widget.onResizeEnd?.call(handle, event);
     widget.onMinWidthReached?.call(false, event);
     widget.onMaxWidthReached?.call(false, event);
     widget.onMinHeightReached?.call(false, event);
@@ -541,13 +532,53 @@ class _TransformableBoxState extends State<TransformableBox> {
     widget.onTerminalWidthReached?.call(false, false, event);
     widget.onTerminalHeightReached?.call(false, false, event);
     widget.onTerminalSizeReached?.call(false, false, false, false, event);
-    widget.onResizeEnd?.call(handle, event);
+  }
+
+  /// Called when the box drag event starts.
+  void onDragPointerDown(PointerDownEvent event) {
+    controller.onDragStart(event.localPosition);
+    widget.onDragStart?.call(event);
+  }
+
+  /// Called when the box drag event updates.
+  void onDragPointerMove(PointerMoveEvent event) {
+    final UIMoveResult result = controller.onDragUpdate(
+      event.localPosition,
+      notify: false,
+    );
+
+    widget.onChange?.call(result, event);
+    widget.onDragUpdate?.call(result, event);
+  }
+
+  /// Called when the box drag event ends.
+  void onDragPointerDone(PointerEvent event) {
+    controller.onDragEnd();
+    widget.onDragEnd?.call(event);
   }
 
   @override
   Widget build(BuildContext context) {
     final Flip flip = controller.flip;
     final Rect box = controller.rect;
+
+    Widget content = Transform.scale(
+      scaleX: widget.allowContentFlipping && flip.isHorizontal ? -1 : 1,
+      scaleY: widget.allowContentFlipping && flip.isVertical ? -1 : 1,
+      child: widget.contentBuilder(context, box, flip),
+    );
+
+    if (controller.movable) {
+      content = Listener(
+        behavior: HitTestBehavior.opaque,
+        onPointerDown: onDragPointerDown,
+        onPointerMove: onDragPointerMove,
+        onPointerUp: onDragPointerDone,
+        onPointerCancel: onDragPointerDone,
+        child: content,
+      );
+    }
+
     return Positioned.fromRect(
       rect: box.inflate(widget.handleAlignment.offset(widget.handleTapSize)),
       child: Stack(
@@ -559,28 +590,7 @@ class _TransformableBoxState extends State<TransformableBox> {
             top: widget.handleAlignment.offset(widget.handleTapSize),
             width: box.width,
             height: box.height,
-            child: Listener(
-              behavior: HitTestBehavior.opaque,
-              onPointerDown: (event) =>
-                  controller.onDragStart(event.localPosition),
-              onPointerMove: (event) {
-                if (!controller.movable) return;
-                final UIMoveResult result = controller.onDragUpdate(
-                  event.localPosition,
-                  notify: false,
-                );
-                widget.onChangeUpdate?.call(result, event);
-                widget.onDragUpdate?.call(result, event);
-              },
-              onPointerUp: (event) => controller.onDragEnd(),
-              onPointerCancel: (event) => controller.onDragEnd(),
-              child: Transform.scale(
-                scaleX:
-                    widget.allowContentFlipping && flip.isHorizontal ? -1 : 1,
-                scaleY: widget.allowContentFlipping && flip.isVertical ? -1 : 1,
-                child: widget.contentBuilder(context, box, flip),
-              ),
-            ),
+            child: content,
           ),
           if (controller.resizable || !controller.hideHandlesWhenNotResizable)
             for (final handle in HandlePosition.corners)
@@ -588,11 +598,13 @@ class _TransformableBoxState extends State<TransformableBox> {
                 key: ValueKey(handle),
                 handlePosition: handle,
                 handleTapSize: widget.handleTapSize,
+                resizable: controller.resizable,
+                onPointerDown: (event) => onHandlePointerDown(event, handle),
+                onPointerUpdate: (event) =>
+                    onHandlePointerUpdate(event, handle),
+                onPointerUp: (event) => onHandlePointerDone(event, handle),
+                onPointerCancel: (event) => onHandlePointerDone(event, handle),
                 builder: widget.cornerHandleBuilder,
-                onPointerDown: (event) => onPointerDown(event, handle),
-                onPointerUpdate: (event) => onPointerUpdate(event, handle),
-                onPointerUp: (event) => onPointerUp(event, handle),
-                onPointerCancel: (event) => onPointerUp(event, handle),
               ),
           if (controller.resizable || !controller.hideHandlesWhenNotResizable)
             for (final handle in HandlePosition.sides)
@@ -600,11 +612,13 @@ class _TransformableBoxState extends State<TransformableBox> {
                 key: ValueKey(handle),
                 handlePosition: handle,
                 handleTapSize: widget.handleTapSize,
+                resizable: controller.resizable,
+                onPointerDown: (event) => onHandlePointerDown(event, handle),
+                onPointerUpdate: (event) =>
+                    onHandlePointerUpdate(event, handle),
+                onPointerUp: (event) => onHandlePointerDone(event, handle),
+                onPointerCancel: (event) => onHandlePointerDone(event, handle),
                 builder: widget.sideHandleBuilder,
-                onPointerDown: (event) => onPointerDown(event, handle),
-                onPointerUpdate: (event) => onPointerUpdate(event, handle),
-                onPointerUp: (event) => onPointerUp(event, handle),
-                onPointerCancel: (event) => onPointerUp(event, handle),
               ),
         ],
       ),
@@ -625,16 +639,19 @@ class _CornerHandleWidget extends StatelessWidget {
   final double handleTapSize;
 
   /// Called when the handle dragging starts.
-  final PointerDownEventListener onPointerDown;
+  final PointerDownEventListener? onPointerDown;
 
   /// Called when the handle dragging is updated.
-  final PointerMoveEventListener onPointerUpdate;
+  final PointerMoveEventListener? onPointerUpdate;
 
   /// Called when the handle dragging ends.
-  final PointerUpEventListener onPointerUp;
+  final PointerUpEventListener? onPointerUp;
 
   /// Called when the handle dragging is canceled.
-  final PointerCancelEventListener onPointerCancel;
+  final PointerCancelEventListener? onPointerCancel;
+
+  /// Whether the handle is resizable.
+  final bool resizable;
 
   /// Creates a new handle widget.
   _CornerHandleWidget({
@@ -646,18 +663,14 @@ class _CornerHandleWidget extends StatelessWidget {
     required this.onPointerUpdate,
     required this.onPointerUp,
     required this.onPointerCancel,
+    required this.resizable,
   }) : assert(handlePosition.isDiagonal, 'A corner handle must be diagonal.');
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      left: handlePosition.influencesLeft ? 0 : null,
-      right: handlePosition.influencesRight ? 0 : null,
-      top: handlePosition.influencesTop ? 0 : null,
-      bottom: handlePosition.influencesBottom ? 0 : null,
-      width: handleTapSize,
-      height: handleTapSize,
-      child: Listener(
+    Widget child = builder(context, handlePosition);
+    if (resizable) {
+      child = Listener(
         behavior: HitTestBehavior.opaque,
         onPointerDown: onPointerDown,
         onPointerMove: onPointerUpdate,
@@ -665,9 +678,19 @@ class _CornerHandleWidget extends StatelessWidget {
         onPointerCancel: onPointerCancel,
         child: MouseRegion(
           cursor: getCursorForHandle(handlePosition),
-          child: builder(context, handlePosition),
+          child: child,
         ),
-      ),
+      );
+    }
+
+    return Positioned(
+      left: handlePosition.influencesLeft ? 0 : null,
+      right: handlePosition.influencesRight ? 0 : null,
+      top: handlePosition.influencesTop ? 0 : null,
+      bottom: handlePosition.influencesBottom ? 0 : null,
+      width: handleTapSize,
+      height: handleTapSize,
+      child: child,
     );
   }
 
@@ -699,16 +722,19 @@ class _SideHandleWidget extends StatelessWidget {
   final double handleTapSize;
 
   /// Called when the handle dragging starts.
-  final PointerDownEventListener onPointerDown;
+  final PointerDownEventListener? onPointerDown;
 
   /// Called when the handle dragging is updated.
-  final PointerMoveEventListener onPointerUpdate;
+  final PointerMoveEventListener? onPointerUpdate;
 
   /// Called when the handle dragging ends.
-  final PointerUpEventListener onPointerUp;
+  final PointerUpEventListener? onPointerUp;
 
   /// Called when the handle dragging is canceled.
-  final PointerCancelEventListener onPointerCancel;
+  final PointerCancelEventListener? onPointerCancel;
+
+  /// Whether the handle is resizable.
+  final bool resizable;
 
   /// Creates a new handle widget.
   _SideHandleWidget({
@@ -720,10 +746,26 @@ class _SideHandleWidget extends StatelessWidget {
     required this.onPointerUpdate,
     required this.onPointerUp,
     required this.onPointerCancel,
+    required this.resizable,
   }) : assert(handlePosition.isSide, 'A cardinal handle must be cardinal.');
 
   @override
   Widget build(BuildContext context) {
+    Widget child = builder(context, handlePosition);
+    if (resizable) {
+      child = Listener(
+        behavior: HitTestBehavior.opaque,
+        onPointerDown: onPointerDown,
+        onPointerMove: onPointerUpdate,
+        onPointerUp: onPointerUp,
+        onPointerCancel: onPointerCancel,
+        child: MouseRegion(
+          cursor: getCursorForHandle(handlePosition),
+          child: child,
+        ),
+      );
+    }
+
     return Positioned(
       left: handlePosition.isVertical
           ? handleTapSize
@@ -747,17 +789,7 @@ class _SideHandleWidget extends StatelessWidget {
               : null,
       width: handlePosition.isHorizontal ? handleTapSize : null,
       height: handlePosition.isVertical ? handleTapSize : null,
-      child: Listener(
-        behavior: HitTestBehavior.opaque,
-        onPointerDown: onPointerDown,
-        onPointerMove: onPointerUpdate,
-        onPointerUp: onPointerUp,
-        onPointerCancel: onPointerCancel,
-        child: MouseRegion(
-          cursor: getCursorForHandle(handlePosition),
-          child: builder(context, handlePosition),
-        ),
-      ),
+      child: child,
     );
   }
 
