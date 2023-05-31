@@ -31,7 +31,8 @@ project.
 Go to the [Getting Started][get-started] page of the 
 [documentation][docsite] to start using Box Transform.
 
-### Live Demo: [Box-transform Playground][demo]
+### Example App: [box-transform-example.firebaseapp.com](https://box-transform-example.firebaseapp.com)
+### Playground: [box-transform-playground.firebaseapp.com](https://box-transform-playground.firebaseapp.com)
 
 ## Documentation
 
@@ -75,6 +76,5 @@ limitations under the License.
 [contributing]: https://github.com/hyper-designed/box_transform/blob/main/CONTRIBUTING.md
 [development]: https://github.com/hyper-designed/box_transform/blob/main/development.md
 [docsite]: https://boxtransform.hyperdesigned.dev/
-[demo]: https://boxtransform-demo.hyperdesigned.dev
 [get-started]: https://boxtransform.hyperdesigned.dev/flutter_get_started
 [github]: https://github.com/hyper-designed/box_transform
