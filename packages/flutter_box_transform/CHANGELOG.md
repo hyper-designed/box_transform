@@ -1,3 +1,9 @@
+## 0.3.2
+
+- Fix controller pattern not updating the UI when the controller is updated.
+- Change null resizeModeResolver pattern to a non-null pattern to fix a crash.
+- Correct two broken doc pages.
+
 ## 0.3.1
 
 - Bump up box_transform version to 0.3.0.
