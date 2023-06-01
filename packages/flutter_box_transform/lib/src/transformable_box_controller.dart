@@ -52,16 +52,16 @@ class TransformableBoxController extends ChangeNotifier {
         _constraints = constraints ?? const BoxConstraints(),
         _resizable = resizable,
         _movable = movable,
-        _resizeModeResolver = resizeModeResolver,
+        _resizeModeResolver = resizeModeResolver ?? defaultResizeModeResolver,
         _allowFlippingWhileResizing = allowFlippingWhileResizing;
 
   /// The callback function that is used to resolve the [ResizeMode] based on
   /// the pressed keys on the keyboard.
-  ValueGetter<ResizeMode>? _resizeModeResolver;
+  ValueGetter<ResizeMode> _resizeModeResolver;
 
   /// The callback function that is used to resolve the [ResizeMode] based on
   /// the pressed keys on the keyboard.
-  ValueGetter<ResizeMode>? get resizeModeResolver => _resizeModeResolver;
+  ValueGetter<ResizeMode> get resizeModeResolver => _resizeModeResolver;
 
   /// The current [Rect] of the [TransformableBox].
   Rect _rect = Rect.zero;
@@ -136,8 +136,10 @@ class TransformableBoxController extends ChangeNotifier {
   BoxConstraints get constraints => _constraints;
 
   /// Sets the current [resizeModeResolver] of the [TransformableBox].
-  void setResizeModeResolver(ValueGetter<ResizeMode>? resizeModeResolver,
-      {bool notify = true}) {
+  void setResizeModeResolver(
+    ValueGetter<ResizeMode> resizeModeResolver, {
+    bool notify = true,
+  }) {
     _resizeModeResolver = resizeModeResolver;
 
     if (notify) notifyListeners();
@@ -292,7 +294,7 @@ class TransformableBoxController extends ChangeNotifier {
       handle: handle,
       initialRect: initialRect,
       initialLocalPosition: initialLocalPosition,
-      resizeMode: resizeModeResolver!(),
+      resizeMode: resizeModeResolver(),
       initialFlip: initialFlip,
       clampingRect: clampingRect,
       constraints: constraints,

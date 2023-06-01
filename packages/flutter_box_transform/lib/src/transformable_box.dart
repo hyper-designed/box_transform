@@ -211,7 +211,7 @@ class TransformableBox extends StatefulWidget {
 
   /// The callback function that is used to resolve the [ResizeMode] based on
   /// the pressed keys on the keyboard.
-  final ValueGetter<ResizeMode>? resizeModeResolver;
+  final ValueGetter<ResizeMode> resizeModeResolver;
 
   /// A callback that is called every time the [TransformableBox] is updated.
   /// This is called every time the [TransformableBoxController] mutates the box
@@ -485,7 +485,6 @@ class _TransformableBoxState extends State<TransformableBox> {
     final UIResizeResult result = controller.onResizeUpdate(
       event.localPosition,
       handle,
-      notify: false,
     );
 
     widget.onChanged?.call(result, event);
@@ -536,7 +535,6 @@ class _TransformableBoxState extends State<TransformableBox> {
   void onDragPointerMove(PointerMoveEvent event) {
     final UIMoveResult result = controller.onDragUpdate(
       event.localPosition,
-      notify: false,
     );
 
     widget.onChanged?.call(result, event);
@@ -552,12 +550,12 @@ class _TransformableBoxState extends State<TransformableBox> {
   @override
   Widget build(BuildContext context) {
     final Flip flip = controller.flip;
-    final Rect box = controller.rect;
+    final Rect rect = controller.rect;
 
     Widget content = Transform.scale(
       scaleX: widget.allowContentFlipping && flip.isHorizontal ? -1 : 1,
       scaleY: widget.allowContentFlipping && flip.isVertical ? -1 : 1,
-      child: widget.contentBuilder(context, box, flip),
+      child: widget.contentBuilder(context, rect, flip),
     );
 
     if (controller.movable) {
@@ -572,7 +570,7 @@ class _TransformableBoxState extends State<TransformableBox> {
     }
 
     return Positioned.fromRect(
-      rect: box.inflate(widget.handleAlignment.offset(widget.handleTapSize)),
+      rect: rect.inflate(widget.handleAlignment.offset(widget.handleTapSize)),
       child: Stack(
         clipBehavior: Clip.none,
         fit: StackFit.expand,
@@ -580,8 +578,8 @@ class _TransformableBoxState extends State<TransformableBox> {
           Positioned(
             left: widget.handleAlignment.offset(widget.handleTapSize),
             top: widget.handleAlignment.offset(widget.handleTapSize),
-            width: box.width,
-            height: box.height,
+            width: rect.width,
+            height: rect.height,
             child: content,
           ),
           if (controller.resizable || !widget.hideHandlesWhenNotResizable)
