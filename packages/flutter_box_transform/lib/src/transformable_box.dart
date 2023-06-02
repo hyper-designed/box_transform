@@ -36,10 +36,12 @@ typedef RectDragUpdateEvent = void Function(
 );
 
 /// A callback that is called when the box ends a drag operation.
-/// [event] is either [PointerUpEvent] or [PointerCancelEvent].
 typedef RectDragEndEvent = void Function(
   DragEndDetails event,
 );
+
+/// A callback that is called when the box cancels a drag operation.
+typedef RectDragCancelEvent = void Function();
 
 /// A callback that is called when the box begins a resize operation.
 typedef RectResizeStart = void Function(
@@ -54,22 +56,24 @@ typedef RectResizeUpdateEvent = void Function(
 );
 
 /// A callback that is called when the box ends a resize operation.
-/// [event] is either [PointerUpEvent] or [PointerCancelEvent].
 typedef RectResizeEnd = void Function(
   HandlePosition handle,
   DragEndDetails event,
 );
 
+/// A callback that is called when the box cancels a resize operation.
+typedef RectResizeCancel = void Function(
+  HandlePosition handle,
+);
+
 /// A callback that is called when the box reaches a terminal edge when
 /// resizing.
-/// [event] is either [PointerUpEvent] or [PointerCancelEvent].
 typedef TerminalEdgeEvent = void Function(
   bool reached,
 );
 
 /// A callback that is called when the box reaches a minimum or maximum size
 /// when resizing a specific axis.
-/// [event] is either [PointerUpEvent] or [PointerCancelEvent].
 typedef TerminalAxisEvent = void Function(
   bool reachedMin,
   bool reachedMax,
@@ -77,7 +81,6 @@ typedef TerminalAxisEvent = void Function(
 
 /// A callback that is called when the box reaches a minimum or maximum size
 /// when resizing.
-/// [event] is either [PointerUpEvent] or [PointerCancelEvent].
 typedef TerminalEvent = void Function(
   bool reachedMinWidth,
   bool reachedMaxWidth,
@@ -142,6 +145,14 @@ class TransformableBox extends StatefulWidget {
   /// The default value is 24 pixels in diameter.
   final double handleTapSize;
 
+  /// A set containing which handles to enable.
+  final Set<HandlePosition> enabledHandles;
+
+  /// A set containing which handles to show. This is different from
+  /// [enabledHandles] in that it will show the handle, but it will not be
+  /// enabled for interaction.
+  final Set<HandlePosition> visibleHandles;
+
   /// The initial box that will be used to position set the initial size of
   /// the [TransformableBox] widget.
   ///
@@ -182,16 +193,18 @@ class TransformableBox extends StatefulWidget {
   final BoxConstraints constraints;
 
   /// Whether the box is resizable or not. Setting this to false will disable
-  /// all resizing operations.
+  /// all resizing operations. This is a convenience parameter that will ignore
+  /// the [enabledHandles] parameter and set all handles to disabled.
   final bool resizable;
 
-  /// Whether the box should hide the corner/side resize controls when [resizable] is
-  /// false.
+  /// Whether the box should hide the corner/side resize controls when
+  /// [resizable] is false. This is a convenience parameter that will ignore
+  /// the [visibleHandles] parameter and set all handles to hidden.
   final bool hideHandlesWhenNotResizable;
 
   /// Whether the box is movable or not. Setting this to false will disable
   /// all moving operations.
-  final bool movable;
+  final bool draggable;
 
   /// Whether to allow flipping of the box while resizing. If this is set to
   /// true, the box will flip when the user drags the handles to opposite
@@ -228,8 +241,12 @@ class TransformableBox extends StatefulWidget {
   final RectDragUpdateEvent? onDragUpdate;
 
   /// A callback that is called every time the [TransformableBox] is completes
-  /// its drag operation via pointer up or cancel events.
+  /// its drag operation via the pan end event.
   final RectDragEndEvent? onDragEnd;
+
+  /// A callback that is called every time the [TransformableBox] cancels
+  /// its drag operation via the pan cancel event.
+  final RectDragCancelEvent? onDragCancel;
 
   /// A callback function that triggers when the box is about to start resizing.
   final RectResizeStart? onResizeStart;
@@ -244,6 +261,9 @@ class TransformableBox extends StatefulWidget {
 
   /// A callback function that triggers when the box is about to end resizing.
   final RectResizeEnd? onResizeEnd;
+
+  /// A callback function that triggers when the box cancels resizing.
+  final RectResizeCancel? onResizeCancel;
 
   /// A callback function that triggers when the box reaches its minimum width
   /// when resizing.
@@ -296,6 +316,8 @@ class TransformableBox extends StatefulWidget {
     this.allowContentFlipping = true,
     this.hideHandlesWhenNotResizable = true,
     this.handleAlignment = HandleAlignment.center,
+    this.enabledHandles = const {...HandlePosition.values},
+    this.visibleHandles = const {...HandlePosition.values},
 
     // Raw values.
     Rect? rect,
@@ -306,7 +328,7 @@ class TransformableBox extends StatefulWidget {
 
     // Additional controls.
     this.resizable = true,
-    this.movable = true,
+    this.draggable = true,
     this.allowFlippingWhileResizing = true,
 
     // Either resize or drag triggers.
@@ -316,11 +338,13 @@ class TransformableBox extends StatefulWidget {
     this.onResizeStart,
     this.onResizeUpdate,
     this.onResizeEnd,
+    this.onResizeCancel,
 
     // Drag Events.
     this.onDragStart,
     this.onDragUpdate,
     this.onDragEnd,
+    this.onDragCancel,
 
     // Terminal update events.
     this.onMinWidthReached,
@@ -369,8 +393,6 @@ class _TransformableBoxState extends State<TransformableBox> {
         constraints: widget.constraints,
         resizeModeResolver: widget.resizeModeResolver,
         allowFlippingWhileResizing: widget.allowFlippingWhileResizing,
-        resizable: widget.resizable,
-        movable: widget.movable,
       );
     }
   }
@@ -395,8 +417,6 @@ class _TransformableBoxState extends State<TransformableBox> {
         constraints: widget.constraints,
         resizeModeResolver: widget.resizeModeResolver,
         allowFlippingWhileResizing: widget.allowFlippingWhileResizing,
-        resizable: widget.resizable,
-        movable: widget.movable,
       );
     }
 
@@ -430,14 +450,6 @@ class _TransformableBoxState extends State<TransformableBox> {
     if (oldWidget.constraints != widget.constraints) {
       controller.setConstraints(widget.constraints, notify: false);
       shouldRecalculateSize = true;
-    }
-
-    if (oldWidget.resizable != widget.resizable) {
-      controller.setResizable(widget.resizable, notify: false);
-    }
-
-    if (oldWidget.movable != widget.movable) {
-      controller.setMovable(widget.movable, notify: false);
     }
 
     if (oldWidget.allowFlippingWhileResizing !=
@@ -519,6 +531,18 @@ class _TransformableBoxState extends State<TransformableBox> {
     widget.onTerminalSizeReached?.call(false, false, false, false);
   }
 
+  void onHandlePanCancel(HandlePosition handle) {
+    controller.onResizeEnd();
+    widget.onResizeCancel?.call(handle);
+    widget.onMinWidthReached?.call(false);
+    widget.onMaxWidthReached?.call(false);
+    widget.onMinHeightReached?.call(false);
+    widget.onMaxHeightReached?.call(false);
+    widget.onTerminalWidthReached?.call(false, false);
+    widget.onTerminalHeightReached?.call(false, false);
+    widget.onTerminalSizeReached?.call(false, false, false, false);
+  }
+
   /// Called when the box drag event starts.
   void onDragPanStart(DragStartDetails event) {
     controller.onDragStart(event.localPosition);
@@ -541,6 +565,11 @@ class _TransformableBoxState extends State<TransformableBox> {
     widget.onDragEnd?.call(event);
   }
 
+  void onDragPanCancel() {
+    controller.onDragEnd();
+    widget.onDragCancel?.call();
+  }
+
   @override
   Widget build(BuildContext context) {
     final Flip flip = controller.flip;
@@ -552,13 +581,13 @@ class _TransformableBoxState extends State<TransformableBox> {
       child: widget.contentBuilder(context, rect, flip),
     );
 
-    if (controller.movable) {
+    if (widget.draggable) {
       content = GestureDetector(
         behavior: HitTestBehavior.opaque,
         onPanStart: onDragPanStart,
         onPanUpdate: onDragPanUpdate,
         onPanEnd: onDragPanEnd,
-        // onPanCancel: onDragPointerEnd,
+        onPanCancel: onDragPanCancel,
         child: content,
       );
     }
@@ -576,32 +605,32 @@ class _TransformableBoxState extends State<TransformableBox> {
             height: rect.height,
             child: content,
           ),
-          if (controller.resizable || !widget.hideHandlesWhenNotResizable)
-            for (final handle in HandlePosition.corners)
+          if (widget.resizable || !widget.hideHandlesWhenNotResizable)
+            for (final handle
+                in widget.visibleHandles.where((handle) => handle.isDiagonal))
               _CornerHandleWidget(
                 key: ValueKey(handle),
                 handlePosition: handle,
                 handleTapSize: widget.handleTapSize,
-                resizable: controller.resizable,
+                enabled: widget.enabledHandles.contains(handle),
                 onPanStart: (event) => onHandlePanStart(event, handle),
-                onPanUpdate: (event) =>
-                    onHandlePanUpdate(event, handle),
+                onPanUpdate: (event) => onHandlePanUpdate(event, handle),
                 onPanEnd: (event) => onHandlePanEnd(event, handle),
-                // onPanCancel: (event) => onHandlePanCancel(event, handle),
+                onPanCancel: () => onHandlePanCancel(handle),
                 builder: widget.cornerHandleBuilder,
               ),
-          if (controller.resizable || !widget.hideHandlesWhenNotResizable)
-            for (final handle in HandlePosition.sides)
+          if (widget.resizable || !widget.hideHandlesWhenNotResizable)
+            for (final handle
+                in widget.visibleHandles.where((handle) => handle.isSide))
               _SideHandleWidget(
                 key: ValueKey(handle),
                 handlePosition: handle,
                 handleTapSize: widget.handleTapSize,
-                resizable: controller.resizable,
+                enabled: widget.enabledHandles.contains(handle),
                 onPanStart: (event) => onHandlePanStart(event, handle),
-                onPanUpdate: (event) =>
-                    onHandlePanUpdate(event, handle),
+                onPanUpdate: (event) => onHandlePanUpdate(event, handle),
                 onPanEnd: (event) => onHandlePanEnd(event, handle),
-                // onPanCancel: (event) => onHandlePanCancel(event, handle),
+                onPanCancel: () => onHandlePanCancel(handle),
                 builder: widget.sideHandleBuilder,
               ),
         ],
@@ -635,7 +664,7 @@ class _CornerHandleWidget extends StatelessWidget {
   final GestureDragCancelCallback? onPanCancel;
 
   /// Whether the handle is resizable.
-  final bool resizable;
+  final bool enabled;
 
   /// Creates a new handle widget.
   _CornerHandleWidget({
@@ -647,13 +676,13 @@ class _CornerHandleWidget extends StatelessWidget {
     this.onPanUpdate,
     this.onPanEnd,
     this.onPanCancel,
-    required this.resizable,
+    required this.enabled,
   }) : assert(handlePosition.isDiagonal, 'A corner handle must be diagonal.');
 
   @override
   Widget build(BuildContext context) {
     Widget child = builder(context, handlePosition);
-    if (resizable) {
+    if (enabled) {
       child = GestureDetector(
         behavior: HitTestBehavior.opaque,
         onPanStart: onPanStart,
@@ -718,7 +747,7 @@ class _SideHandleWidget extends StatelessWidget {
   final GestureDragCancelCallback? onPanCancel;
 
   /// Whether the handle is resizable.
-  final bool resizable;
+  final bool enabled;
 
   /// Creates a new handle widget.
   _SideHandleWidget({
@@ -730,13 +759,13 @@ class _SideHandleWidget extends StatelessWidget {
     this.onPanUpdate,
     this.onPanEnd,
     this.onPanCancel,
-    required this.resizable,
+    required this.enabled,
   }) : assert(handlePosition.isSide, 'A cardinal handle must be cardinal.');
 
   @override
   Widget build(BuildContext context) {
     Widget child = builder(context, handlePosition);
-    if (resizable) {
+    if (enabled) {
       child = GestureDetector(
         behavior: HitTestBehavior.opaque,
         onPanStart: onPanStart,
