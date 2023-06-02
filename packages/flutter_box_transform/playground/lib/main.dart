@@ -588,18 +588,17 @@ class _ImageBoxState extends State<ImageBox> {
               return;
             }
             log('Recording resize action result');
-            recorder.onResult(
-              action: currentAction!,
-              result: lastResult!,
-              localPosition: event.localPosition,
-            );
+            // recorder.onResult(
+            //   action: currentAction!,
+            //   result: lastResult!,
+            //   localPosition: event.localPosition,
+            // );
           },
           onTerminalSizeReached: (
             bool reachedMinWidth,
             bool reachedMaxWidth,
             bool reachedMinHeight,
             bool reachedMaxHeight,
-            event,
           ) {
             if (minWidthReached == reachedMinWidth &&
                 minHeightReached == reachedMinHeight &&
@@ -745,7 +744,6 @@ class _ClampingRectState extends State<ClampingRect> {
         bool reachedMaxWidth,
         bool reachedMinHeight,
         bool reachedMaxHeight,
-        event,
       ) {
         if (minWidthReached == reachedMinWidth &&
             minHeightReached == reachedMinHeight &&
