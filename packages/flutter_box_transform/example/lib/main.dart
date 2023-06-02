@@ -39,14 +39,6 @@ class _MyHomePageState extends State<MyHomePage> {
     height: 300,
   );
 
-  late Rect rect2 = Rect.fromCenter(
-    center: const Offset(200, 150),
-    width: 200,
-    height: 100,
-  );
-
-  late Rect clampingRect = (Offset.zero & MediaQuery.of(context).size);
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,7 +47,7 @@ class _MyHomePageState extends State<MyHomePage> {
         children: [
           TransformableBox(
             rect: rect,
-            clampingRect: clampingRect,
+            clampingRect: Offset.zero & MediaQuery.sizeOf(context),
             onChanged: (result, event) {
               setState(() {
                 rect = result.rect;
