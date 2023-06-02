@@ -72,34 +72,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     fit: BoxFit.fill,
                   ),
                 ),
-                child: Stack(
-                  children: [
-                    TransformableBox(
-                      rect: rect2,
-                      clampingRect:
-                          Rect.fromLTWH(0, 0, rect.width, rect.height),
-                      onChanged: (result, event) {
-                        setState(() {
-                          rect2 = result.rect;
-                        });
-                      },
-                      contentBuilder:
-                          (BuildContext context, Rect rect, Flip flip) {
-                        return DecoratedBox(
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            image: const DecorationImage(
-                              image: AssetImage('assets/image2.jpg'),
-                              fit: BoxFit.fill,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
               );
             },
           ),
