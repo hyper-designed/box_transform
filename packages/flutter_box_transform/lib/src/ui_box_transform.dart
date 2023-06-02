@@ -3,7 +3,8 @@ import 'dart:ui' as ui;
 import 'package:box_transform/box_transform.dart' as transform;
 import 'package:flutter/rendering.dart' as widgets;
 
-import '../flutter_box_transform.dart';
+import 'extensions.dart';
+import 'ui_result.dart';
 
 /// A Flutter translation of [transform.BoxTransformer].
 class UIBoxTransform {

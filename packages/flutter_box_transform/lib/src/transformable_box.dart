@@ -1,106 +1,11 @@
+import 'package:box_transform/box_transform.dart';
 import 'package:flutter/material.dart';
 
-import '../flutter_box_transform.dart';
-
-/// A callback that expects a [Widget] that represents any of the handles.
-/// The [handle] is the current position and size of the handle.
-typedef HandleBuilder = Widget Function(
-  BuildContext context,
-  HandlePosition handle,
-);
-
-/// A callback that expects a [Widget] that represents the content of the box.
-/// The [rect] is the current position and size of the box.
-/// The [flip] is the current flip state of the box.
-typedef TransformableChildBuilder = Widget Function(
-  BuildContext context,
-  Rect rect,
-  Flip flip,
-);
-
-/// A callback that is called when the box is moved or resized.
-typedef RectChangeEvent = void Function(
-  UITransformResult result,
-  DragUpdateDetails event,
-);
-
-/// A callback that is called when the box begins a drag operation.
-typedef RectDragStartEvent = void Function(
-  DragStartDetails event,
-);
-
-/// A callback that is called when the box is being dragged.
-typedef RectDragUpdateEvent = void Function(
-  UIMoveResult result,
-  DragUpdateDetails event,
-);
-
-/// A callback that is called when the box ends a drag operation.
-typedef RectDragEndEvent = void Function(
-  DragEndDetails event,
-);
-
-/// A callback that is called when the box cancels a drag operation.
-typedef RectDragCancelEvent = void Function();
-
-/// A callback that is called when the box begins a resize operation.
-typedef RectResizeStart = void Function(
-  HandlePosition handle,
-  DragStartDetails event,
-);
-
-/// A callback that is called when the box is being resized.
-typedef RectResizeUpdateEvent = void Function(
-  UIResizeResult result,
-  DragUpdateDetails event,
-);
-
-/// A callback that is called when the box ends a resize operation.
-typedef RectResizeEnd = void Function(
-  HandlePosition handle,
-  DragEndDetails event,
-);
-
-/// A callback that is called when the box cancels a resize operation.
-typedef RectResizeCancel = void Function(
-  HandlePosition handle,
-);
-
-/// A callback that is called when the box reaches a terminal edge when
-/// resizing.
-typedef TerminalEdgeEvent = void Function(
-  bool reached,
-);
-
-/// A callback that is called when the box reaches a minimum or maximum size
-/// when resizing a specific axis.
-typedef TerminalAxisEvent = void Function(
-  bool reachedMin,
-  bool reachedMax,
-);
-
-/// A callback that is called when the box reaches a minimum or maximum size
-/// when resizing.
-typedef TerminalEvent = void Function(
-  bool reachedMinWidth,
-  bool reachedMaxWidth,
-  bool reachedMinHeight,
-  bool reachedMaxHeight,
-);
-
-/// A default implementation of the corner [HandleBuilder] callback.
-Widget _defaultCornerHandleBuilder(
-  BuildContext context,
-  HandlePosition handle,
-) =>
-    DefaultCornerHandle(handle: handle);
-
-/// A default implementation of the side [HandleBuilder] callback.
-Widget _defaultSideHandleBuilder(
-  BuildContext context,
-  HandlePosition handle,
-) =>
-    DefaultSideHandle(handle: handle);
+import 'handle_builders.dart';
+import 'handles.dart';
+import 'transformable_box_controller.dart';
+import 'typedefs.dart';
+import 'ui_result.dart';
 
 /// A widget that allows you to resize and drag a box around a widget.
 class TransformableBox extends StatefulWidget {
@@ -145,12 +50,24 @@ class TransformableBox extends StatefulWidget {
   /// The default value is 24 pixels in diameter.
   final double handleTapSize;
 
-  /// A set containing which handles to enable.
+  /// A set containing handles that are enabled. This is different from
+  /// [visibleHandles].
+  ///
+  /// [enabledHandles] determines which handles are
+  /// interactive and can be used to resize the box. [visibleHandles]
+  /// determines which handles are visible. If a handle is visible but not
+  /// enabled, it will not be interactive. If a handle is enabled but not
+  /// visible, it will not be shown and will not be interactive.
   final Set<HandlePosition> enabledHandles;
 
   /// A set containing which handles to show. This is different from
-  /// [enabledHandles] in that it will show the handle, but it will not be
-  /// enabled for interaction.
+  /// [enabledHandles].
+  ///
+  /// [enabledHandles] determines which handles are
+  /// interactive and can be used to resize the box. [visibleHandles]
+  /// determines which handles are visible. If a handle is visible but not
+  /// enabled, it will not be interactive. If a handle is enabled but not
+  /// visible, it will not be shown and will not be interactive.
   final Set<HandlePosition> visibleHandles;
 
   /// The initial box that will be used to position set the initial size of
@@ -608,7 +525,7 @@ class _TransformableBoxState extends State<TransformableBox> {
           if (widget.resizable || !widget.hideHandlesWhenNotResizable)
             for (final handle
                 in widget.visibleHandles.where((handle) => handle.isDiagonal))
-              _CornerHandleWidget(
+              CornerHandleWidget(
                 key: ValueKey(handle),
                 handlePosition: handle,
                 handleTapSize: widget.handleTapSize,
@@ -622,7 +539,7 @@ class _TransformableBoxState extends State<TransformableBox> {
           if (widget.resizable || !widget.hideHandlesWhenNotResizable)
             for (final handle
                 in widget.visibleHandles.where((handle) => handle.isSide))
-              _SideHandleWidget(
+              SideHandleWidget(
                 key: ValueKey(handle),
                 handlePosition: handle,
                 handleTapSize: widget.handleTapSize,
@@ -639,184 +556,16 @@ class _TransformableBoxState extends State<TransformableBox> {
   }
 }
 
-/// Creates a new corner handle widget, with its appropriate gesture splash
-/// zone.
-class _CornerHandleWidget extends StatelessWidget {
-  /// The position of the handle.
-  final HandlePosition handlePosition;
+/// A default implementation of the corner [HandleBuilder] callback.
+Widget _defaultCornerHandleBuilder(
+  BuildContext context,
+  HandlePosition handle,
+) =>
+    DefaultCornerHandle(handle: handle);
 
-  /// The builder that is used to build the handle widget.
-  final HandleBuilder builder;
-
-  /// The size of the handle's gesture response area.
-  final double handleTapSize;
-
-  /// Called when the handle dragging starts.
-  final GestureDragStartCallback? onPanStart;
-
-  /// Called when the handle dragging is updated.
-  final GestureDragUpdateCallback? onPanUpdate;
-
-  /// Called when the handle dragging ends.
-  final GestureDragEndCallback? onPanEnd;
-
-  /// Called when the handle dragging is canceled.
-  final GestureDragCancelCallback? onPanCancel;
-
-  /// Whether the handle is resizable.
-  final bool enabled;
-
-  /// Creates a new handle widget.
-  _CornerHandleWidget({
-    super.key,
-    required this.handlePosition,
-    required this.handleTapSize,
-    required this.builder,
-    this.onPanStart,
-    this.onPanUpdate,
-    this.onPanEnd,
-    this.onPanCancel,
-    required this.enabled,
-  }) : assert(handlePosition.isDiagonal, 'A corner handle must be diagonal.');
-
-  @override
-  Widget build(BuildContext context) {
-    Widget child = builder(context, handlePosition);
-    if (enabled) {
-      child = GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onPanStart: onPanStart,
-        onPanUpdate: onPanUpdate,
-        onPanEnd: onPanEnd,
-        onPanCancel: onPanCancel,
-        child: MouseRegion(
-          cursor: getCursorForHandle(handlePosition),
-          child: child,
-        ),
-      );
-    }
-
-    return Positioned(
-      left: handlePosition.influencesLeft ? 0 : null,
-      right: handlePosition.influencesRight ? 0 : null,
-      top: handlePosition.influencesTop ? 0 : null,
-      bottom: handlePosition.influencesBottom ? 0 : null,
-      width: handleTapSize,
-      height: handleTapSize,
-      child: child,
-    );
-  }
-
-  /// Returns the cursor for the given handle position.
-  MouseCursor getCursorForHandle(HandlePosition handle) {
-    switch (handle) {
-      case HandlePosition.topLeft:
-      case HandlePosition.bottomRight:
-        return SystemMouseCursors.resizeUpLeftDownRight;
-      case HandlePosition.topRight:
-      case HandlePosition.bottomLeft:
-        return SystemMouseCursors.resizeUpRightDownLeft;
-      default:
-        throw Exception('Invalid handle position.');
-    }
-  }
-}
-
-/// Creates a new cardinal handle widget, with its appropriate gesture splash
-/// zone.
-class _SideHandleWidget extends StatelessWidget {
-  /// The position of the handle.
-  final HandlePosition handlePosition;
-
-  /// The builder that is used to build the handle widget.
-  final HandleBuilder builder;
-
-  /// The thickness of the handle that is used for gesture detection.
-  final double handleTapSize;
-
-  /// Called when the handle dragging starts.
-  final GestureDragStartCallback? onPanStart;
-
-  /// Called when the handle dragging is updated.
-  final GestureDragUpdateCallback? onPanUpdate;
-
-  /// Called when the handle dragging ends.
-  final GestureDragEndCallback? onPanEnd;
-
-  /// Called when the handle dragging is canceled.
-  final GestureDragCancelCallback? onPanCancel;
-
-  /// Whether the handle is resizable.
-  final bool enabled;
-
-  /// Creates a new handle widget.
-  _SideHandleWidget({
-    super.key,
-    required this.handlePosition,
-    required this.handleTapSize,
-    required this.builder,
-    this.onPanStart,
-    this.onPanUpdate,
-    this.onPanEnd,
-    this.onPanCancel,
-    required this.enabled,
-  }) : assert(handlePosition.isSide, 'A cardinal handle must be cardinal.');
-
-  @override
-  Widget build(BuildContext context) {
-    Widget child = builder(context, handlePosition);
-    if (enabled) {
-      child = GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onPanStart: onPanStart,
-        onPanUpdate: onPanUpdate,
-        onPanEnd: onPanEnd,
-        onPanCancel: onPanCancel,
-        child: MouseRegion(
-          cursor: getCursorForHandle(handlePosition),
-          child: child,
-        ),
-      );
-    }
-
-    return Positioned(
-      left: handlePosition.isVertical
-          ? handleTapSize
-          : handlePosition.influencesLeft
-              ? 0
-              : null,
-      right: handlePosition.isVertical
-          ? handleTapSize
-          : handlePosition.influencesRight
-              ? 0
-              : null,
-      top: handlePosition.isHorizontal
-          ? handleTapSize
-          : handlePosition.influencesTop
-              ? 0
-              : null,
-      bottom: handlePosition.isHorizontal
-          ? handleTapSize
-          : handlePosition.influencesBottom
-              ? 0
-              : null,
-      width: handlePosition.isHorizontal ? handleTapSize : null,
-      height: handlePosition.isVertical ? handleTapSize : null,
-      child: child,
-    );
-  }
-
-  /// Returns the cursor for the given handle position.
-  MouseCursor getCursorForHandle(HandlePosition handle) {
-    switch (handle) {
-      case HandlePosition.left:
-      case HandlePosition.right:
-        return SystemMouseCursors.resizeLeftRight;
-      case HandlePosition.top:
-      case HandlePosition.bottom:
-        return SystemMouseCursors.resizeUpDown;
-      default:
-        throw Exception('Invalid handle position.');
-    }
-  }
-}
+/// A default implementation of the side [HandleBuilder] callback.
+Widget _defaultSideHandleBuilder(
+  BuildContext context,
+  HandlePosition handle,
+) =>
+    DefaultSideHandle(handle: handle);
