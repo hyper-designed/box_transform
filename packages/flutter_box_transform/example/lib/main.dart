@@ -39,6 +39,12 @@ class _MyHomePageState extends State<MyHomePage> {
     height: 300,
   );
 
+  late Rect rect2 = Rect.fromCenter(
+    center: const Offset(200, 150),
+    width: 200,
+    height: 100,
+  );
+
   late Rect clampingRect = (Offset.zero & MediaQuery.of(context).size);
 
   @override
@@ -65,6 +71,34 @@ class _MyHomePageState extends State<MyHomePage> {
                     image: AssetImage('assets/image1.png'),
                     fit: BoxFit.fill,
                   ),
+                ),
+                child: Stack(
+                  children: [
+                    TransformableBox(
+                      rect: rect2,
+                      clampingRect:
+                          Rect.fromLTWH(0, 0, rect.width, rect.height),
+                      onChanged: (result, event) {
+                        setState(() {
+                          rect2 = result.rect;
+                        });
+                      },
+                      contentBuilder:
+                          (BuildContext context, Rect rect, Flip flip) {
+                        return DecoratedBox(
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            image: const DecorationImage(
+                              image: AssetImage('assets/image2.jpg'),
+                              fit: BoxFit.fill,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ),
               );
             },

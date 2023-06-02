@@ -21,43 +21,43 @@ typedef TransformableChildBuilder = Widget Function(
 /// A callback that is called when the box is moved or resized.
 typedef RectChangeEvent = void Function(
   UITransformResult result,
-  PointerMoveEvent event,
+  DragUpdateDetails event,
 );
 
 /// A callback that is called when the box begins a drag operation.
 typedef RectDragStartEvent = void Function(
-  PointerDownEvent event,
+  DragStartDetails event,
 );
 
 /// A callback that is called when the box is being dragged.
 typedef RectDragUpdateEvent = void Function(
   UIMoveResult result,
-  PointerMoveEvent event,
+  DragUpdateDetails event,
 );
 
 /// A callback that is called when the box ends a drag operation.
 /// [event] is either [PointerUpEvent] or [PointerCancelEvent].
 typedef RectDragEndEvent = void Function(
-  PointerEvent event,
+  DragEndDetails event,
 );
 
 /// A callback that is called when the box begins a resize operation.
 typedef RectResizeStart = void Function(
   HandlePosition handle,
-  PointerDownEvent event,
+  DragStartDetails event,
 );
 
 /// A callback that is called when the box is being resized.
 typedef RectResizeUpdateEvent = void Function(
   UIResizeResult result,
-  PointerMoveEvent event,
+  DragUpdateDetails event,
 );
 
 /// A callback that is called when the box ends a resize operation.
 /// [event] is either [PointerUpEvent] or [PointerCancelEvent].
 typedef RectResizeEnd = void Function(
   HandlePosition handle,
-  PointerEvent event,
+  DragEndDetails event,
 );
 
 /// A callback that is called when the box reaches a terminal edge when
@@ -65,7 +65,6 @@ typedef RectResizeEnd = void Function(
 /// [event] is either [PointerUpEvent] or [PointerCancelEvent].
 typedef TerminalEdgeEvent = void Function(
   bool reached,
-  PointerEvent event,
 );
 
 /// A callback that is called when the box reaches a minimum or maximum size
@@ -74,7 +73,6 @@ typedef TerminalEdgeEvent = void Function(
 typedef TerminalAxisEvent = void Function(
   bool reachedMin,
   bool reachedMax,
-  PointerEvent event,
 );
 
 /// A callback that is called when the box reaches a minimum or maximum size
@@ -85,7 +83,6 @@ typedef TerminalEvent = void Function(
   bool reachedMaxWidth,
   bool reachedMinHeight,
   bool reachedMaxHeight,
-  PointerEvent event,
 );
 
 /// A default implementation of the corner [HandleBuilder] callback.
@@ -475,13 +472,13 @@ class _TransformableBoxState extends State<TransformableBox> {
   }
 
   /// Called when the handle drag starts.
-  void onHandlePointerDown(PointerDownEvent event, HandlePosition handle) {
+  void onHandlePanStart(DragStartDetails event, HandlePosition handle) {
     controller.onResizeStart(event.localPosition);
     widget.onResizeStart?.call(handle, event);
   }
 
   /// Called when the handle drag updates.
-  void onHandlePointerUpdate(PointerMoveEvent event, HandlePosition handle) {
+  void onHandlePanUpdate(DragUpdateDetails event, HandlePosition handle) {
     final UIResizeResult result = controller.onResizeUpdate(
       event.localPosition,
       handle,
@@ -489,50 +486,47 @@ class _TransformableBoxState extends State<TransformableBox> {
 
     widget.onChanged?.call(result, event);
     widget.onResizeUpdate?.call(result, event);
-    widget.onMinWidthReached?.call(result.minWidthReached, event);
-    widget.onMaxWidthReached?.call(result.maxWidthReached, event);
-    widget.onMinHeightReached?.call(result.minHeightReached, event);
-    widget.onMaxHeightReached?.call(result.maxHeightReached, event);
+    widget.onMinWidthReached?.call(result.minWidthReached);
+    widget.onMaxWidthReached?.call(result.maxWidthReached);
+    widget.onMinHeightReached?.call(result.minHeightReached);
+    widget.onMaxHeightReached?.call(result.maxHeightReached);
     widget.onTerminalWidthReached?.call(
       result.minWidthReached,
       result.maxWidthReached,
-      event,
     );
     widget.onTerminalHeightReached?.call(
       result.minHeightReached,
       result.maxHeightReached,
-      event,
     );
     widget.onTerminalSizeReached?.call(
       result.minWidthReached,
       result.maxWidthReached,
       result.minHeightReached,
       result.maxHeightReached,
-      event,
     );
   }
 
   /// Called when the handle drag ends.
-  void onHandlePointerDone(PointerEvent event, HandlePosition handle) {
+  void onHandlePanEnd(DragEndDetails event, HandlePosition handle) {
     controller.onResizeEnd();
     widget.onResizeEnd?.call(handle, event);
-    widget.onMinWidthReached?.call(false, event);
-    widget.onMaxWidthReached?.call(false, event);
-    widget.onMinHeightReached?.call(false, event);
-    widget.onMaxHeightReached?.call(false, event);
-    widget.onTerminalWidthReached?.call(false, false, event);
-    widget.onTerminalHeightReached?.call(false, false, event);
-    widget.onTerminalSizeReached?.call(false, false, false, false, event);
+    widget.onMinWidthReached?.call(false);
+    widget.onMaxWidthReached?.call(false);
+    widget.onMinHeightReached?.call(false);
+    widget.onMaxHeightReached?.call(false);
+    widget.onTerminalWidthReached?.call(false, false);
+    widget.onTerminalHeightReached?.call(false, false);
+    widget.onTerminalSizeReached?.call(false, false, false, false);
   }
 
   /// Called when the box drag event starts.
-  void onDragPointerDown(PointerDownEvent event) {
+  void onDragPanStart(DragStartDetails event) {
     controller.onDragStart(event.localPosition);
     widget.onDragStart?.call(event);
   }
 
   /// Called when the box drag event updates.
-  void onDragPointerMove(PointerMoveEvent event) {
+  void onDragPanUpdate(DragUpdateDetails event) {
     final UIMoveResult result = controller.onDragUpdate(
       event.localPosition,
     );
@@ -542,7 +536,7 @@ class _TransformableBoxState extends State<TransformableBox> {
   }
 
   /// Called when the box drag event ends.
-  void onDragPointerDone(PointerEvent event) {
+  void onDragPanEnd(DragEndDetails event) {
     controller.onDragEnd();
     widget.onDragEnd?.call(event);
   }
@@ -559,12 +553,12 @@ class _TransformableBoxState extends State<TransformableBox> {
     );
 
     if (controller.movable) {
-      content = Listener(
+      content = GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onPointerDown: onDragPointerDown,
-        onPointerMove: onDragPointerMove,
-        onPointerUp: onDragPointerDone,
-        onPointerCancel: onDragPointerDone,
+        onPanStart: onDragPanStart,
+        onPanUpdate: onDragPanUpdate,
+        onPanEnd: onDragPanEnd,
+        // onPanCancel: onDragPointerEnd,
         child: content,
       );
     }
@@ -589,11 +583,11 @@ class _TransformableBoxState extends State<TransformableBox> {
                 handlePosition: handle,
                 handleTapSize: widget.handleTapSize,
                 resizable: controller.resizable,
-                onPointerDown: (event) => onHandlePointerDown(event, handle),
-                onPointerUpdate: (event) =>
-                    onHandlePointerUpdate(event, handle),
-                onPointerUp: (event) => onHandlePointerDone(event, handle),
-                onPointerCancel: (event) => onHandlePointerDone(event, handle),
+                onPanStart: (event) => onHandlePanStart(event, handle),
+                onPanUpdate: (event) =>
+                    onHandlePanUpdate(event, handle),
+                onPanEnd: (event) => onHandlePanEnd(event, handle),
+                // onPanCancel: (event) => onHandlePanCancel(event, handle),
                 builder: widget.cornerHandleBuilder,
               ),
           if (controller.resizable || !widget.hideHandlesWhenNotResizable)
@@ -603,11 +597,11 @@ class _TransformableBoxState extends State<TransformableBox> {
                 handlePosition: handle,
                 handleTapSize: widget.handleTapSize,
                 resizable: controller.resizable,
-                onPointerDown: (event) => onHandlePointerDown(event, handle),
-                onPointerUpdate: (event) =>
-                    onHandlePointerUpdate(event, handle),
-                onPointerUp: (event) => onHandlePointerDone(event, handle),
-                onPointerCancel: (event) => onHandlePointerDone(event, handle),
+                onPanStart: (event) => onHandlePanStart(event, handle),
+                onPanUpdate: (event) =>
+                    onHandlePanUpdate(event, handle),
+                onPanEnd: (event) => onHandlePanEnd(event, handle),
+                // onPanCancel: (event) => onHandlePanCancel(event, handle),
                 builder: widget.sideHandleBuilder,
               ),
         ],
@@ -629,16 +623,16 @@ class _CornerHandleWidget extends StatelessWidget {
   final double handleTapSize;
 
   /// Called when the handle dragging starts.
-  final PointerDownEventListener? onPointerDown;
+  final GestureDragStartCallback? onPanStart;
 
   /// Called when the handle dragging is updated.
-  final PointerMoveEventListener? onPointerUpdate;
+  final GestureDragUpdateCallback? onPanUpdate;
 
   /// Called when the handle dragging ends.
-  final PointerUpEventListener? onPointerUp;
+  final GestureDragEndCallback? onPanEnd;
 
   /// Called when the handle dragging is canceled.
-  final PointerCancelEventListener? onPointerCancel;
+  final GestureDragCancelCallback? onPanCancel;
 
   /// Whether the handle is resizable.
   final bool resizable;
@@ -649,10 +643,10 @@ class _CornerHandleWidget extends StatelessWidget {
     required this.handlePosition,
     required this.handleTapSize,
     required this.builder,
-    required this.onPointerDown,
-    required this.onPointerUpdate,
-    required this.onPointerUp,
-    required this.onPointerCancel,
+    this.onPanStart,
+    this.onPanUpdate,
+    this.onPanEnd,
+    this.onPanCancel,
     required this.resizable,
   }) : assert(handlePosition.isDiagonal, 'A corner handle must be diagonal.');
 
@@ -660,12 +654,12 @@ class _CornerHandleWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget child = builder(context, handlePosition);
     if (resizable) {
-      child = Listener(
+      child = GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onPointerDown: onPointerDown,
-        onPointerMove: onPointerUpdate,
-        onPointerUp: onPointerUp,
-        onPointerCancel: onPointerCancel,
+        onPanStart: onPanStart,
+        onPanUpdate: onPanUpdate,
+        onPanEnd: onPanEnd,
+        onPanCancel: onPanCancel,
         child: MouseRegion(
           cursor: getCursorForHandle(handlePosition),
           child: child,
@@ -712,16 +706,16 @@ class _SideHandleWidget extends StatelessWidget {
   final double handleTapSize;
 
   /// Called when the handle dragging starts.
-  final PointerDownEventListener? onPointerDown;
+  final GestureDragStartCallback? onPanStart;
 
   /// Called when the handle dragging is updated.
-  final PointerMoveEventListener? onPointerUpdate;
+  final GestureDragUpdateCallback? onPanUpdate;
 
   /// Called when the handle dragging ends.
-  final PointerUpEventListener? onPointerUp;
+  final GestureDragEndCallback? onPanEnd;
 
   /// Called when the handle dragging is canceled.
-  final PointerCancelEventListener? onPointerCancel;
+  final GestureDragCancelCallback? onPanCancel;
 
   /// Whether the handle is resizable.
   final bool resizable;
@@ -732,10 +726,10 @@ class _SideHandleWidget extends StatelessWidget {
     required this.handlePosition,
     required this.handleTapSize,
     required this.builder,
-    required this.onPointerDown,
-    required this.onPointerUpdate,
-    required this.onPointerUp,
-    required this.onPointerCancel,
+    this.onPanStart,
+    this.onPanUpdate,
+    this.onPanEnd,
+    this.onPanCancel,
     required this.resizable,
   }) : assert(handlePosition.isSide, 'A cardinal handle must be cardinal.');
 
@@ -743,12 +737,12 @@ class _SideHandleWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget child = builder(context, handlePosition);
     if (resizable) {
-      child = Listener(
+      child = GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onPointerDown: onPointerDown,
-        onPointerMove: onPointerUpdate,
-        onPointerUp: onPointerUp,
-        onPointerCancel: onPointerCancel,
+        onPanStart: onPanStart,
+        onPanUpdate: onPanUpdate,
+        onPanEnd: onPanEnd,
+        onPanCancel: onPanCancel,
         child: MouseRegion(
           cursor: getCursorForHandle(handlePosition),
           child: child,
