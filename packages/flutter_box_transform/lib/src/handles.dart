@@ -1,8 +1,7 @@
 import 'dart:math';
 
+import 'package:box_transform/box_transform.dart';
 import 'package:flutter/material.dart';
-
-import '../flutter_box_transform.dart';
 
 /// Default width of the border of the handles.
 const kDefaultHandleBorderWidth = 1.5;

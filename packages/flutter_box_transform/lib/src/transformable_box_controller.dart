@@ -1,7 +1,9 @@
+import 'package:box_transform/box_transform.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../flutter_box_transform.dart';
+import 'ui_box_transform.dart';
+import 'ui_result.dart';
 
 /// Default [ResizeModeResolver] implementation. This implementation
 /// doesn't rely on the focus system .It resolves the [ResizeMode] based on
