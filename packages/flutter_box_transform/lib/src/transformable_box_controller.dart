@@ -41,17 +41,11 @@ class TransformableBoxController extends ChangeNotifier {
     Rect? clampingRect,
     BoxConstraints? constraints,
     ValueGetter<ResizeMode>? resizeModeResolver,
-
-    // Additional controls.
-    bool resizable = true,
-    bool movable = true,
     bool allowFlippingWhileResizing = true,
   })  : _rect = rect ?? Rect.zero,
         _flip = flip ?? Flip.none,
         _clampingRect = clampingRect ?? Rect.largest,
         _constraints = constraints ?? const BoxConstraints(),
-        _resizable = resizable,
-        _movable = movable,
         _resizeModeResolver = resizeModeResolver ?? defaultResizeModeResolver,
         _allowFlippingWhileResizing = allowFlippingWhileResizing;
 
@@ -101,22 +95,6 @@ class TransformableBoxController extends ChangeNotifier {
   /// its bounds.
   Rect get clampingRect => _clampingRect;
 
-  /// Whether the box is movable or not. Setting this to false will disable
-  /// all moving operations.
-  bool _movable = true;
-
-  /// Whether the box is movable or not. Setting this to false will disable
-  /// all moving operations.
-  bool get movable => _movable;
-
-  /// Whether the box is resizable or not. Setting this to false will disable
-  /// all resizing operations.
-  bool _resizable = true;
-
-  /// Whether the box is resizable or not. Setting this to false will disable
-  /// all resizing operations.
-  bool get resizable => _resizable;
-
   /// Whether to allow flipping of the box while resizing. If this is set to
   /// true, the box will flip when the user drags the handles to opposite
   /// corners of the rect.
@@ -146,8 +124,16 @@ class TransformableBoxController extends ChangeNotifier {
   }
 
   /// Sets the current [rect] of the [TransformableBox].
-  void setRect(Rect rect, {bool notify = true}) {
+  void setRect(
+    Rect rect, {
+    bool notify = true,
+    bool recalculate = true,
+  }) {
     _rect = rect;
+
+    if (recalculate) {
+      this.recalculate(notify: false);
+    }
 
     if (notify) notifyListeners();
   }
@@ -182,8 +168,16 @@ class TransformableBoxController extends ChangeNotifier {
   }
 
   /// Sets the current [clampingRect] of the [TransformableBox].
-  void setClampingRect(Rect clampingRect, {bool notify = true}) {
+  void setClampingRect(
+    Rect clampingRect, {
+    bool notify = true,
+    bool recalculate = true,
+  }) {
     _clampingRect = clampingRect;
+
+    if (recalculate) {
+      this.recalculate(notify: false);
+    }
 
     if (notify) notifyListeners();
   }
@@ -191,22 +185,6 @@ class TransformableBoxController extends ChangeNotifier {
   /// Sets the current [constraints] of the [TransformableBox].
   void setConstraints(BoxConstraints constraints, {bool notify = true}) {
     _constraints = constraints;
-
-    if (notify) notifyListeners();
-  }
-
-  /// Whether the rect is movable or not. Setting this to false will disable
-  /// all moving operations.
-  void setMovable(bool movable, {bool notify = true}) {
-    _movable = movable;
-
-    if (notify) notifyListeners();
-  }
-
-  /// Whether the rect is resizable or not. Setting this to false will disable
-  /// all resizing operations.
-  void setResizable(bool resizable, {bool notify = true}) {
-    _resizable = resizable;
 
     if (notify) notifyListeners();
   }
@@ -265,6 +243,9 @@ class TransformableBoxController extends ChangeNotifier {
     if (notify) notifyListeners();
   }
 
+  /// Called when the dragging of the [TransformableBox] is cancelled.
+  void onDragCancel({bool notify = true}) => onDragEnd(notify: notify);
+
   /// Called when the resizing starts on [TransformableBox].
   ///
   /// [localPosition] is the position of the pointer relative to the
@@ -317,6 +298,9 @@ class TransformableBoxController extends ChangeNotifier {
     if (notify) notifyListeners();
   }
 
+  /// Called when the resizing of the [TransformableBox] is cancelled.
+  void onResizeCancel({bool notify = true}) => onResizeEnd(notify: notify);
+
   /// Recalculates the current state of this [rect] to ensure the position is
   /// correct in case of extreme jumps of the [TransformableBox].
   void recalculatePosition({bool notify = true}) {
@@ -348,6 +332,17 @@ class TransformableBoxController extends ChangeNotifier {
     );
 
     _rect = result.rect;
+
+    if (notify) notifyListeners();
+  }
+
+  /// Recalculates the current state of this [rect] to ensure the position and
+  /// size are correct in case of extreme jumps of the [TransformableBox].
+  /// This is a combination of [recalculatePosition] and [recalculateSize] for
+  /// convenience.
+  void recalculate({bool notify = true}) {
+    recalculatePosition(notify: false);
+    recalculateSize(notify: false);
 
     if (notify) notifyListeners();
   }

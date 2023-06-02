@@ -243,7 +243,7 @@ class PlaygroundModel with ChangeNotifier {
 
   void toggleMoving(bool enabled) {
     if (selectedBoxIndex == -1) return;
-    selectedBox!.movable = enabled;
+    selectedBox!.draggable = enabled;
     notifyListeners();
   }
 
@@ -543,131 +543,118 @@ class _ImageBoxState extends State<ImageBox> {
   Widget build(BuildContext context) {
     final PlaygroundModel model = context.read<PlaygroundModel>();
     final Color handleColor = Theme.of(context).colorScheme.primary;
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        TransformableBox(
-          key: ValueKey('image-box-${box.name}'),
-          rect: box.rect,
+    return TransformableBox(
+      key: ValueKey('image-box-${box.name}'),
+      rect: box.rect,
+      flip: box.flip,
+      clampingRect: model.clampingEnabled ? model.clampingRect : null,
+      constraints: box.constraintsEnabled ? box.constraints : null,
+      onChanged: (result, event) {
+        widget.onChanged?.call(result);
+        largestClampingBox = result.largestRect;
+        setState(() {});
+        lastResult = result;
+        model.onRectChanged(result);
+      },
+      resizable: widget.selected && box.resizable,
+      hideHandlesWhenNotResizable:
+          !widget.selected || box.hideHandlesWhenNotResizable,
+      draggable: widget.selected && box.draggable,
+      allowContentFlipping: box.flipChild,
+      allowFlippingWhileResizing: box.flipRectWhileResizing,
+      onResizeStart: (handle, event) {
+        if (!showTestRecorder || !recorder.isRecording) return;
+
+        log('Recording resize action');
+        currentAction = recorder.onAction(
+          resizeMode: currentResizeMode,
           flip: box.flip,
+          rect: box.rect,
+          handle: handle,
+          cursorPosition: event.localPosition,
           clampingRect: model.clampingEnabled ? model.clampingRect : null,
           constraints: box.constraintsEnabled ? box.constraints : null,
-          onChanged: (result, event) {
-            widget.onChanged?.call(result);
-            largestClampingBox = result.largestRect;
-            setState(() {});
-            lastResult = result;
-            model.onRectChanged(result);
-          },
-          resizable: widget.selected && box.resizable,
-          hideHandlesWhenNotResizable:
-              !widget.selected || box.hideHandlesWhenNotResizable,
-          movable: widget.selected && box.movable,
-          allowContentFlipping: box.flipChild,
-          allowFlippingWhileResizing: box.flipRectWhileResizing,
-          onResizeStart: (handle, event) {
-            if (!showTestRecorder || !recorder.isRecording) return;
+          flipRect: box.flipRectWhileResizing,
+        );
+      },
+      onResizeEnd: (handle, event) {
+        if (!showTestRecorder ||
+            currentAction == null ||
+            !recorder.isRecording ||
+            lastResult == null) {
+          return;
+        }
+        log('Recording resize action result');
+        // recorder.onResult(
+        //   action: currentAction!,
+        //   result: lastResult!,
+        //   localPosition: event.localPosition,
+        // );
+      },
+      onTerminalSizeReached: (
+        bool reachedMinWidth,
+        bool reachedMaxWidth,
+        bool reachedMinHeight,
+        bool reachedMaxHeight,
+      ) {
+        if (minWidthReached == reachedMinWidth &&
+            minHeightReached == reachedMinHeight &&
+            maxWidthReached == reachedMaxWidth &&
+            maxHeightReached == reachedMaxHeight) return;
 
-            log('Recording resize action');
-            currentAction = recorder.onAction(
-              resizeMode: currentResizeMode,
-              flip: box.flip,
-              rect: box.rect,
-              handle: handle,
-              cursorPosition: event.localPosition,
-              clampingRect: model.clampingEnabled ? model.clampingRect : null,
-              constraints: box.constraintsEnabled ? box.constraints : null,
-              flipRect: box.flipRectWhileResizing,
-            );
-          },
-          onResizeEnd: (handle, event) {
-            if (!showTestRecorder ||
-                currentAction == null ||
-                !recorder.isRecording ||
-                lastResult == null) {
-              return;
-            }
-            log('Recording resize action result');
-            // recorder.onResult(
-            //   action: currentAction!,
-            //   result: lastResult!,
-            //   localPosition: event.localPosition,
-            // );
-          },
-          onTerminalSizeReached: (
-            bool reachedMinWidth,
-            bool reachedMaxWidth,
-            bool reachedMinHeight,
-            bool reachedMaxHeight,
-          ) {
-            if (minWidthReached == reachedMinWidth &&
-                minHeightReached == reachedMinHeight &&
-                maxWidthReached == reachedMaxWidth &&
-                maxHeightReached == reachedMaxHeight) return;
-
-            setState(() {
-              minWidthReached = reachedMinWidth;
-              minHeightReached = reachedMinHeight;
-              maxWidthReached = reachedMaxWidth;
-              maxHeightReached = reachedMaxHeight;
-            });
-          },
-          contentBuilder: (context, rect, flip) => GestureDetector(
-            onTap: () {
-              setState(() {});
-              if (widget.selected) return;
-              widget.onSelected();
-            },
-            onPanStart: (_) {
-              if (widget.selected) return;
-              widget.onSelected();
-            },
-            onPanUpdate: (_) => setState(() {}),
-            // onTapDown: (_) {
-            //   if(widget.selected) return;
-            //   widget.onSelected();
-            // },
-            child: Container(
-              key: ValueKey('image-box-${box.name}-content'),
-              width: rect.width,
-              height: rect.height,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                image: DecorationImage(
-                  image: AssetImage(box.imageAsset),
-                  fit: BoxFit.fill,
-                ),
-              ),
-              foregroundDecoration: BoxDecoration(
-                border: widget.selected
-                    ? Border.symmetric(
-                        horizontal: BorderSide(
-                          color: minHeightReached
-                              ? Colors.orange
-                              : maxHeightReached
-                                  ? Colors.red
-                                  : handleColor,
-                          width: 2,
-                          // TODO: Due to flutter issue in 3.7.10, this doesn't work in debug mode.
-                          // strokeAlign: BorderSide.strokeAlignCenter,
-                        ),
-                        vertical: BorderSide(
-                          color: minWidthReached
-                              ? Colors.orange
-                              : maxWidthReached
-                                  ? Colors.red
-                                  : handleColor,
-                          width: 2,
-                          // TODO: Due to flutter issue in 3.7.10, this doesn't work in debug mode.
-                          // strokeAlign: BorderSide.strokeAlignCenter,
-                        ),
-                      )
-                    : null,
-              ),
+        setState(() {
+          minWidthReached = reachedMinWidth;
+          minHeightReached = reachedMinHeight;
+          maxWidthReached = reachedMaxWidth;
+          maxHeightReached = reachedMaxHeight;
+        });
+      },
+      contentBuilder: (context, rect, flip) => GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () {
+          setState(() {});
+          if (widget.selected) return;
+          widget.onSelected();
+        },
+        child: Container(
+          key: ValueKey('image-box-${box.name}-content'),
+          width: rect.width,
+          height: rect.height,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            image: DecorationImage(
+              image: AssetImage(box.imageAsset),
+              fit: BoxFit.fill,
             ),
           ),
+          foregroundDecoration: BoxDecoration(
+            border: widget.selected
+                ? Border.symmetric(
+                    horizontal: BorderSide(
+                      color: minHeightReached
+                          ? Colors.orange
+                          : maxHeightReached
+                              ? Colors.red
+                              : handleColor,
+                      width: 2,
+                      // TODO: Due to flutter issue in 3.7.10, this doesn't work in debug mode.
+                      // strokeAlign: BorderSide.strokeAlignCenter,
+                    ),
+                    vertical: BorderSide(
+                      color: minWidthReached
+                          ? Colors.orange
+                          : maxWidthReached
+                              ? Colors.red
+                              : handleColor,
+                      width: 2,
+                      // TODO: Due to flutter issue in 3.7.10, this doesn't work in debug mode.
+                      // strokeAlign: BorderSide.strokeAlignCenter,
+                    ),
+                  )
+                : null,
+          ),
         ),
-      ],
+      ),
     );
   }
 }
@@ -915,7 +902,7 @@ class ControlPanel extends StatelessWidget {
                       child: Transform.scale(
                         scale: 0.7,
                         child: Switch(
-                          value: box.movable,
+                          value: box.draggable,
                           onChanged: (value) => model.toggleMoving(value),
                         ),
                       ),
@@ -2040,7 +2027,7 @@ class BoxData {
   bool flipChild = true;
   bool constraintsEnabled = false;
   bool resizable = true;
-  bool movable = true;
+  bool draggable = true;
   bool hideHandlesWhenNotResizable = true;
 
   final String imageAsset;
@@ -2057,7 +2044,7 @@ class BoxData {
     this.flipChild = true,
     this.constraintsEnabled = false,
     this.resizable = true,
-    this.movable = true,
+    this.draggable = true,
     this.hideHandlesWhenNotResizable = true,
   });
 }
