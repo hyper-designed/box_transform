@@ -1,3 +1,8 @@
+## 0.4.0
+- [BREAKING]: Replace `hideHandlesWhenNotResizable` with `enabledHandles` and `visibleHandles`.
+- Replace the usage of Listener widgets with GestureDetectors in the TransformableBox.
+- Add new controls to the playground to reflect the new handle parameters.
+
 ## 0.3.2
 
 - Fix controller pattern not updating the UI when the controller is updated.
