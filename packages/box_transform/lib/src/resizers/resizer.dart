@@ -7,11 +7,8 @@ import '../geometry.dart';
 import '../helpers.dart';
 
 part 'freeform_resizing.dart';
-
 part 'scale_resizing.dart';
-
 part 'symmetric_resizing.dart';
-
 part 'symmetric_scale_resizing.dart';
 
 /// An abstract class the provides a common interface for all resize modes.

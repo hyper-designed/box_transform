@@ -43,8 +43,11 @@ final class ScaleResizer extends Resizer {
         // can't flip it back again. This means that the box might be invalid
         // in the first place or something catastrophic happened!!! Contact
         // the package author if this happens.
-        return (rect: initialRect,largest: clampingRect, hasValidFlip: false);
-        throw StateError('Box found to be invalid more than once!');
+        return (
+          rect: initialRect,
+          largest: result.largest,
+          hasValidFlip: false
+        );
       }
 
       return newResult;

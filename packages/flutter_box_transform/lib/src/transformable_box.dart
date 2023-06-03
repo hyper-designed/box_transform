@@ -522,7 +522,8 @@ class _TransformableBoxState extends State<TransformableBox> {
               key: ValueKey(handle),
               handlePosition: handle,
               handleTapSize: widget.handleTapSize,
-              enabled: widget.resizable && widget.enabledHandles.contains(handle),
+              enabled:
+                  widget.resizable && widget.enabledHandles.contains(handle),
               onPanStart: (event) => onHandlePanStart(event, handle),
               onPanUpdate: (event) => onHandlePanUpdate(event, handle),
               onPanEnd: (event) => onHandlePanEnd(event, handle),
@@ -535,7 +536,8 @@ class _TransformableBoxState extends State<TransformableBox> {
               key: ValueKey(handle),
               handlePosition: handle,
               handleTapSize: widget.handleTapSize,
-              enabled: widget.resizable && widget.enabledHandles.contains(handle),
+              enabled:
+                  widget.resizable && widget.enabledHandles.contains(handle),
               onPanStart: (event) => onHandlePanStart(event, handle),
               onPanUpdate: (event) => onHandlePanUpdate(event, handle),
               onPanEnd: (event) => onHandlePanEnd(event, handle),
