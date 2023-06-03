@@ -253,9 +253,55 @@ class PlaygroundModel with ChangeNotifier {
     notifyListeners();
   }
 
-  void toggleHideHandlesWhenNotResizable(bool enabled) {
+  void addVisibleHandle(HandlePosition handle) {
     if (selectedBoxIndex == -1) return;
-    selectedBox!.hideHandlesWhenNotResizable = enabled;
+    selectedBox!.visibleHandles.add(handle);
+    notifyListeners();
+  }
+
+  void removeVisibleHandle(HandlePosition handle) {
+    if (selectedBoxIndex == -1) return;
+    selectedBox!.visibleHandles.remove(handle);
+    notifyListeners();
+  }
+
+  void addAllEnabledHandles() {
+    if (selectedBoxIndex == -1) return;
+    selectedBox!.enabledHandles
+      ..clear()
+      ..addAll([...HandlePosition.values]..remove(HandlePosition.none));
+    notifyListeners();
+  }
+
+  void removeAllEnabledHandles() {
+    if (selectedBoxIndex == -1) return;
+    selectedBox!.enabledHandles.clear();
+    notifyListeners();
+  }
+
+  void addEnabledHandle(HandlePosition handle) {
+    if (selectedBoxIndex == -1) return;
+    selectedBox!.enabledHandles.add(handle);
+    notifyListeners();
+  }
+
+  void removeEnabledHandle(HandlePosition handle) {
+    if (selectedBoxIndex == -1) return;
+    selectedBox!.enabledHandles.remove(handle);
+    notifyListeners();
+  }
+
+  void addAllVisibleHandles() {
+    if (selectedBoxIndex == -1) return;
+    selectedBox!.visibleHandles
+      ..clear()
+      ..addAll([...HandlePosition.values]..remove(HandlePosition.none));
+    notifyListeners();
+  }
+
+  void removeAllVisibleHandles() {
+    if (selectedBoxIndex == -1) return;
+    selectedBox!.visibleHandles.clear();
     notifyListeners();
   }
 
@@ -557,8 +603,10 @@ class _ImageBoxState extends State<ImageBox> {
         model.onRectChanged(result);
       },
       resizable: widget.selected && box.resizable,
-      hideHandlesWhenNotResizable:
-          !widget.selected || box.hideHandlesWhenNotResizable,
+      visibleHandles:
+          !widget.selected || !box.resizable ? {} : box.visibleHandles,
+      enabledHandles:
+          !widget.selected || !box.resizable ? {} : box.enabledHandles,
       draggable: widget.selected && box.draggable,
       allowContentFlipping: box.flipChild,
       allowFlippingWhileResizing: box.flipRectWhileResizing,
@@ -863,34 +911,6 @@ class ControlPanel extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        'Resizable',
-                        style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                              color: Theme.of(context).colorScheme.secondary,
-                            ),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 20,
-                      child: Transform.scale(
-                        scale: 0.7,
-                        child: Switch(
-                          value: box.resizable,
-                          onChanged: (value) => model.toggleResizing(value),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1),
-              Container(
-                height: 44,
-                padding: const EdgeInsets.fromLTRB(16, 0, 6, 0),
-                alignment: Alignment.centerLeft,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
                         'Movable',
                         style: Theme.of(context).textTheme.titleSmall!.copyWith(
                               color: Theme.of(context).colorScheme.secondary,
@@ -911,34 +931,7 @@ class ControlPanel extends StatelessWidget {
                 ),
               ),
               const Divider(height: 1),
-              Container(
-                height: 44,
-                padding: const EdgeInsets.fromLTRB(16, 0, 6, 0),
-                alignment: Alignment.centerLeft,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Hide handles if not resizable',
-                        style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                              color: Theme.of(context).colorScheme.secondary,
-                            ),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 20,
-                      child: Transform.scale(
-                        scale: 0.7,
-                        child: Switch(
-                          value: box.hideHandlesWhenNotResizable,
-                          onChanged: (value) =>
-                              model.toggleHideHandlesWhenNotResizable(value),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              const HandleControls(),
               const Divider(height: 1),
               const FlipControls(),
               const Divider(height: 1),
@@ -1193,6 +1186,320 @@ class PositionControls extends StatelessWidget {
   }
 }
 
+class HandleControls extends StatefulWidget {
+  const HandleControls({super.key});
+
+  @override
+  State<HandleControls> createState() => _HandleControlsState();
+}
+
+class _HandleControlsState extends State<HandleControls> {
+  bool advancedEnabledHandles = false;
+  bool advancedVisibleHandles = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final PlaygroundModel model = context.watch<PlaygroundModel>();
+
+    final BoxData box = model.selectedBox!;
+
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOutQuart,
+      alignment: Alignment.topCenter,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            height: 44,
+            padding: const EdgeInsets.fromLTRB(16, 0, 6, 0),
+            alignment: Alignment.centerLeft,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Resizable',
+                    style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
+                  ),
+                ),
+                SizedBox(
+                  height: 20,
+                  child: Transform.scale(
+                    scale: 0.7,
+                    child: Switch(
+                      value: box.resizable,
+                      onChanged: (value) => model.toggleResizing(value),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, indent: 24),
+          ClipRect(
+            child: AnimatedAlign(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutQuart,
+              alignment: Alignment.topCenter,
+              heightFactor: box.resizable ? 1 : 0,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(24, 8, 6, 8),
+                    alignment: Alignment.centerLeft,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Enabled Handles',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleSmall!
+                                .copyWith(
+                                  color:
+                                      Theme.of(context).colorScheme.secondary,
+                                ),
+                          ),
+                        ),
+                        SizedBox(
+                          height: 20,
+                          child: Transform.scale(
+                            scale: 0.6,
+                            child: Switch(
+                              value: box.enabledHandles.isNotEmpty,
+                              onChanged: (value) {
+                                if (value) {
+                                  model.addAllEnabledHandles();
+                                } else {
+                                  model.removeAllEnabledHandles();
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  ListTile(
+                    dense: true,
+                    contentPadding: const EdgeInsets.only(left: 24, right: 16),
+                    title: Text(
+                      'Advanced',
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.secondary,
+                          ),
+                    ),
+                    trailing: Icon(
+                      advancedEnabledHandles
+                          ? Icons.keyboard_arrow_up
+                          : Icons.keyboard_arrow_down,
+                      size: 18,
+                    ),
+                    onTap: () => setState(() {
+                      advancedEnabledHandles = !advancedEnabledHandles;
+                    }),
+                  ),
+                  ClipRect(
+                    child: AnimatedAlign(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOutQuart,
+                      alignment: Alignment.topCenter,
+                      heightFactor: advancedEnabledHandles ? 1 : 0,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (final handle in {
+                            ...HandlePosition.values
+                          }..remove(HandlePosition.none))
+                            InkWell(
+                              onTap: () {
+                                if (box.enabledHandles.contains(handle)) {
+                                  model.removeEnabledHandle(handle);
+                                } else {
+                                  model.addEnabledHandle(handle);
+                                }
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                    left: 36, top: 4, bottom: 4),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        handle.prettify,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelMedium
+                                            ?.copyWith(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .secondary,
+                                            ),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height: 15,
+                                      child: Transform.scale(
+                                        scale: 0.5,
+                                        child: Switch(
+                                          value: box.enabledHandles
+                                              .contains(handle),
+                                          onChanged: (bool? value) {
+                                            if (value == null) return;
+                                            if (value) {
+                                              model.addEnabledHandle(handle);
+                                            } else {
+                                              model.removeEnabledHandle(handle);
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          const SizedBox(height: 8),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const Divider(height: 1, indent: 24),
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(24, 12, 6, 8),
+                    alignment: Alignment.centerLeft,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Visible Handles',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleSmall!
+                                .copyWith(
+                                  color:
+                                      Theme.of(context).colorScheme.secondary,
+                                ),
+                          ),
+                        ),
+                        SizedBox(
+                          height: 20,
+                          child: Transform.scale(
+                            scale: 0.7,
+                            child: Switch(
+                              value: box.visibleHandles.isNotEmpty,
+                              onChanged: (value) {
+                                if (value) {
+                                  model.addAllVisibleHandles();
+                                } else {
+                                  model.removeAllVisibleHandles();
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  ListTile(
+                    dense: true,
+                    contentPadding: const EdgeInsets.only(left: 24, right: 16),
+                    title: Text(
+                      'Advanced',
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.secondary,
+                          ),
+                    ),
+                    trailing: Icon(
+                      advancedVisibleHandles
+                          ? Icons.keyboard_arrow_up
+                          : Icons.keyboard_arrow_down,
+                      size: 18,
+                    ),
+                    onTap: () => setState(() {
+                      advancedVisibleHandles = !advancedVisibleHandles;
+                    }),
+                  ),
+                  ClipRect(
+                    child: AnimatedAlign(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOutQuart,
+                      alignment: Alignment.topCenter,
+                      heightFactor: advancedVisibleHandles ? 1 : 0,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (final handle in {
+                            ...HandlePosition.values
+                          }..remove(HandlePosition.none))
+                            InkWell(
+                              onTap: () {
+                                if (box.visibleHandles.contains(handle)) {
+                                  model.removeVisibleHandle(handle);
+                                } else {
+                                  model.addVisibleHandle(handle);
+                                }
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                    left: 36, top: 4, bottom: 4),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        handle.prettify,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelMedium
+                                            ?.copyWith(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .secondary,
+                                            ),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height: 15,
+                                      child: Transform.scale(
+                                        scale: 0.5,
+                                        child: Switch(
+                                          value: box.visibleHandles
+                                              .contains(handle),
+                                          onChanged: (bool? value) {
+                                            if (value == null) return;
+                                            if (value) {
+                                              model.addVisibleHandle(handle);
+                                            } else {
+                                              model.removeVisibleHandle(handle);
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          const SizedBox(height: 8),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class FlipControls extends StatelessWidget {
   const FlipControls({super.key});
 
@@ -1216,6 +1523,7 @@ class FlipControls extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 16, 6, 16),
             alignment: Alignment.centerLeft,
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: Column(
@@ -1266,6 +1574,7 @@ class FlipControls extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 16, 6, 16),
             alignment: Alignment.centerLeft,
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: Column(
@@ -2028,7 +2337,8 @@ class BoxData {
   bool constraintsEnabled = false;
   bool resizable = true;
   bool draggable = true;
-  bool hideHandlesWhenNotResizable = true;
+  Set<HandlePosition> enabledHandles;
+  Set<HandlePosition> visibleHandles;
 
   final String imageAsset;
 
@@ -2043,10 +2353,14 @@ class BoxData {
     this.flipRectWhileResizing = true,
     this.flipChild = true,
     this.constraintsEnabled = false,
-    this.resizable = true,
     this.draggable = true,
-    this.hideHandlesWhenNotResizable = true,
-  });
+    this.resizable = true,
+    Set<HandlePosition>? enabledHandles,
+    Set<HandlePosition>? visibleHandles,
+  })  : enabledHandles = enabledHandles ?? {...HandlePosition.values}
+          ..remove(HandlePosition.none),
+        visibleHandles = visibleHandles ?? {...HandlePosition.values}
+          ..remove(HandlePosition.none);
 }
 
 List<Vector2>? extendLineToRect(Rect rect, Vector2 p1, Vector2 p2) {

@@ -114,11 +114,6 @@ class TransformableBox extends StatefulWidget {
   /// the [enabledHandles] parameter and set all handles to disabled.
   final bool resizable;
 
-  /// Whether the box should hide the corner/side resize controls when
-  /// [resizable] is false. This is a convenience parameter that will ignore
-  /// the [visibleHandles] parameter and set all handles to hidden.
-  final bool hideHandlesWhenNotResizable;
-
   /// Whether the box is movable or not. Setting this to false will disable
   /// all moving operations.
   final bool draggable;
@@ -231,7 +226,6 @@ class TransformableBox extends StatefulWidget {
     this.sideHandleBuilder = _defaultSideHandleBuilder,
     this.handleTapSize = 24,
     this.allowContentFlipping = true,
-    this.hideHandlesWhenNotResizable = true,
     this.handleAlignment = HandleAlignment.center,
     this.enabledHandles = const {...HandlePosition.values},
     this.visibleHandles = const {...HandlePosition.values},
@@ -522,34 +516,32 @@ class _TransformableBoxState extends State<TransformableBox> {
             height: rect.height,
             child: content,
           ),
-          if (widget.resizable || !widget.hideHandlesWhenNotResizable)
-            for (final handle
-                in widget.visibleHandles.where((handle) => handle.isDiagonal))
-              CornerHandleWidget(
-                key: ValueKey(handle),
-                handlePosition: handle,
-                handleTapSize: widget.handleTapSize,
-                enabled: widget.enabledHandles.contains(handle),
-                onPanStart: (event) => onHandlePanStart(event, handle),
-                onPanUpdate: (event) => onHandlePanUpdate(event, handle),
-                onPanEnd: (event) => onHandlePanEnd(event, handle),
-                onPanCancel: () => onHandlePanCancel(handle),
-                builder: widget.cornerHandleBuilder,
-              ),
-          if (widget.resizable || !widget.hideHandlesWhenNotResizable)
-            for (final handle
-                in widget.visibleHandles.where((handle) => handle.isSide))
-              SideHandleWidget(
-                key: ValueKey(handle),
-                handlePosition: handle,
-                handleTapSize: widget.handleTapSize,
-                enabled: widget.enabledHandles.contains(handle),
-                onPanStart: (event) => onHandlePanStart(event, handle),
-                onPanUpdate: (event) => onHandlePanUpdate(event, handle),
-                onPanEnd: (event) => onHandlePanEnd(event, handle),
-                onPanCancel: () => onHandlePanCancel(handle),
-                builder: widget.sideHandleBuilder,
-              ),
+          for (final handle
+              in widget.visibleHandles.where((handle) => handle.isDiagonal))
+            CornerHandleWidget(
+              key: ValueKey(handle),
+              handlePosition: handle,
+              handleTapSize: widget.handleTapSize,
+              enabled: widget.resizable && widget.enabledHandles.contains(handle),
+              onPanStart: (event) => onHandlePanStart(event, handle),
+              onPanUpdate: (event) => onHandlePanUpdate(event, handle),
+              onPanEnd: (event) => onHandlePanEnd(event, handle),
+              onPanCancel: () => onHandlePanCancel(handle),
+              builder: widget.cornerHandleBuilder,
+            ),
+          for (final handle
+              in widget.visibleHandles.where((handle) => handle.isSide))
+            SideHandleWidget(
+              key: ValueKey(handle),
+              handlePosition: handle,
+              handleTapSize: widget.handleTapSize,
+              enabled: widget.resizable && widget.enabledHandles.contains(handle),
+              onPanStart: (event) => onHandlePanStart(event, handle),
+              onPanUpdate: (event) => onHandlePanUpdate(event, handle),
+              onPanEnd: (event) => onHandlePanEnd(event, handle),
+              onPanCancel: () => onHandlePanCancel(handle),
+              builder: widget.sideHandleBuilder,
+            ),
         ],
       ),
     );
