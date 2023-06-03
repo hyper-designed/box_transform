@@ -1,3 +1,6 @@
+## 0.4.0
+- Fix stack overflow error when the clamping rect is smaller than the box rect.
+
 ## 0.3.0
 
 - Refactored the core logic to make it more readable, cleaner and easier to maintain.

@@ -41,19 +41,45 @@ the interactive area is aligned to the center of box corner/side.
 
 ## Handle visibility
 
-By default, handles will be hidden when `resizable` is set to `false`. This can be changed by setting
-`hideHandlesWhenNotResizable` to `false`.
+By default, handles will be hidden when `resizable` is set to `false`.
 
-```dart title="Showing handles when box is not resizable"
+```dart title="Using the resizable boolean to hide handles"
   TransformableBox(
     rect: rect,
     flip: flip,
     resizable: false,
-    hideHandlesWhenNotResizable: false,
     onChanged: (event) {...},
     contentBuilder: (context, rect, flip) {...},
   );
 ```
+
+You can alternatively selectively hide handles by providing your own `visibleHandles` set.
+
+```dart title="Using the visibleHandles set to hide handles"
+  TransformableBox(
+    rect: rect,
+    flip: flip,
+    visibleHandles: {HandlePosition.right, HandlePosition.bottom, HandlePosition.bottomRight},
+    onChanged: (event) {...},
+    contentBuilder: (context, rect, flip) {...},
+  );
+```
+
+## Handle Interaction
+
+You can selectively disable handles but keep them visible at the same time by providing your own `enabledHandles` set.
+
+```dart title="Using the enabledHandles set to disable handles"
+  TransformableBox(
+    rect: rect,
+    flip: flip,
+    enabledHandles: {HandlePosition.right, HandlePosition.bottom, HandlePosition.bottomRight},
+    onChanged: (event) {...},
+    contentBuilder: (context, rect, flip) {...},
+  );
+```
+
+<Info>You can provide an empty set to disable all the handles but keep them visible and vice versa.</Info>
 
 ## Customizing the default handles
 
