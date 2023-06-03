@@ -118,6 +118,26 @@ class BoxTransformer {
       );
     }
 
+    // Check if clampingRect is smaller than initialRect.
+    // If it is, then we return the initialRect and not resize it.
+    if (clampingRect.width < initialRect.width ||
+        clampingRect.height < initialRect.height) {
+      return ResizeResult(
+        rect: initialRect,
+        oldRect: initialRect,
+        flip: initialFlip,
+        resizeMode: resizeMode,
+        delta: delta,
+        handle: handle,
+        rawSize: initialRect.size,
+        minWidthReached: false,
+        minHeightReached: false,
+        largestRect: clampingRect,
+        maxHeightReached: false,
+        maxWidthReached: false,
+      );
+    }
+
     // Symmetric resizing requires the delta to be doubled since it grows or
     // shrinks in all directions from center.
     if (resizeMode.hasSymmetry) delta = Vector2(delta.x * 2, delta.y * 2);

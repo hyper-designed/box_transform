@@ -200,6 +200,30 @@ enum HandlePosition {
         throw ArgumentError('HandlePosition.none is not supported!');
     }
   }
+
+  /// Displayable representation of the [HandlePosition] value.
+  String get prettify {
+    switch (this) {
+      case HandlePosition.topLeft:
+        return 'Top Left';
+      case HandlePosition.top:
+        return 'Top';
+      case HandlePosition.topRight:
+        return 'Top Right';
+      case HandlePosition.left:
+        return 'Left';
+      case HandlePosition.right:
+        return 'Right';
+      case HandlePosition.bottomLeft:
+        return 'Bottom Left';
+      case HandlePosition.bottom:
+        return 'Bottom';
+      case HandlePosition.bottomRight:
+        return 'Bottom Right';
+      case HandlePosition.none:
+        return 'None';
+    }
+  }
 }
 
 /// Represents the flip state of a rectangle, or, in other words, if the

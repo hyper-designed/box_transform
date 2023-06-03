@@ -14,6 +14,53 @@ final class ScaleResizer extends Resizer {
     required Constraints constraints,
     required Flip flip,
   }) {
+    ({Box rect, Box largest, bool hasValidFlip}) result = _resizeRect(
+      initialRect: initialRect,
+      explodedRect: explodedRect,
+      clampingRect: clampingRect,
+      handle: handle,
+      constraints: constraints,
+      flip: flip,
+    );
+
+    if (!result.hasValidFlip) {
+      // Since we can't flip the box, explodedRect (which is a raw rect with delta applied)
+      // would be flipped so we can't use that because it would make the size
+      // calculations wrong. Instead we use box from the result which is the
+      // flipped box but with correct constraints applied. (min rect always).
+      final newResult = _resizeRect(
+        explodedRect: result.rect,
+        initialRect: initialRect,
+        clampingRect: clampingRect,
+        handle: handle,
+        flip: Flip.none,
+        constraints: constraints,
+      );
+
+      if (!newResult.hasValidFlip) {
+        // This should never happen. If it does, it means that the box is
+        // invalid even after flipping it back to the original state and we
+        // can't flip it back again. This means that the box might be invalid
+        // in the first place or something catastrophic happened!!! Contact
+        // the package author if this happens.
+        return (rect: initialRect,largest: clampingRect, hasValidFlip: false);
+        throw StateError('Box found to be invalid more than once!');
+      }
+
+      return newResult;
+    }
+
+    return result;
+  }
+
+  ({Box rect, Box largest, bool hasValidFlip}) _resizeRect({
+    required Box initialRect,
+    required Box explodedRect,
+    required Box clampingRect,
+    required HandlePosition handle,
+    required Constraints constraints,
+    required Flip flip,
+  }) {
     final flippedHandle = handle.flip(flip);
     final effectiveInitialRect = flipRect(initialRect, flip, handle);
 
@@ -54,21 +101,6 @@ final class ScaleResizer extends Resizer {
         result = handleBottom(explodedRect, effectiveInitialRect, clampingRect,
             flippedHandle, constraints, flip);
         break;
-    }
-
-    if (!result.hasValidFlip) {
-      // Since we can't flip the box, explodedRect (which is a raw rect with delta applied)
-      // would be flipped so we can't use that because it would make the size
-      // calculations wrong. Instead we use box from the result which is the
-      // flipped box but with correct constraints applied. (min rect always).
-      return resize(
-        explodedRect: result.rect,
-        initialRect: initialRect,
-        clampingRect: clampingRect,
-        handle: handle,
-        flip: Flip.none,
-        constraints: constraints,
-      );
     }
 
     return result;
