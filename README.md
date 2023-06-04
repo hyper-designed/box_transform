@@ -53,7 +53,9 @@ See [DEVELOPMENT.md][development] for development setup.
   </tr>
 </table>
 
-Feel free to join our Discord server for any inquiries or support: https://discord.gg/yrahEhCqTJ
+Feel free to join our Discord server for any inquiries or support!
+
+<a href="https://discord.gg/yrahEhCqTJ"><img src="docs/assets/discord.png" width="200px"/></a>
 
 ## License
 
