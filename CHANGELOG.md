@@ -3,6 +3,56 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 2023-06-04
+
+### Changes
+
+---
+
+Packages with breaking changes:
+
+- [`box_transform` - `v0.4.0`](#box_transform---v040)
+- [`flutter_box_transform` - `v0.4.0`](#flutter_box_transform---v040)
+
+Packages with other changes:
+
+- There are no breaking changes in this release.
+
+---
+
+#### `box_transform` - `v0.4.0`
+
+- Fix stack overflow error when the clamping rect is smaller than the box rect.
+
+#### `flutter_box_transform` - `v0.4.0`
+
+- [BREAKING]: Replace `hideHandlesWhenNotResizable` with `enabledHandles` and `visibleHandles`.
+- Replace the usage of Listener widgets with GestureDetectors in the TransformableBox.
+- Add new controls to the playground to reflect the new handle parameters.
+- Bump up **box_transform** version to `0.4.0`.
+
+## 2023-06-02
+
+### Changes
+
+---
+
+Packages with breaking changes:
+
+- There are no breaking changes in this release.
+
+Packages with other changes:
+
+- [`flutter_box_transform` - `v0.3.2`](#flutter_box_transform---v030)
+
+---
+
+#### `flutter_box_transform` - `v0.3.2`
+
+- Fix controller pattern not updating the UI when the controller is updated.
+- Change null resizeModeResolver pattern to a non-null pattern to fix a crash.
+- Correct two broken doc pages.
+
 ## 2023-06-01
 
 ### Changes

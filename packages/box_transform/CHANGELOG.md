@@ -1,4 +1,5 @@
 ## 0.4.0
+
 - Fix stack overflow error when the clamping rect is smaller than the box rect.
 
 ## 0.3.0
