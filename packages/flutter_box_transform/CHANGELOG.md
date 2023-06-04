@@ -2,6 +2,7 @@
 - [BREAKING]: Replace `hideHandlesWhenNotResizable` with `enabledHandles` and `visibleHandles`.
 - Replace the usage of Listener widgets with GestureDetectors in the TransformableBox.
 - Add new controls to the playground to reflect the new handle parameters.
+- Bump up **box_transform** version to `0.4.0`.
 
 ## 0.3.2
 
@@ -11,7 +12,7 @@
 
 ## 0.3.1
 
-- Bump up box_transform version to 0.3.0.
+- Bump up **box_transform** version to `0.3.0`.
 
 ## 0.3.0
 
