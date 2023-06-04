@@ -11,14 +11,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  adaptive_theme: ^3.2.1
-  url_launcher: ^6.1.11
-  provider: ^6.0.5
-  vector_math: ^2.1.4
   flutter_box_transform:
     path: ../
-  box_transform:
-    path: ../../box_transform
 
 dev_dependencies:
   flutter_test:

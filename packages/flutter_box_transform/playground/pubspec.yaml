@@ -20,8 +20,6 @@ dependencies:
   file_picker: ^5.2.11
   flutter_box_transform:
     path: ../
-  box_transform:
-    path: ../../box_transform
 
 dev_dependencies:
   flutter_test:
