@@ -1,7 +1,7 @@
 library box_transform;
 
 export 'src/enums.dart';
-export 'src/extensions.dart';
+export 'src/extensions.dart' hide DoubleExt;
 export 'src/geometry.dart';
 export 'src/helpers.dart';
 export 'src/result.dart';

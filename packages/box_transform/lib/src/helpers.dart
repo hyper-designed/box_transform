@@ -2,7 +2,9 @@ import 'dart:math';
 
 import 'package:vector_math/vector_math.dart';
 
-import '../box_transform.dart';
+import 'enums.dart';
+import 'extensions.dart';
+import 'geometry.dart';
 
 /// Flips the given [rect] with given [flip] with [handle] being the
 /// pivot point.
