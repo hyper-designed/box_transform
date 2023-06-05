@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:box_transform/box_transform.dart';
 import 'package:flutter/material.dart';
 
@@ -287,6 +289,8 @@ class TransformableBox extends StatefulWidget {
 class _TransformableBoxState extends State<TransformableBox> {
   late TransformableBoxController controller;
 
+  bool isLegalGesture = false;
+
   @override
   void initState() {
     super.initState();
@@ -396,12 +400,23 @@ class _TransformableBoxState extends State<TransformableBox> {
 
   /// Called when the handle drag starts.
   void onHandlePanStart(DragStartDetails event, HandlePosition handle) {
+    // Two fingers were used to start the drag. This produces issues with
+    // the box drag event. Therefore, we ignore it.
+    if (event.kind == PointerDeviceKind.trackpad) {
+      isLegalGesture = false;
+      return;
+    } else {
+      isLegalGesture = true;
+    }
+
     controller.onResizeStart(event.localPosition);
     widget.onResizeStart?.call(handle, event);
   }
 
   /// Called when the handle drag updates.
   void onHandlePanUpdate(DragUpdateDetails event, HandlePosition handle) {
+    if (!isLegalGesture) return;
+
     final UIResizeResult result = controller.onResizeUpdate(
       event.localPosition,
       handle,
@@ -431,6 +446,8 @@ class _TransformableBoxState extends State<TransformableBox> {
 
   /// Called when the handle drag ends.
   void onHandlePanEnd(DragEndDetails event, HandlePosition handle) {
+    if (!isLegalGesture) return;
+
     controller.onResizeEnd();
     widget.onResizeEnd?.call(handle, event);
     widget.onMinWidthReached?.call(false);
@@ -443,6 +460,8 @@ class _TransformableBoxState extends State<TransformableBox> {
   }
 
   void onHandlePanCancel(HandlePosition handle) {
+    if (!isLegalGesture) return;
+
     controller.onResizeEnd();
     widget.onResizeCancel?.call(handle);
     widget.onMinWidthReached?.call(false);
@@ -456,12 +475,23 @@ class _TransformableBoxState extends State<TransformableBox> {
 
   /// Called when the box drag event starts.
   void onDragPanStart(DragStartDetails event) {
+    // Two fingers were used to start the drag. This produces issues with
+    // the box drag event. Therefore, we ignore it.
+    if (event.kind == PointerDeviceKind.trackpad) {
+      isLegalGesture = false;
+      return;
+    } else {
+      isLegalGesture = true;
+    }
+
     controller.onDragStart(event.localPosition);
     widget.onDragStart?.call(event);
   }
 
   /// Called when the box drag event updates.
   void onDragPanUpdate(DragUpdateDetails event) {
+    if (!isLegalGesture) return;
+
     final UIMoveResult result = controller.onDragUpdate(
       event.localPosition,
     );
@@ -472,11 +502,15 @@ class _TransformableBoxState extends State<TransformableBox> {
 
   /// Called when the box drag event ends.
   void onDragPanEnd(DragEndDetails event) {
+    if (!isLegalGesture) return;
+
     controller.onDragEnd();
     widget.onDragEnd?.call(event);
   }
 
   void onDragPanCancel() {
+    if (!isLegalGesture) return;
+
     controller.onDragEnd();
     widget.onDragCancel?.call();
   }
@@ -494,7 +528,7 @@ class _TransformableBoxState extends State<TransformableBox> {
 
     if (widget.draggable) {
       content = GestureDetector(
-        behavior: HitTestBehavior.opaque,
+        behavior: HitTestBehavior.translucent,
         onPanStart: onDragPanStart,
         onPanUpdate: onDragPanUpdate,
         onPanEnd: onDragPanEnd,
