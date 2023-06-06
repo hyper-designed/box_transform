@@ -282,6 +282,18 @@ class TransformableBox extends StatefulWidget {
         constraints = constraints ?? const BoxConstraints.expand(),
         resizeModeResolver = resizeModeResolver ?? defaultResizeModeResolver;
 
+  /// Returns the [TransformableBox] of the closest ancestor.
+  static TransformableBox? widgetOf(BuildContext context) {
+    return context.findAncestorWidgetOfExactType<TransformableBox>();
+  }
+
+  /// Returns the [TransformableBoxController] of the closest ancestor.
+  static TransformableBoxController? controllerOf(BuildContext context) {
+    return context
+        .findAncestorStateOfType<_TransformableBoxState>()
+        ?.controller;
+  }
+
   @override
   State<TransformableBox> createState() => _TransformableBoxState();
 }

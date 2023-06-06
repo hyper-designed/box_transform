@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:box_transform/box_transform.dart';
 import 'package:flutter/material.dart';
 
+import 'transformable_box.dart';
+
 /// Default width of the border of the handles.
 const kDefaultHandleBorderWidth = 1.5;
 
@@ -167,9 +169,6 @@ class AngularHandle extends StatelessWidget {
   /// Whether the handle has a shadow.
   final bool hasShadow;
 
-  /// The alignment of the handle.
-  final HandleAlignment handleAlignment;
-
   /// Creates a new angular corner handle.
   const AngularHandle({
     super.key,
@@ -178,11 +177,13 @@ class AngularHandle extends StatelessWidget {
     this.thickness = 5,
     this.color,
     this.hasShadow = true,
-    this.handleAlignment = HandleAlignment.inside,
   });
 
   @override
   Widget build(BuildContext context) {
+    final handleAlignment =
+        TransformableBox.widgetOf(context)?.handleAlignment ??
+            HandleAlignment.outside;
     return LayoutBuilder(
       builder: (context, constraints) {
         return Container(
