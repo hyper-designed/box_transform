@@ -1,4 +1,11 @@
+## 0.4.1
+
+- Deny trackpad pointer devices to prevent erratic drag events when interacting with TransformableBox.
+- Inherit `handleAlignment` from `TransformableBox` for `AngularHandle`.
+- Add `debugPaintHandleBounds` param for painting handle bounds.
+
 ## 0.4.0
+
 - [BREAKING]: Replace `hideHandlesWhenNotResizable` with `enabledHandles` and `visibleHandles`.
 - Replace the usage of Listener widgets with GestureDetectors in the TransformableBox.
 - Add new controls to the playground to reflect the new handle parameters.

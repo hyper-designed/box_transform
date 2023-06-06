@@ -1,3 +1,7 @@
+## 0.4.1
+
+- Remove `DoubleExt` from package exports.
+
 ## 0.4.0
 
 - Fix stack overflow error when the clamping rect is smaller than the box rect.

@@ -3,6 +3,33 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 2023-06-06
+
+### Changes
+
+---
+
+Packages with breaking changes:
+
+- There are no breaking changes in this release.
+
+Packages with other changes:
+
+- [`box_transform` - `v0.4.1`](#box_transform---v041)
+- [`flutter_box_transform` - `v0.4.1`](#flutter_box_transform---v041)
+
+---
+
+#### `box_transform` - `v0.4.1`
+
+- Remove `DoubleExt` from package exports.
+
+#### `flutter_box_transform` - `v0.4.1`
+
+- Deny trackpad pointer devices to prevent erratic drag events when interacting with TransformableBox.
+- Inherit `handleAlignment` from `TransformableBox` for `AngularHandle`.
+- Add `debugPaintHandleBounds` param for painting handle bounds.
+
 ## 2023-06-04
 
 ### Changes
