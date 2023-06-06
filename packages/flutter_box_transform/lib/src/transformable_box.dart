@@ -219,6 +219,9 @@ class TransformableBox extends StatefulWidget {
   /// [onTerminalHeightReached] into one callback function.
   final TerminalEvent? onTerminalSizeReached;
 
+  /// Whether to paint the handle's bounds for debugging purposes.
+  final bool debugPaintHandleBounds;
+
   /// Creates a [TransformableBox] widget.
   const TransformableBox({
     super.key,
@@ -267,6 +270,7 @@ class TransformableBox extends StatefulWidget {
     this.onTerminalWidthReached,
     this.onTerminalHeightReached,
     this.onTerminalSizeReached,
+    this.debugPaintHandleBounds = false,
   })  : assert(
           (controller == null) ||
               ((rect == null) &&
@@ -568,6 +572,7 @@ class _TransformableBoxState extends State<TransformableBox> {
               key: ValueKey(handle),
               handlePosition: handle,
               handleTapSize: widget.handleTapSize,
+              debugPaintHandleBounds: widget.debugPaintHandleBounds,
               enabled:
                   widget.resizable && widget.enabledHandles.contains(handle),
               onPanStart: (event) => onHandlePanStart(event, handle),
@@ -582,6 +587,7 @@ class _TransformableBoxState extends State<TransformableBox> {
               key: ValueKey(handle),
               handlePosition: handle,
               handleTapSize: widget.handleTapSize,
+              debugPaintHandleBounds: widget.debugPaintHandleBounds,
               enabled:
                   widget.resizable && widget.enabledHandles.contains(handle),
               onPanStart: (event) => onHandlePanStart(event, handle),

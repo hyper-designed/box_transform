@@ -1,4 +1,5 @@
 import 'package:box_transform/box_transform.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'typedefs.dart';
@@ -31,6 +32,9 @@ class CornerHandleWidget extends StatelessWidget {
   /// Whether the handle is resizable.
   final bool enabled;
 
+  /// Whether to paint the handle's bounds for debugging purposes.
+  final bool debugPaintHandleBounds;
+
   /// Creates a new handle widget.
   CornerHandleWidget({
     super.key,
@@ -42,6 +46,7 @@ class CornerHandleWidget extends StatelessWidget {
     this.onPanEnd,
     this.onPanCancel,
     required this.enabled,
+    this.debugPaintHandleBounds = false,
   }) : assert(handlePosition.isDiagonal, 'A corner handle must be diagonal.');
 
   @override
@@ -58,6 +63,13 @@ class CornerHandleWidget extends StatelessWidget {
           cursor: getCursorForHandle(handlePosition),
           child: child,
         ),
+      );
+    }
+
+    if(kDebugMode && debugPaintHandleBounds) {
+      child = ColoredBox(
+        color: Colors.orange.withOpacity(0.5),
+        child: child,
       );
     }
 
@@ -115,6 +127,9 @@ class SideHandleWidget extends StatelessWidget {
   /// Whether the handle is resizable.
   final bool enabled;
 
+  /// Whether to paint the handle's bounds for debugging purposes.
+  final bool debugPaintHandleBounds;
+
   /// Creates a new handle widget.
   SideHandleWidget({
     super.key,
@@ -126,6 +141,7 @@ class SideHandleWidget extends StatelessWidget {
     this.onPanEnd,
     this.onPanCancel,
     required this.enabled,
+    this.debugPaintHandleBounds = false,
   }) : assert(handlePosition.isSide, 'A cardinal handle must be cardinal.');
 
   @override
@@ -142,6 +158,13 @@ class SideHandleWidget extends StatelessWidget {
           cursor: getCursorForHandle(handlePosition),
           child: child,
         ),
+      );
+    }
+
+    if(kDebugMode && debugPaintHandleBounds) {
+      child = ColoredBox(
+        color: Colors.yellow.withOpacity(0.5),
+        child: child,
       );
     }
 
