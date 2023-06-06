@@ -66,7 +66,7 @@ class CornerHandleWidget extends StatelessWidget {
       );
     }
 
-    if(kDebugMode && debugPaintHandleBounds) {
+    if (kDebugMode && debugPaintHandleBounds) {
       child = ColoredBox(
         color: Colors.orange.withOpacity(0.5),
         child: child,
@@ -161,7 +161,7 @@ class SideHandleWidget extends StatelessWidget {
       );
     }
 
-    if(kDebugMode && debugPaintHandleBounds) {
+    if (kDebugMode && debugPaintHandleBounds) {
       child = ColoredBox(
         color: Colors.yellow.withOpacity(0.5),
         child: child,
