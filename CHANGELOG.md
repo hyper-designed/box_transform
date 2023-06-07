@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 2023-06-07
+
+### Changes
+
+---
+
+Packages with breaking changes:
+
+- There are no breaking changes in this release.
+
+Packages with other changes:
+
+- [`flutter_box_transform` - `v0.4.2`](#flutter_box_transform---v042)
+
+---
+
+#### `flutter_box_transform` - `v0.4.2`
+
+- Fix an issue where visibleHandles disabled the handles instead of hiding them but keeping them enabled.
+
 ## 2023-06-06
 
 ### Changes
