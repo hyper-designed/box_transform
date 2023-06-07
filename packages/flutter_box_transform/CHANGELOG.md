@@ -1,3 +1,7 @@
+## 0.4.2
+
+- Fix an issue where visibleHandles disabled the handles instead of hiding them but keeping them enabled.
+
 ## 0.4.1
 
 - Deny trackpad pointer devices to prevent erratic drag events when interacting with TransformableBox.
