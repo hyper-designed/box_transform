@@ -32,6 +32,9 @@ class CornerHandleWidget extends StatelessWidget {
   /// Whether the handle is resizable.
   final bool enabled;
 
+  /// Whether the handle is visible.
+  final bool visible;
+
   /// Whether to paint the handle's bounds for debugging purposes.
   final bool debugPaintHandleBounds;
 
@@ -45,13 +48,16 @@ class CornerHandleWidget extends StatelessWidget {
     this.onPanUpdate,
     this.onPanEnd,
     this.onPanCancel,
-    required this.enabled,
+    this.enabled = true,
+    this.visible = true,
     this.debugPaintHandleBounds = false,
   }) : assert(handlePosition.isDiagonal, 'A corner handle must be diagonal.');
 
   @override
   Widget build(BuildContext context) {
-    Widget child = builder(context, handlePosition);
+    Widget child =
+        visible ? builder(context, handlePosition) : const SizedBox.shrink();
+
     if (enabled) {
       child = GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -127,6 +133,9 @@ class SideHandleWidget extends StatelessWidget {
   /// Whether the handle is resizable.
   final bool enabled;
 
+  /// Whether the handle is visible.
+  final bool visible;
+
   /// Whether to paint the handle's bounds for debugging purposes.
   final bool debugPaintHandleBounds;
 
@@ -140,13 +149,16 @@ class SideHandleWidget extends StatelessWidget {
     this.onPanUpdate,
     this.onPanEnd,
     this.onPanCancel,
-    required this.enabled,
+    this.enabled = true,
+    this.visible = true,
     this.debugPaintHandleBounds = false,
   }) : assert(handlePosition.isSide, 'A cardinal handle must be cardinal.');
 
   @override
   Widget build(BuildContext context) {
-    Widget child = builder(context, handlePosition);
+    Widget child =
+        visible ? builder(context, handlePosition) : const SizedBox.shrink();
+
     if (enabled) {
       child = GestureDetector(
         behavior: HitTestBehavior.opaque,

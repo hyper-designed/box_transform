@@ -566,36 +566,38 @@ class _TransformableBoxState extends State<TransformableBox> {
             height: rect.height,
             child: content,
           ),
-          for (final handle
-              in widget.visibleHandles.where((handle) => handle.isDiagonal))
-            CornerHandleWidget(
-              key: ValueKey(handle),
-              handlePosition: handle,
-              handleTapSize: widget.handleTapSize,
-              debugPaintHandleBounds: widget.debugPaintHandleBounds,
-              enabled:
-                  widget.resizable && widget.enabledHandles.contains(handle),
-              onPanStart: (event) => onHandlePanStart(event, handle),
-              onPanUpdate: (event) => onHandlePanUpdate(event, handle),
-              onPanEnd: (event) => onHandlePanEnd(event, handle),
-              onPanCancel: () => onHandlePanCancel(handle),
-              builder: widget.cornerHandleBuilder,
-            ),
-          for (final handle
-              in widget.visibleHandles.where((handle) => handle.isSide))
-            SideHandleWidget(
-              key: ValueKey(handle),
-              handlePosition: handle,
-              handleTapSize: widget.handleTapSize,
-              debugPaintHandleBounds: widget.debugPaintHandleBounds,
-              enabled:
-                  widget.resizable && widget.enabledHandles.contains(handle),
-              onPanStart: (event) => onHandlePanStart(event, handle),
-              onPanUpdate: (event) => onHandlePanUpdate(event, handle),
-              onPanEnd: (event) => onHandlePanEnd(event, handle),
-              onPanCancel: () => onHandlePanCancel(handle),
-              builder: widget.sideHandleBuilder,
-            ),
+          if (widget.resizable)
+            for (final handle in HandlePosition.corners.where((handle) =>
+            widget.visibleHandles.contains(handle) ||
+                widget.enabledHandles.contains(handle)))
+              CornerHandleWidget(
+                key: ValueKey(handle),
+                handlePosition: handle,
+                handleTapSize: widget.handleTapSize,
+                enabled: widget.enabledHandles.contains(handle),
+                visible: widget.visibleHandles.contains(handle),
+                onPanStart: (event) => onHandlePanStart(event, handle),
+                onPanUpdate: (event) => onHandlePanUpdate(event, handle),
+                onPanEnd: (event) => onHandlePanEnd(event, handle),
+                onPanCancel: () => onHandlePanCancel(handle),
+                builder: widget.cornerHandleBuilder,
+              ),
+          if (widget.resizable)
+            for (final handle in HandlePosition.sides.where((handle) =>
+            widget.visibleHandles.contains(handle) ||
+                widget.enabledHandles.contains(handle)))
+              SideHandleWidget(
+                key: ValueKey(handle),
+                handlePosition: handle,
+                handleTapSize: widget.handleTapSize,
+                enabled: widget.enabledHandles.contains(handle),
+                visible: widget.visibleHandles.contains(handle),
+                onPanStart: (event) => onHandlePanStart(event, handle),
+                onPanUpdate: (event) => onHandlePanUpdate(event, handle),
+                onPanEnd: (event) => onHandlePanEnd(event, handle),
+                onPanCancel: () => onHandlePanCancel(handle),
+                builder: widget.sideHandleBuilder,
+              ),
         ],
       ),
     );
