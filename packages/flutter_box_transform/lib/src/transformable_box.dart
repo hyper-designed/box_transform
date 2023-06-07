@@ -568,7 +568,7 @@ class _TransformableBoxState extends State<TransformableBox> {
           ),
           if (widget.resizable)
             for (final handle in HandlePosition.corners.where((handle) =>
-            widget.visibleHandles.contains(handle) ||
+                widget.visibleHandles.contains(handle) ||
                 widget.enabledHandles.contains(handle)))
               CornerHandleWidget(
                 key: ValueKey(handle),
@@ -584,7 +584,7 @@ class _TransformableBoxState extends State<TransformableBox> {
               ),
           if (widget.resizable)
             for (final handle in HandlePosition.sides.where((handle) =>
-            widget.visibleHandles.contains(handle) ||
+                widget.visibleHandles.contains(handle) ||
                 widget.enabledHandles.contains(handle)))
               SideHandleWidget(
                 key: ValueKey(handle),
