@@ -320,14 +320,18 @@ class TransformableBoxController extends ChangeNotifier {
 
   /// Recalculates the current state of this [rect] to ensure the position is
   /// correct in case of extreme jumps of the [TransformableBox].
-  void recalculateSize({bool notify = true}) {
+  void recalculateSize({
+    bool notify = true,
+    ResizeMode resizeMode = ResizeMode.freeform,
+    HandlePosition handle = HandlePosition.bottomRight,
+  }) {
     final UIResizeResult result = UIBoxTransform.resize(
       initialRect: rect,
       initialLocalPosition: initialLocalPosition,
       localPosition: initialLocalPosition,
       clampingRect: clampingRect,
-      handle: HandlePosition.bottomRight,
-      resizeMode: ResizeMode.scale,
+      handle: handle,
+      resizeMode: resizeMode,
       initialFlip: initialFlip,
       constraints: constraints,
       allowFlipping: allowFlippingWhileResizing,

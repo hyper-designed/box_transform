@@ -120,23 +120,24 @@ class BoxTransformer {
 
     // Check if clampingRect is smaller than initialRect.
     // If it is, then we return the initialRect and not resize it.
-    if (clampingRect.width < initialRect.width ||
-        clampingRect.height < initialRect.height) {
-      return ResizeResult(
-        rect: initialRect,
-        oldRect: initialRect,
-        flip: initialFlip,
-        resizeMode: resizeMode,
-        delta: delta,
-        handle: handle,
-        rawSize: initialRect.size,
-        minWidthReached: false,
-        minHeightReached: false,
-        largestRect: clampingRect,
-        maxHeightReached: false,
-        maxWidthReached: false,
-      );
-    }
+    // TODO:
+    // if (clampingRect.width < initialRect.width ||
+    //     clampingRect.height < initialRect.height) {
+    //   return ResizeResult(
+    //     rect: initialRect,
+    //     oldRect: initialRect,
+    //     flip: initialFlip,
+    //     resizeMode: resizeMode,
+    //     delta: delta,
+    //     handle: handle,
+    //     rawSize: initialRect.size,
+    //     minWidthReached: false,
+    //     minHeightReached: false,
+    //     largestRect: clampingRect,
+    //     maxHeightReached: false,
+    //     maxWidthReached: false,
+    //   );
+    // }
 
     // Symmetric resizing requires the delta to be doubled since it grows or
     // shrinks in all directions from center.

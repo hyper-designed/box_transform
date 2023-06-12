@@ -352,15 +352,11 @@ class _TransformableBoxState extends State<TransformableBox> {
     }
 
     // Return if the controller is external.
+    // Below code should only be executed if the controller is internal.
     if (widget.controller != null) return;
 
-    // Below code should only be executed if the controller is internal.
     bool shouldRecalculatePosition = false;
     bool shouldRecalculateSize = false;
-
-    if (oldWidget.rect != widget.rect) {
-      controller.setRect(widget.rect, notify: false);
-    }
 
     if (oldWidget.flip != widget.flip) {
       controller.setFlip(widget.flip, notify: false);
@@ -373,9 +369,25 @@ class _TransformableBoxState extends State<TransformableBox> {
       );
     }
 
-    if (oldWidget.clampingRect != widget.clampingRect) {
-      controller.setClampingRect(widget.clampingRect, notify: false);
+    if (oldWidget.rect != widget.rect) {
+      controller.setRect(
+        widget.rect,
+        notify: false,
+        recalculate: false,
+      );
       shouldRecalculatePosition = true;
+      shouldRecalculateSize = true;
+    }
+
+
+    if (oldWidget.clampingRect != widget.clampingRect) {
+      controller.setClampingRect(
+        widget.clampingRect,
+        notify: false,
+        recalculate: false,
+      );
+      shouldRecalculatePosition = true;
+      shouldRecalculateSize = true;
     }
 
     if (oldWidget.constraints != widget.constraints) {
