@@ -469,14 +469,14 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
                 const SingleActivator(LogicalKeyboardKey.delete):
                     model.removeSelectedBox,
               },
-              child: RawKeyboardListener(
+              child: KeyboardListener(
                 focusNode: focusNode,
                 autofocus: true,
-                onKey: (key) {
-                  if (key is RawKeyDownEvent) {
+                onKeyEvent: (key) {
+                  if (key is KeyDownEvent) {
                     pressedKeys.add(key.logicalKey);
                     setState(() {});
-                  } else if (key is RawKeyUpEvent) {
+                  } else if (key is KeyUpEvent) {
                     pressedKeys.remove(key.logicalKey);
                     setState(() {});
                   }
