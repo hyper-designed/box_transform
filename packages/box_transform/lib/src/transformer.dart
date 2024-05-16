@@ -171,7 +171,7 @@ class BoxTransformer {
       initialRect: initialRect,
       clampingRect: clampingRect,
       constraints: constraints,
-      delta: delta,
+      handle: handle,
     );
 
     return ResizeResult(
@@ -203,13 +203,13 @@ class BoxTransformer {
     required Box initialRect,
     required Box clampingRect,
     required Constraints constraints,
-    required Vector2 delta,
+    required HandlePosition handle,
   }) {
     bool minWidthReached = false;
     bool maxWidthReached = false;
     bool minHeightReached = false;
     bool maxHeightReached = false;
-    if (delta.x != 0) {
+    if (handle.influencesHorizontal) {
       if (rect.width <= initialRect.width &&
           rect.width == constraints.minWidth) {
         minWidthReached = true;
@@ -220,14 +220,14 @@ class BoxTransformer {
         maxWidthReached = true;
       }
     }
-    if (delta.y != 0) {
+    if (handle.influencesVertical) {
       if (rect.height <= initialRect.height &&
           rect.height == constraints.minHeight) {
         minHeightReached = true;
       }
       if (rect.height >= initialRect.height &&
-              rect.height == constraints.maxHeight ||
-          rect.height == clampingRect.height) {
+          (rect.height == constraints.maxHeight ||
+              rect.height == clampingRect.height)) {
         maxHeightReached = true;
       }
     }

@@ -65,6 +65,14 @@ enum HandlePosition {
   bool get influencesBottomOrRight =>
       this == bottomRight || this == bottom || this == right;
 
+  /// Whether the handle is either on the left or right, or any diagonal side
+  /// of the rect.
+  bool get influencesHorizontal => isHorizontal || isDiagonal;
+
+  /// Whether the handle is either on the top or bottom, or any diagonal side
+  /// of the rect.
+  bool get influencesVertical => isVertical || isDiagonal;
+
   /// Whether the handle is on the corner of the rect.
   bool get isDiagonal =>
       this == topLeft ||
