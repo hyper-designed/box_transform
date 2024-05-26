@@ -110,6 +110,7 @@ class PlaygroundModel with ChangeNotifier {
           kInitialWidth,
           kInitialHeight,
         ),
+        rotation: 0,
         flip: Flip.none,
         constraintsEnabled: true,
         constraints: const BoxConstraints(
@@ -131,6 +132,10 @@ class PlaygroundModel with ChangeNotifier {
     if (result is UIResizeResult) {
       selectedBox!.flip = result.flip;
     }
+    if (result is UIRotateResult) {
+      selectedBox!.rotation = result.rotation;
+    }
+
     notifyListeners();
   }
 
@@ -176,6 +181,7 @@ class PlaygroundModel with ChangeNotifier {
       BoxData(
         name: 'Box ${boxes.length + 1}',
         imageAsset: Images.values[boxes.length % Images.values.length],
+        rotation: 0,
         rect: Rect.fromLTWH(
           playgroundArea!.center.dx - kInitialWidth / 2,
           playgroundArea!.center.dy - kInitialHeight / 2,
@@ -593,6 +599,7 @@ class _ImageBoxState extends State<ImageBox> {
       key: ValueKey('image-box-${box.name}'),
       rect: box.rect,
       flip: box.flip,
+      rotation: box.rotation,
       clampingRect: model.clampingEnabled ? model.clampingRect : null,
       constraints: box.constraintsEnabled ? box.constraints : null,
       onChanged: (result, event) {
@@ -773,6 +780,7 @@ class _ClampingRectState extends State<ClampingRect> {
       rect: model.clampingRect,
       flip: Flip.none,
       clampingRect: model.playgroundArea!,
+      rotatable: false,
       allowFlippingWhileResizing: false,
       constraints: BoxConstraints(minWidth: minWidth, minHeight: minHeight),
       onChanged: (result, event) => model.setClampingRect(result.rect),
@@ -2333,6 +2341,8 @@ class BoxData {
   Rect rect2 = Rect.zero;
   Flip flip2 = Flip.none;
   BoxConstraints constraints;
+  double rotation;
+  BindingStrategy bindingStrategy;
 
   bool flipRectWhileResizing = true;
   bool flipChild = true;
@@ -2352,6 +2362,8 @@ class BoxData {
     this.rect2 = Rect.zero,
     this.flip2 = Flip.none,
     this.constraints = const BoxConstraints(minWidth: 0, minHeight: 0),
+    this.rotation = 0,
+    this.bindingStrategy = BindingStrategy.boundingBox,
     this.flipRectWhileResizing = true,
     this.flipChild = true,
     this.constraintsEnabled = false,

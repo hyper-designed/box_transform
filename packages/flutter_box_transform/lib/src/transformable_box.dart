@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -45,7 +47,20 @@ class TransformableBox extends StatefulWidget {
   /// gesture response area to make it forgiving.
   ///
   /// The default value is 24 pixels in diameter.
-  final double handleTapSize;
+  final double resizeHandleGestureSize;
+
+  /// The size of the gesture response area of the rotation handle. If you don't
+  /// specify it, the default value will be used.
+  ///
+  /// This is similar to Flutter's [MaterialTapTargetSize] property, in which
+  /// the actual rotation handle size is smaller than the gesture response area.
+  /// This is done to improve accessibility and usability of the handles; users
+  /// will not need cursor precision over the handle's pixels to be able to
+  /// perform operations with them, they need only to be able to reach the
+  /// handle's gesture response area to make it forgiving.
+  ///
+  /// The default value is 64 pixels in diameter.
+  final double rotationHandleGestureSize;
 
   /// A set containing handles that are enabled. This is different from
   /// [visibleHandles].
@@ -116,6 +131,17 @@ class TransformableBox extends StatefulWidget {
   /// resized by the [TransformableBoxController].
   final BoxConstraints constraints;
 
+  /// Whether the box is rotatable or not. Setting this to false will disable
+  /// all rotation operations.
+  final bool rotatable;
+
+  /// The rotation of the box in radians.
+  final double rotation;
+
+  /// The strategy to use when binding the box to the constraints and clamping
+  /// rect.
+  final BindingStrategy bindingStrategy;
+
   /// Whether the box is resizable or not. Setting this to false will disable
   /// all resizing operations. This is a convenience parameter that will ignore
   /// the [enabledHandles] parameter and set all handles to disabled.
@@ -171,7 +197,7 @@ class TransformableBox extends StatefulWidget {
   final RectDragCancelEvent? onDragCancel;
 
   /// A callback function that triggers when the box is about to start resizing.
-  final RectResizeStart? onResizeStart;
+  final RectResizeStartEvent? onResizeStart;
 
   /// A callback that is called every time the [TransformableBox] is resized.
   /// This is called every time the [TransformableBoxController] mutates the
@@ -182,10 +208,26 @@ class TransformableBox extends StatefulWidget {
   final RectResizeUpdateEvent? onResizeUpdate;
 
   /// A callback function that triggers when the box is about to end resizing.
-  final RectResizeEnd? onResizeEnd;
+  final RectResizeEndEvent? onResizeEnd;
 
   /// A callback function that triggers when the box cancels resizing.
-  final RectResizeCancel? onResizeCancel;
+  final RectResizeCancelEvent? onResizeCancel;
+
+  /// A callback function that triggers when the box is about to start rotating.
+  final RectRotateStartEvent? onRotationStart;
+
+  /// A callback that is called every time the [TransformableBox] is rotated.
+  /// This is called every time the [TransformableBoxController] mutates the
+  /// box through a rotation operation.
+  final RectRotateUpdateEvent? onRotationUpdate;
+
+  /// A callback that is called every time the [TransformableBox] is completes
+  /// its rotation operation via the pan end event.
+  final RectRotateEndEvent? onRotationEnd;
+
+  /// A callback that is called every time the [TransformableBox] cancels
+  /// its rotation operation via the pan cancel event.
+  final RectRotateCancelEvent? onRotationCancel;
 
   /// A callback function that triggers when the box reaches its minimum width
   /// when resizing.
@@ -237,13 +279,15 @@ class TransformableBox extends StatefulWidget {
     this.controller,
     this.cornerHandleBuilder = _defaultCornerHandleBuilder,
     this.sideHandleBuilder = _defaultSideHandleBuilder,
-    this.handleTapSize = 24,
+    this.resizeHandleGestureSize = 24,
+    this.rotationHandleGestureSize = 64,
     this.allowContentFlipping = true,
     this.handleAlignment = HandleAlignment.center,
     this.enabledHandles = const {...HandlePosition.values},
     this.visibleHandles = const {...HandlePosition.values},
     this.supportedDragDevices = const {...PointerDeviceKind.values},
     this.supportedResizeDevices = const {...PointerDeviceKind.values},
+    this.bindingStrategy = BindingStrategy.boundingBox,
 
     // Raw values.
     Rect? rect,
@@ -251,10 +295,12 @@ class TransformableBox extends StatefulWidget {
     Rect? clampingRect,
     BoxConstraints? constraints,
     ValueGetter<ResizeMode>? resizeModeResolver,
+    double? rotation,
 
     // Additional controls.
     this.resizable = true,
     this.draggable = true,
+    this.rotatable = true,
     this.allowFlippingWhileResizing = true,
 
     // Tap events
@@ -269,11 +315,17 @@ class TransformableBox extends StatefulWidget {
     this.onResizeEnd,
     this.onResizeCancel,
 
-    // Drag Events.
+    // Drag events.
     this.onDragStart,
     this.onDragUpdate,
     this.onDragEnd,
     this.onDragCancel,
+
+    // Rotate events.
+    this.onRotationStart,
+    this.onRotationUpdate,
+    this.onRotationEnd,
+    this.onRotationCancel,
 
     // Terminal update events.
     this.onMinWidthReached,
@@ -297,7 +349,8 @@ class TransformableBox extends StatefulWidget {
         flip = flip ?? Flip.none,
         clampingRect = clampingRect ?? Rect.largest,
         constraints = constraints ?? const BoxConstraints.expand(),
-        resizeModeResolver = resizeModeResolver ?? defaultResizeModeResolver;
+        resizeModeResolver = resizeModeResolver ?? defaultResizeModeResolver,
+        rotation = rotation ?? 0;
 
   /// Returns the [TransformableBox] of the closest ancestor.
   static TransformableBox? widgetOf(BuildContext context) {
@@ -355,8 +408,10 @@ class _TransformableBoxState extends State<TransformableBox> {
         flip: widget.flip,
         clampingRect: widget.clampingRect,
         constraints: widget.constraints,
+        rotation: widget.rotation,
         resizeModeResolver: widget.resizeModeResolver,
         allowFlippingWhileResizing: widget.allowFlippingWhileResizing,
+        bindingStrategy: widget.bindingStrategy,
       );
     }
   }
@@ -378,9 +433,11 @@ class _TransformableBoxState extends State<TransformableBox> {
         rect: widget.rect,
         flip: widget.flip,
         clampingRect: widget.clampingRect,
+        rotation: widget.rotation,
         constraints: widget.constraints,
         resizeModeResolver: widget.resizeModeResolver,
         allowFlippingWhileResizing: widget.allowFlippingWhileResizing,
+        bindingStrategy: widget.bindingStrategy,
       );
     }
 
@@ -388,11 +445,17 @@ class _TransformableBoxState extends State<TransformableBox> {
     if (widget.controller != null) return;
 
     // Below code should only be executed if the controller is internal.
-    bool shouldRecalculatePosition = false;
-    bool shouldRecalculateSize = false;
 
     if (oldWidget.rect != widget.rect || widget.rect != controller.rect) {
-      controller.setRect(widget.rect, notify: false);
+      controller.setRect(widget.rect, notify: false, recalculate: false);
+    }
+
+    if (oldWidget.rotation != widget.rotation) {
+      controller.setRotation(widget.rotation, notify: false);
+    }
+
+    if (oldWidget.bindingStrategy != widget.bindingStrategy) {
+      controller.setBindingStrategy(widget.bindingStrategy, notify: false);
       shouldRecalculatePosition = true;
       shouldRecalculateSize = true;
     }
@@ -411,14 +474,16 @@ class _TransformableBoxState extends State<TransformableBox> {
 
     if (oldWidget.clampingRect != widget.clampingRect ||
         widget.clampingRect != controller.clampingRect) {
-      controller.setClampingRect(widget.clampingRect, notify: false);
-      shouldRecalculatePosition = true;
+      controller.setClampingRect(
+        widget.clampingRect,
+        notify: false,
+        recalculate: false,
+      );
     }
 
     if (oldWidget.constraints != widget.constraints ||
         widget.constraints != controller.constraints) {
       controller.setConstraints(widget.constraints, notify: false);
-      shouldRecalculateSize = true;
     }
 
     if (oldWidget.allowFlippingWhileResizing !=
@@ -431,13 +496,7 @@ class _TransformableBoxState extends State<TransformableBox> {
       );
     }
 
-    if (shouldRecalculatePosition) {
-      controller.recalculatePosition(notify: false);
-    }
-
-    if (shouldRecalculateSize) {
-      controller.recalculateSize(notify: false);
-    }
+    controller.recalculate(notify: false);
   }
 
   @override
@@ -531,6 +590,78 @@ class _TransformableBoxState extends State<TransformableBox> {
     widget.onTerminalSizeReached?.call(false, false, false, false);
   }
 
+  void onHandleRotateStart(DragStartDetails event, HandlePosition handle) {
+    // Two fingers were used to start the drag. This produces issues with
+    // the box drag event. Therefore, we ignore it.
+    if (event.kind == PointerDeviceKind.trackpad) {
+      isLegalGesture = false;
+      return;
+    } else {
+      isLegalGesture = true;
+    }
+
+    controller.onRotateStart(event.localPosition);
+    widget.onRotationStart?.call(handle, event);
+  }
+
+  void onHandleRotateUpdate(DragUpdateDetails event, HandlePosition handle) {
+    if (!isLegalGesture) return;
+
+    final UIRotateResult result = controller.onRotateUpdate(
+      event.localPosition,
+      handle,
+    );
+
+    widget.onChanged?.call(result, event);
+    widget.onRotationUpdate?.call(result, event);
+    widget.onMinWidthReached?.call(result.minWidthReached);
+    widget.onMaxWidthReached?.call(result.maxWidthReached);
+    widget.onMinHeightReached?.call(result.minHeightReached);
+    widget.onMaxHeightReached?.call(result.maxHeightReached);
+    widget.onTerminalWidthReached?.call(
+      result.minWidthReached,
+      result.maxWidthReached,
+    );
+    widget.onTerminalHeightReached?.call(
+      result.minHeightReached,
+      result.maxHeightReached,
+    );
+    widget.onTerminalSizeReached?.call(
+      result.minWidthReached,
+      result.maxWidthReached,
+      result.minHeightReached,
+      result.maxHeightReached,
+    );
+  }
+
+  void onHandleRotateEnd(DragEndDetails event, HandlePosition handle) {
+    if (!isLegalGesture) return;
+
+    controller.onRotateEnd();
+    widget.onRotationEnd?.call(handle, event);
+    widget.onMinWidthReached?.call(false);
+    widget.onMaxWidthReached?.call(false);
+    widget.onMinHeightReached?.call(false);
+    widget.onMaxHeightReached?.call(false);
+    widget.onTerminalWidthReached?.call(false, false);
+    widget.onTerminalHeightReached?.call(false, false);
+    widget.onTerminalSizeReached?.call(false, false, false, false);
+  }
+
+  void onHandleRotateCancel(HandlePosition handle) {
+    if (!isLegalGesture) return;
+
+    controller.onRotateEnd();
+    widget.onRotationCancel?.call(handle);
+    widget.onMinWidthReached?.call(false);
+    widget.onMaxWidthReached?.call(false);
+    widget.onMinHeightReached?.call(false);
+    widget.onMaxHeightReached?.call(false);
+    widget.onTerminalWidthReached?.call(false, false);
+    widget.onTerminalHeightReached?.call(false, false);
+    widget.onTerminalSizeReached?.call(false, false, false, false);
+  }
+
   /// Called when the box is tapped.
   void onTap() {
     if (isGestureActive) return;
@@ -585,12 +716,14 @@ class _TransformableBoxState extends State<TransformableBox> {
   @override
   Widget build(BuildContext context) {
     final Flip flip = controller.flip;
-    final Rect rect = controller.rect;
+    final Rect unrotatedRect = controller.rect;
+    final Rect boundingRect = controller.boundingRect;
+    final double rotation = controller.rotation;
 
     Widget content = Transform.scale(
       scaleX: widget.allowContentFlipping && flip.isHorizontal ? -1 : 1,
       scaleY: widget.allowContentFlipping && flip.isVertical ? -1 : 1,
-      child: widget.contentBuilder(context, rect, flip),
+      child: widget.contentBuilder(context, unrotatedRect, flip),
     );
 
     if (widget.draggable) {
@@ -606,55 +739,130 @@ class _TransformableBoxState extends State<TransformableBox> {
       );
     }
 
-    return Positioned.fromRect(
-      rect: rect.inflate(widget.handleAlignment.offset(widget.handleTapSize)),
-      child: Stack(
-        clipBehavior: Clip.none,
-        fit: StackFit.expand,
-        children: [
-          Positioned(
-            left: widget.handleAlignment.offset(widget.handleTapSize),
-            top: widget.handleAlignment.offset(widget.handleTapSize),
-            width: rect.width,
-            height: rect.height,
-            child: content,
+    final double gestureSize = switch (widget.rotatable) {
+      false => widget.resizeHandleGestureSize,
+      true => widget.rotationHandleGestureSize,
+    };
+    final double handleOffset = widget.handleAlignment.offset(gestureSize);
+
+    final double gestureGap =
+        (widget.rotationHandleGestureSize - widget.resizeHandleGestureSize) / 2;
+    final double offset = widget.resizeHandleGestureSize / 2 +
+        (widget.rotatable ? widget.rotationHandleGestureSize / 2 : 0);
+    final Rect inflatedRect = unrotatedRect.inflate(handleOffset);
+
+    return Stack(
+      fit: StackFit.expand,
+      clipBehavior: Clip.none,
+      children: [
+        // Positioned.fromRect(
+        //   rect: unrotatedRect.inflate(widget.rotationGestureSize / 2),
+        //   child: Container(
+        //     decoration:
+        //         BoxDecoration(border: Border.all(color: Colors.red, width: 4)),
+        //   ),
+        // ),
+        // Positioned.fromRect(
+        //   rect: unrotatedRect.inflate(widget.handleGestureSize / 2),
+        //   child: Container(
+        //     decoration: BoxDecoration(
+        //         border: Border.all(color: Colors.green, width: 3)),
+        //   ),
+        // ),
+        // Positioned.fromRect(
+        //   rect: unrotatedRect,
+        //   child: Container(
+        //     decoration: BoxDecoration(border: Border.all(color: Colors.white, width: 2)),
+        //   ),
+        // ),
+        // Positioned.fromRect(
+        //   rect: unrotatedRect,
+        //   child: Container(
+        //     decoration:
+        //         BoxDecoration(border: Border.all(color: Colors.green.shade900)),
+        //   ),
+        // ),
+        Positioned(
+          left: inflatedRect.left + widget.handleAlignment.offset(gestureSize),
+          top: inflatedRect.top + widget.handleAlignment.offset(gestureSize),
+          width: unrotatedRect.width,
+          height: unrotatedRect.height,
+          child: Container(
+            decoration:
+                BoxDecoration(border: Border.all(color: Colors.red, width: 4)),
           ),
-          if (widget.resizable)
-            for (final handle in HandlePosition.corners.where((handle) =>
-                widget.visibleHandles.contains(handle) ||
-                widget.enabledHandles.contains(handle)))
-              CornerHandleWidget(
-                key: ValueKey(handle),
-                handlePosition: handle,
-                handleTapSize: widget.handleTapSize,
+        ),
+
+        Positioned.fromRect(
+          rect: inflatedRect,
+          child: Transform.rotate(
+            angle: rotation,
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                Positioned(
+                  left: widget.handleAlignment.offset(gestureSize),
+                  top: widget.handleAlignment.offset(gestureSize),
+                  width: unrotatedRect.width,
+                  height: unrotatedRect.height,
+                  child: content,
+                ),
+                if (widget.resizable)
+                  for (final handle in HandlePosition.corners.where((handle) =>
+                      widget.visibleHandles.contains(handle) ||
+                      widget.enabledHandles.contains(handle)))
+                    CornerHandleWidget(
+                      key: ValueKey(handle),
+                      handlePosition: handle,
+                      resizeHandleGestureSize: widget.resizeHandleGestureSize,
+                      rotationHandleGestureSize:
+                          widget.rotationHandleGestureSize,
+                      supportedDevices: widget.supportedResizeDevices,enabled: widget.enabledHandles.contains(handle),
+                      visible: widget.visibleHandles.contains(handle),
+                      rotatable: widget.rotatable,
+                      // Resize
+                      onPanStart: (event) => onHandlePanStart(event, handle),
+                      onPanUpdate: (event) => onHandlePanUpdate(event, handle),
+                      onPanEnd: (event) => onHandlePanEnd(event, handle),
+                      onPanCancel: () => onHandlePanCancel(handle),
+                      // Rotate
+                      onRotationStart: (event) =>
+                          onHandleRotateStart(event, handle),
+                      onRotationUpdate: (event) =>
+                          onHandleRotateUpdate(event, handle),
+                      onRotationEnd: (event) =>
+                          onHandleRotateEnd(event, handle),
+                      onRotationCancel: () => onHandleRotateCancel(handle),
+                      builder: widget.cornerHandleBuilder,
+                      debugPaintHandleBounds: true,
+                    ),
+                if (widget.resizable)
+                  for (final handle in HandlePosition.sides.where((handle) =>
+                      widget.visibleHandles.contains(handle) ||
+                      widget.enabledHandles.contains(handle)))
+                    SideHandleWidget(
+                      key: ValueKey(handle),
+                      handlePosition: handle,
+                      resizeHandleGestureSize: widget.resizeHandleGestureSize,
+                      rotationHandleGestureSize:
+                          widget.rotationHandleGestureSize,
+                      rotatable: widget.rotatable,
                 supportedDevices: widget.supportedResizeDevices,
-                enabled: widget.enabledHandles.contains(handle),
-                visible: widget.visibleHandles.contains(handle),
-                onPanStart: (event) => onHandlePanStart(event, handle),
-                onPanUpdate: (event) => onHandlePanUpdate(event, handle),
-                onPanEnd: (event) => onHandlePanEnd(event, handle),
-                onPanCancel: () => onHandlePanCancel(handle),
-                builder: widget.cornerHandleBuilder,
-              ),
-          if (widget.resizable)
-            for (final handle in HandlePosition.sides.where((handle) =>
-                widget.visibleHandles.contains(handle) ||
-                widget.enabledHandles.contains(handle)))
-              SideHandleWidget(
-                key: ValueKey(handle),
-                handlePosition: handle,
-                handleTapSize: widget.handleTapSize,
-                supportedDevices: widget.supportedResizeDevices,
-                enabled: widget.enabledHandles.contains(handle),
-                visible: widget.visibleHandles.contains(handle),
-                onPanStart: (event) => onHandlePanStart(event, handle),
-                onPanUpdate: (event) => onHandlePanUpdate(event, handle),
-                onPanEnd: (event) => onHandlePanEnd(event, handle),
-                onPanCancel: () => onHandlePanCancel(handle),
-                builder: widget.sideHandleBuilder,
-              ),
-        ],
-      ),
+                      enabled: widget.enabledHandles.contains(handle),
+                      visible: widget.visibleHandles.contains(handle),
+                      onPanStart: (event) => onHandlePanStart(event, handle),
+                      onPanUpdate: (event) => onHandlePanUpdate(event, handle),
+                      onPanEnd: (event) => onHandlePanEnd(event, handle),
+                      onPanCancel: () => onHandlePanCancel(handle),
+                      builder: widget.sideHandleBuilder,
+                      debugPaintHandleBounds: true,
+                    ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

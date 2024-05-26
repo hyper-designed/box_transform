@@ -3,16 +3,57 @@ import 'dart:math' hide log;
 
 import 'package:vector_math/vector_math.dart';
 
-import 'enums.dart';
-import 'geometry.dart';
-import 'helpers.dart';
+import '../box_transform.dart';
 import 'resizers/resizer.dart';
-import 'result.dart';
 
 /// A class that transforms a [Box] in several different supported forms.
 class BoxTransformer {
   /// A private constructor to prevent instantiation.
   const BoxTransformer._();
+
+  /// Rotates the given [initialRect] with the given [initialLocalPosition] of
+  /// the mouse cursor and wherever [localPosition] of the mouse cursor is
+  /// currently at.
+  ///
+  /// The [clampingRect] is the rect that the [initialRect] is not allowed
+  /// to go outside of when dragging or resizing.
+  static RawRotateResult rotate({
+    required Box initialRect,
+    required Vector2 initialLocalPosition,
+    required Vector2 localPosition,
+    required double initialRotation,
+    Box clampingRect = Box.largest,
+    BindingStrategy bindingStrategy = BindingStrategy.boundingBox,
+  }) {
+    final Vector2 delta = localPosition - initialLocalPosition;
+    final Vector2 from = initialRect.center - initialLocalPosition;
+    final Vector2 to = initialRect.center - localPosition;
+    double rotation = atan2(
+      from.x * to.y - from.y * to.x,
+      from.x * to.x + from.y * to.y,
+    ) + initialRotation;
+
+    // Convert from 0->180->-180->0 to 0->360.
+    // if (rotation < 0) {
+    //   rotation += 2 * pi;
+    // }
+
+    print('rotation: ${rotation * 180 / pi}');
+
+    final initialBoundingRect = calculateBoundingRect(
+      rotation: rotation,
+      unrotatedBox: initialRect,
+    );
+
+    return RotateResult(
+      rect: initialRect,
+      boundingRect: initialBoundingRect,
+      oldBoundingRect: initialBoundingRect,
+      delta: delta,
+      rawSize: initialRect.size,
+      rotation: rotation,
+    );
+  }
 
   /// Calculates the new position of the [initialRect] based on the
   /// [initialLocalPosition] of the mouse cursor and wherever [localPosition]
@@ -24,19 +65,46 @@ class BoxTransformer {
     required Box initialRect,
     required Vector2 initialLocalPosition,
     required Vector2 localPosition,
+    double rotation = 0.0,
     Box clampingRect = Box.largest,
+    BindingStrategy bindingStrategy = BindingStrategy.boundingBox,
   }) {
     final Vector2 delta = localPosition - initialLocalPosition;
+    final initialBoundingRect = calculateBoundingRect(
+      rotation: rotation,
+      unrotatedBox: initialRect,
+    );
 
-    final Box unclampedRect = initialRect.translate(delta.x, delta.y);
-    final Box clampedRect = clampingRect.containOther(unclampedRect);
-    final Vector2 clampedDelta = clampedRect.topLeft - initialRect.topLeft;
+    // If the box is rotated, the incoming delta is also rotated. We need to
+    // unrotate the delta to get the actual delta.
+    if (rotation != 0) {
+      Matrix2.rotation(rotation).transform(delta);
+    }
+
+    final Vector2 clampedDelta;
+    switch (bindingStrategy) {
+      case BindingStrategy.originalBox:
+        final Box unclampedRect = initialRect.translate(delta.x, delta.y);
+        final Box clampedRect = clampingRect.containOther(unclampedRect);
+        clampedDelta = clampedRect.topLeft - initialRect.topLeft;
+        break;
+      case BindingStrategy.boundingBox:
+        final Box unclampedRect =
+            initialBoundingRect.translate(delta.x, delta.y);
+        final Box clampedRect = clampingRect.containOther(unclampedRect);
+        clampedDelta = clampedRect.topLeft - initialBoundingRect.topLeft;
+        break;
+    }
 
     final Box newRect = initialRect.translate(clampedDelta.x, clampedDelta.y);
+    final Box newBoundingRect =
+        initialBoundingRect.translate(clampedDelta.x, clampedDelta.y);
 
     return MoveResult(
       rect: newRect,
       oldRect: initialRect,
+      boundingRect: newBoundingRect,
+      oldBoundingRect: initialBoundingRect,
       delta: delta,
       rawSize: newRect.size,
       largestRect: clampingRect,
@@ -74,14 +142,21 @@ class BoxTransformer {
     required HandlePosition handle,
     required ResizeMode resizeMode,
     required Flip initialFlip,
+    double rotation = 0.0,
     Box clampingRect = Box.largest,
     Constraints constraints = const Constraints.unconstrained(),
     bool allowFlipping = true,
+    BindingStrategy bindingStrategy = BindingStrategy.boundingBox,
   }) {
     if (handle == HandlePosition.none) {
       log('Using bottomRight handle instead of none.');
       handle = HandlePosition.bottomRight;
     }
+
+    final initialBoundingRect = calculateBoundingRect(
+      rotation: rotation,
+      unrotatedBox: initialRect,
+    );
 
     Vector2 delta = localPosition - initialLocalPosition;
 
@@ -118,21 +193,30 @@ class BoxTransformer {
       );
     }
 
+    final Box bindingRect = switch (bindingStrategy) {
+      BindingStrategy.originalBox => initialRect,
+      BindingStrategy.boundingBox => initialBoundingRect,
+    };
+    final double bindingWidth = bindingRect.width;
+    final double bindingHeight = bindingRect.height;
+
     // Check if clampingRect is smaller than initialRect.
     // If it is, then we return the initialRect and not resize it.
-    if (clampingRect.width < initialRect.width ||
-        clampingRect.height < initialRect.height) {
+    if (clampingRect.width < bindingWidth ||
+        clampingRect.height < bindingHeight) {
       return ResizeResult(
         rect: initialRect,
         oldRect: initialRect,
+        boundingRect: initialBoundingRect,
+        oldBoundingRect: initialBoundingRect,
         flip: initialFlip,
         resizeMode: resizeMode,
         delta: delta,
         handle: handle,
         rawSize: initialRect.size,
+        largestRect: clampingRect,
         minWidthReached: false,
         minHeightReached: false,
-        largestRect: clampingRect,
         maxHeightReached: false,
         maxWidthReached: false,
       );
@@ -144,7 +228,7 @@ class BoxTransformer {
 
     // No constraints or clamping is done. Only delta is applied to the
     // initial rect.
-    Box explodedRect = _applyDelta(
+    final Box explodedRect = _applyDelta(
       initialRect: initialRect,
       handle: handle,
       delta: delta,
@@ -160,33 +244,43 @@ class BoxTransformer {
       constraints: constraints,
       initialRect: initialRect,
       flip: currentFlip,
+      rotation: rotation,
+      bindingStrategy: bindingStrategy,
     );
 
     final Box newRect = result.rect;
     final Box largestRect = result.largest;
+    final Box newBoundingRect = calculateBoundingRect(
+      rotation: rotation,
+      unrotatedBox: newRect,
+    );
 
     // Detect terminal resizing, where the resizing reached a hard limit.
     final terminalResult = checkForTerminalSizes(
       rect: newRect,
       initialRect: initialRect,
       clampingRect: clampingRect,
+      rotation: rotation,
       constraints: constraints,
       handle: handle,
+      bindingStrategy: bindingStrategy,
     );
 
     return ResizeResult(
       rect: newRect,
       oldRect: initialRect,
+      boundingRect: newBoundingRect,
+      oldBoundingRect: initialBoundingRect,
       flip: currentFlip * initialFlip,
       resizeMode: resizeMode,
       delta: delta,
+      handle: handle,
       rawSize: newRect.size,
+      largestRect: largestRect,
       minWidthReached: terminalResult.minWidthReached,
       maxWidthReached: terminalResult.maxWidthReached,
       minHeightReached: terminalResult.minHeightReached,
       maxHeightReached: terminalResult.maxHeightReached,
-      largestRect: largestRect,
-      handle: handle,
     );
   }
 
@@ -202,32 +296,56 @@ class BoxTransformer {
     required Box rect,
     required Box initialRect,
     required Box clampingRect,
+    required double rotation,
     required Constraints constraints,
     required HandlePosition handle,
+    required BindingStrategy bindingStrategy,
   }) {
+    final initialBoundingRect = calculateBoundingRect(
+      rotation: rotation,
+      unrotatedBox: initialRect,
+    );
+    final boundingRect = calculateBoundingRect(
+      rotation: rotation,
+      unrotatedBox: rect,
+    );
+    final initialBindingWidth = bindingStrategy == BindingStrategy.originalBox
+        ? initialRect.width
+        : initialBoundingRect.width;
+    final initialBindingHeight = bindingStrategy == BindingStrategy.originalBox
+        ? initialRect.height
+        : initialBoundingRect.height;
+
+    final bindingWidth = bindingStrategy == BindingStrategy.originalBox
+        ? rect.width
+        : boundingRect.width;
+    final bindingHeight = bindingStrategy == BindingStrategy.originalBox
+        ? rect.height
+        : boundingRect.height;
+
     bool minWidthReached = false;
     bool maxWidthReached = false;
     bool minHeightReached = false;
     bool maxHeightReached = false;
     if (handle.influencesHorizontal) {
-      if (rect.width <= initialRect.width &&
-          rect.width == constraints.minWidth) {
+      if (bindingWidth <= initialBindingWidth &&
+          bindingWidth == constraints.minWidth) {
         minWidthReached = true;
       }
-      if (rect.width >= initialRect.width &&
-          (rect.width == constraints.maxWidth ||
-              rect.width == clampingRect.width)) {
+      if (bindingWidth >= initialBindingWidth &&
+          (bindingWidth == constraints.maxWidth ||
+              bindingWidth == clampingRect.width)) {
         maxWidthReached = true;
       }
     }
     if (handle.influencesVertical) {
-      if (rect.height <= initialRect.height &&
-          rect.height == constraints.minHeight) {
+      if (bindingHeight <= initialBindingHeight &&
+          bindingHeight == constraints.minHeight) {
         minHeightReached = true;
       }
-      if (rect.height >= initialRect.height &&
-          (rect.height == constraints.maxHeight ||
-              rect.height == clampingRect.height)) {
+      if (bindingHeight >= initialBindingHeight &&
+          (bindingHeight == constraints.maxHeight ||
+              bindingHeight == clampingRect.height)) {
         maxHeightReached = true;
       }
     }
@@ -299,5 +417,87 @@ class BoxTransformer {
       max(left, right),
       max(top, bottom),
     );
+  }
+
+  /// Rotates a point [point] around [origin] by the given [radians] and returns
+  /// the new coordinates as a [Vec].
+  static Vector2 rotatePointAroundVec(
+      Vector2 origin, double radians, Vector2 point) {
+    final transform = Matrix4.translationValues(origin.x, origin.y, 0)
+      ..rotateZ(radians)
+      ..translate(-origin.x, -origin.y, 0);
+
+    final rotated = transform.applyToVector3Array([point.x, point.y, 0]);
+    return Vector2(rotated[0], rotated[1]);
+  }
+
+  static Vector2 calculateUnrotatedPos(
+      Box unrotatedRect, double radians, Vector2 newPos, Dimension newSize) {
+    // This was our old rotated position.
+    final oldRotatedXY = rotatePointAroundVec(
+        unrotatedRect.center, radians, unrotatedRect.topLeft);
+    // This is how the rotated position changes in parents system.
+    final sinA = sin(-radians);
+    final cosA = cos(-radians);
+    final xChange = cosA * newPos.x + sinA * newPos.y;
+    final yChange = cosA * newPos.y - sinA * newPos.x;
+    // Node's new position in parent's system accounting for the changes:
+    final newRotatedXY = oldRotatedXY + Vector2(xChange, yChange);
+    // We need to rotate this back because we're interested in the new
+    // unrotated position, not the rotated one.
+    // For this we need the new center.
+    final newRotatedBR = newRotatedXY +
+        Vector2(cosA * newSize.width + sinA * newSize.height,
+            cosA * newSize.height - sinA * newSize.width);
+    final newCenter = Box.fromLTRB(
+            newRotatedXY.x, newRotatedXY.y, newRotatedBR.x, newRotatedBR.y)
+        .center;
+    // Now we can rotate topLeft back.
+    return rotatePointAroundVec(newCenter, -radians, newRotatedXY);
+  }
+
+  static Box calculateBoundingRect({
+    required double rotation,
+    required Box unrotatedBox,
+  }) {
+    final Vector2 center = unrotatedBox.center;
+
+    // 𝑎cos𝜃+𝑏sin𝜃,
+    final double boundingWidth = unrotatedBox.width * cos(rotation) +
+        unrotatedBox.height * sin(rotation);
+
+    // 𝑎sin𝜃+𝑏cos𝜃.
+    final double boundingHeight = unrotatedBox.width * sin(rotation) +
+        unrotatedBox.height * cos(rotation);
+
+    final Box explodedRect = Box.fromCenter(
+      center: center,
+      width: boundingWidth,
+      height: boundingHeight,
+    );
+
+    return explodedRect;
+  }
+
+  static Box calculateUnrotatedRect({
+    required Box boundingBox,
+    required double rotation,
+    required double aspectRatio,
+  }) {
+    final Vector2 center = boundingBox.center;
+
+    final double width = boundingBox.width * cos(-rotation) +
+        boundingBox.height * sin(-rotation);
+
+    // derive from aspect ratio.
+    final double height = width / aspectRatio;
+
+    final Box unrotatedRect = Box.fromCenter(
+      center: center,
+      width: width,
+      height: height,
+    );
+
+    return unrotatedRect;
   }
 }

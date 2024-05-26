@@ -6,6 +6,7 @@ void main() {
   test('RawTransformResult equality tests', () {
     final result1 = RawTransformResult(
       rect: Box.fromLTRB(100, 100, 500, 400),
+      boundingRect: Box.fromLTRB(100, 100, 500, 400),
       handle: HandlePosition.bottomRight,
       flip: Flip.none,
       maxHeightReached: false,
@@ -13,6 +14,7 @@ void main() {
       minHeightReached: false,
       minWidthReached: false,
       oldRect: Box.fromLTRB(100, 100, 300, 200),
+      oldBoundingRect: Box.fromLTRB(100, 100, 300, 200),
       resizeMode: ResizeMode.freeform,
       largestRect: Box.fromLTRB(100, 100, 1000, 1000),
       rawSize: Dimension(400, 300),
@@ -21,6 +23,7 @@ void main() {
 
     final result2 = RawTransformResult(
       rect: Box.fromLTRB(100, 100, 500, 400),
+      boundingRect: Box.fromLTRB(100, 100, 500, 400),
       handle: HandlePosition.bottomRight,
       flip: Flip.none,
       maxHeightReached: false,
@@ -28,6 +31,7 @@ void main() {
       minHeightReached: false,
       minWidthReached: false,
       oldRect: Box.fromLTRB(100, 100, 300, 200),
+      oldBoundingRect: Box.fromLTRB(100, 100, 300, 200),
       resizeMode: ResizeMode.freeform,
       largestRect: Box.fromLTRB(100, 100, 1000, 1000),
       rawSize: Dimension(400, 300),
@@ -43,6 +47,7 @@ void main() {
   test('RawResizeResult equality tests', () {
     final result1 = RawResizeResult(
       rect: Box.fromLTRB(100, 100, 500, 400),
+      boundingRect: Box.fromLTRB(100, 100, 500, 400),
       handle: HandlePosition.bottomRight,
       flip: Flip.none,
       maxHeightReached: false,
@@ -50,6 +55,7 @@ void main() {
       minHeightReached: false,
       minWidthReached: false,
       oldRect: Box.fromLTRB(100, 100, 300, 200),
+      oldBoundingRect: Box.fromLTRB(100, 100, 300, 200),
       resizeMode: ResizeMode.freeform,
       largestRect: Box.fromLTRB(100, 100, 1000, 1000),
       rawSize: Dimension(400, 300),
@@ -58,6 +64,7 @@ void main() {
 
     final result2 = RawResizeResult(
       rect: Box.fromLTRB(100, 100, 500, 400),
+      boundingRect: Box.fromLTRB(100, 100, 500, 400),
       handle: HandlePosition.bottomRight,
       flip: Flip.none,
       maxHeightReached: false,
@@ -65,6 +72,7 @@ void main() {
       minHeightReached: false,
       minWidthReached: false,
       oldRect: Box.fromLTRB(100, 100, 300, 200),
+      oldBoundingRect: Box.fromLTRB(100, 100, 300, 200),
       resizeMode: ResizeMode.freeform,
       largestRect: Box.fromLTRB(100, 100, 1000, 1000),
       rawSize: Dimension(400, 300),
@@ -80,7 +88,9 @@ void main() {
   test('RawMoveResult equality tests', () {
     final result1 = RawMoveResult(
       rect: Box.fromLTRB(100, 100, 500, 400),
+      boundingRect: Box.fromLTRB(100, 100, 500, 400),
       oldRect: Box.fromLTRB(100, 100, 300, 200),
+      oldBoundingRect: Box.fromLTRB(100, 100, 300, 200),
       largestRect: Box.fromLTRB(100, 100, 1000, 1000),
       rawSize: Dimension(400, 300),
       delta: Vector2(200, 200),
@@ -88,7 +98,9 @@ void main() {
 
     final result2 = RawMoveResult(
       rect: Box.fromLTRB(100, 100, 500, 400),
+      boundingRect: Box.fromLTRB(100, 100, 500, 400),
       oldRect: Box.fromLTRB(100, 100, 300, 200),
+      oldBoundingRect: Box.fromLTRB(100, 100, 300, 200),
       largestRect: Box.fromLTRB(100, 100, 1000, 1000),
       rawSize: Dimension(400, 300),
       delta: Vector2(200, 200),

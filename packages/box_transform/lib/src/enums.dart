@@ -413,3 +413,21 @@ enum ResizeMode {
   /// w.r.t the center.
   bool get hasSymmetry => isSymmetric || isSymmetricScale;
 }
+
+/// An enum that defines how a box should be constrained and/or clamped when
+/// undergoing a box transformation operation.
+enum BindingStrategy {
+  /// When a box transformation occurs, clamps and constraints are considered
+  /// on the original unrotated dimensions of the box. Rotation is not
+  /// considered with this strategy, and therefore, if a box is rotated,
+  /// its vertices may leak out of its terminal dimensions and positions.
+  originalBox,
+
+  /// When a box transformation occurs, clamps and constraints are considered
+  /// on the entire bounding box of the box. The bounding box is the smallest
+  /// box that can contain all the vertices of its rotated box.
+  ///
+  /// This is the default strategy to ensure that the box does not
+  /// leak out of its terminal dimensions and positions.
+  boundingBox,
+}

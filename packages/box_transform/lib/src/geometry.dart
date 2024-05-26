@@ -474,8 +474,9 @@ class Box {
   static const Box largest =
       Box.fromLTRB(-_giantScalar, -_giantScalar, _giantScalar, _giantScalar);
 
-  /// Whether any of the coordinates of this rectangle are equal to positive infinity.
-  // included for consistency with Vector2 and Dimension
+  /// Whether any of the coordinates of this rectangle are equal to positive
+  /// infinity.
+  /// Included for consistency with Vector2 and Dimension
   bool get isInfinite =>
       left >= double.infinity ||
       top >= double.infinity ||
@@ -721,5 +722,5 @@ class Box {
 
   @override
   String toString() =>
-      'Box.fromLTRB(${left.toStringAsFixed(1)}, ${top.toStringAsFixed(1)}, ${right.toStringAsFixed(1)}, ${bottom.toStringAsFixed(1)})';
+      'Box.fromLTWH(${left.toStringAsFixed(1)}, ${top.toStringAsFixed(1)}, ${width.toStringAsFixed(1)}, ${height.toStringAsFixed(1)})';
 }
