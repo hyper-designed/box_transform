@@ -13,6 +13,8 @@ final class ScaleResizer extends Resizer {
     required HandlePosition handle,
     required Constraints constraints,
     required Flip flip,
+    required double rotation,
+    required BindingStrategy bindingStrategy,
   }) {
     ({Box rect, Box largest, bool hasValidFlip}) result = _resizeRect(
       initialRect: initialRect,
