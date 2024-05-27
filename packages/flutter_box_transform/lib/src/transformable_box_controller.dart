@@ -315,7 +315,7 @@ class TransformableBoxController extends ChangeNotifier {
     bool notify = true,
   }) {
     final UIRotateResult result = UIBoxTransform.rotate(
-      initialRect: initialRect,
+      rect: initialRect,
       initialLocalPosition: initialLocalPosition,
       initialRotation: initialRotation,
       localPosition: localPosition,
@@ -324,7 +324,6 @@ class TransformableBoxController extends ChangeNotifier {
     );
 
     _rotation = result.rotation;
-    _rect = result.rect;
     _boundingRect = result.boundingRect;
 
     if (notify) notifyListeners();
