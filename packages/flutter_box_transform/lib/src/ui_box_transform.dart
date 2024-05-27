@@ -58,7 +58,7 @@ class UIBoxTransform {
 
   /// The Flutter wrapper for [transform.BoxTransformer.rotate].
   static UIRotateResult rotate({
-    required ui.Rect initialRect,
+    required ui.Rect rect,
     required ui.Offset initialLocalPosition,
     required ui.Offset localPosition,
     required double initialRotation,
@@ -66,7 +66,7 @@ class UIBoxTransform {
     BindingStrategy bindingStrategy = BindingStrategy.boundingBox,
   }) =>
       transform.BoxTransformer.rotate(
-        initialRect: initialRect.toBox(),
+        rect: rect.toBox(),
         initialLocalPosition: initialLocalPosition.toVector2(),
         localPosition: localPosition.toVector2(),
         clampingRect: clampingRect.toBox(),

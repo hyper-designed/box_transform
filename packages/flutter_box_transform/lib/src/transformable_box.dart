@@ -590,7 +590,24 @@ class _TransformableBoxState extends State<TransformableBox> {
     widget.onTerminalSizeReached?.call(false, false, false, false);
   }
 
+  Offset localPos = Offset.zero;
+  Offset initialPos = Offset.zero;
+
+  Offset rectQuadrantOffset(Quadrant quadrant) => switch (quadrant) {
+        Quadrant.topLeft => controller.rect.topLeft,
+        Quadrant.topRight => controller.rect.topRight,
+        Quadrant.bottomLeft => controller.rect.bottomLeft,
+        Quadrant.bottomRight => controller.rect.bottomRight,
+      };
+
   void onHandleRotateStart(DragStartDetails event, HandlePosition handle) {
+    final offset =
+        widget.handleAlignment.offset(widget.rotationHandleGestureSize);
+    initialPos = rectQuadrantOffset(handle.quadrant) +
+        event.localPosition -
+        Offset(offset, offset);
+    localPos = initialPos;
+    setState(() {});
     // Two fingers were used to start the drag. This produces issues with
     // the box drag event. Therefore, we ignore it.
     if (event.kind == PointerDeviceKind.trackpad) {
@@ -600,15 +617,21 @@ class _TransformableBoxState extends State<TransformableBox> {
       isLegalGesture = true;
     }
 
-    controller.onRotateStart(event.localPosition);
+    controller.onRotateStart(initialPos);
     widget.onRotationStart?.call(handle, event);
   }
 
   void onHandleRotateUpdate(DragUpdateDetails event, HandlePosition handle) {
     if (!isLegalGesture) return;
+    final offset =
+        widget.handleAlignment.offset(widget.rotationHandleGestureSize);
+    localPos = rectQuadrantOffset(handle.quadrant) +
+        event.localPosition -
+        Offset(offset, offset);
+    setState(() {});
 
     final UIRotateResult result = controller.onRotateUpdate(
-      event.localPosition,
+      localPos,
       handle,
     );
 
@@ -782,16 +805,6 @@ class _TransformableBoxState extends State<TransformableBox> {
         //         BoxDecoration(border: Border.all(color: Colors.green.shade900)),
         //   ),
         // ),
-        Positioned(
-          left: inflatedRect.left + widget.handleAlignment.offset(gestureSize),
-          top: inflatedRect.top + widget.handleAlignment.offset(gestureSize),
-          width: unrotatedRect.width,
-          height: unrotatedRect.height,
-          child: Container(
-            decoration:
-                BoxDecoration(border: Border.all(color: Colors.red, width: 4)),
-          ),
-        ),
 
         Positioned.fromRect(
           rect: inflatedRect,
@@ -862,9 +875,77 @@ class _TransformableBoxState extends State<TransformableBox> {
             ),
           ),
         ),
+        // Positioned(
+        //   left: boundingRect.left,
+        //   top: boundingRect.top,
+        //   width: boundingRect.width,
+        //   height: boundingRect.height,
+        //   child: IgnorePointer(
+        //     child: Container(
+        //       decoration:
+        //       BoxDecoration(border: Border.all(color: Colors.red, width: 4)),
+        //     ),
+        //   ),
+        // ),
+        // Positioned.fill(
+        //   child: IgnorePointer(
+        //     child: CustomPaint(
+        //         painter: RenderRotationArrows(
+        //       initialPosition: initialPos,
+        //       currentPosition: localPos,
+        //       rect: unrotatedRect,
+        //     )),
+        //   ),
+        // ),
       ],
     );
   }
+}
+
+class RenderRotationArrows extends CustomPainter {
+  final Offset initialPosition;
+  final Offset currentPosition;
+  final Rect rect;
+
+  const RenderRotationArrows({
+    required this.initialPosition,
+    required this.currentPosition,
+    required this.rect,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Offset from = initialPosition;
+    final Offset to = currentPosition;
+
+    final Path fromPath = Path()
+      ..moveTo(rect.center.dx, rect.center.dy)
+      ..lineTo(from.dx, from.dy)
+      ..addOval(Rect.fromCircle(center: from, radius: 8))
+      ..close();
+
+    final Path toPath = Path()
+      ..moveTo(rect.center.dx, rect.center.dy)
+      ..lineTo(to.dx, to.dy)
+      ..addOval(Rect.fromCircle(center: to, radius: 8))
+      ..close();
+
+    final Paint paint = Paint()
+      ..color = Colors.red
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4;
+
+    canvas.drawPath(fromPath, paint);
+    canvas.drawPath(toPath, paint..color = Colors.blue);
+
+    // canvas.drawCircle(currentPosition, 24, Paint()..color = Colors.green);
+  }
+
+  @override
+  bool shouldRepaint(covariant RenderRotationArrows oldDelegate) =>
+      oldDelegate.initialPosition != initialPosition ||
+      oldDelegate.currentPosition != currentPosition ||
+      oldDelegate.rect != rect;
 }
 
 /// A default implementation of the corner [HandleBuilder] callback.

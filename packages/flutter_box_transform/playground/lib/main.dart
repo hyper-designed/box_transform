@@ -600,6 +600,7 @@ class _ImageBoxState extends State<ImageBox> {
       rect: box.rect,
       flip: box.flip,
       rotation: box.rotation,
+      handleAlignment: HandleAlignment.center,
       clampingRect: model.clampingEnabled ? model.clampingRect : null,
       constraints: box.constraintsEnabled ? box.constraints : null,
       onChanged: (result, event) {

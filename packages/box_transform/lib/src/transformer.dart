@@ -11,14 +11,14 @@ class BoxTransformer {
   /// A private constructor to prevent instantiation.
   const BoxTransformer._();
 
-  /// Rotates the given [initialRect] with the given [initialLocalPosition] of
+  /// Rotates the given [rect] with the given [initialLocalPosition] of
   /// the mouse cursor and wherever [localPosition] of the mouse cursor is
   /// currently at.
   ///
-  /// The [clampingRect] is the rect that the [initialRect] is not allowed
+  /// The [clampingRect] is the rect that the [rect] is not allowed
   /// to go outside of when dragging or resizing.
   static RawRotateResult rotate({
-    required Box initialRect,
+    required Box rect,
     required Vector2 initialLocalPosition,
     required Vector2 localPosition,
     required double initialRotation,
@@ -26,31 +26,27 @@ class BoxTransformer {
     BindingStrategy bindingStrategy = BindingStrategy.boundingBox,
   }) {
     final Vector2 delta = localPosition - initialLocalPosition;
-    final Vector2 from = initialRect.center - initialLocalPosition;
-    final Vector2 to = initialRect.center - localPosition;
-    double rotation = atan2(
-      from.x * to.y - from.y * to.x,
-      from.x * to.x + from.y * to.y,
-    ) + initialRotation;
+    final Vector2 from = rect.center - initialLocalPosition;
+    final Vector2 to = rect.center - localPosition;
+    double rotation = atan2(to.y, to.x) - atan2(from.y, from.x);
+    rotation += initialRotation;
 
-    // Convert from 0->180->-180->0 to 0->360.
-    // if (rotation < 0) {
-    //   rotation += 2 * pi;
-    // }
-
-    print('rotation: ${rotation * 180 / pi}');
+    // Normalize the angle to the range [0, 2π).
+    if (rotation < 0) {
+      rotation += 2 * pi;
+    }
 
     final initialBoundingRect = calculateBoundingRect(
       rotation: rotation,
-      unrotatedBox: initialRect,
+      unrotatedBox: rect,
     );
 
     return RotateResult(
-      rect: initialRect,
+      rect: rect,
       boundingRect: initialBoundingRect,
       oldBoundingRect: initialBoundingRect,
       delta: delta,
-      rawSize: initialRect.size,
+      rawSize: rect.size,
       rotation: rotation,
     );
   }
@@ -460,20 +456,21 @@ class BoxTransformer {
     required double rotation,
     required Box unrotatedBox,
   }) {
-    final Vector2 center = unrotatedBox.center;
+    final double sinA = sin(rotation);
+    final double cosA = cos(rotation);
 
-    // 𝑎cos𝜃+𝑏sin𝜃,
-    final double boundingWidth = unrotatedBox.width * cos(rotation) +
-        unrotatedBox.height * sin(rotation);
+    final double width = unrotatedBox.width;
+    final double height = unrotatedBox.height;
+    final double boundingWidth = (width * cosA).abs() + (height * sinA).abs();
+    final double boundingHeight = (width * sinA).abs() + (height * cosA).abs();
+    final double left = (unrotatedBox.left + (width / 2)) - (boundingWidth / 2);
+    final double top = (unrotatedBox.top + (height / 2)) - (boundingHeight / 2);
 
-    // 𝑎sin𝜃+𝑏cos𝜃.
-    final double boundingHeight = unrotatedBox.width * sin(rotation) +
-        unrotatedBox.height * cos(rotation);
-
-    final Box explodedRect = Box.fromCenter(
-      center: center,
-      width: boundingWidth,
-      height: boundingHeight,
+    final Box explodedRect = Box.fromLTWH(
+      left,
+      top,
+      boundingWidth,
+      boundingHeight,
     );
 
     return explodedRect;

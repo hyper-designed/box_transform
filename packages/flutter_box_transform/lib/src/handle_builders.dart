@@ -95,6 +95,8 @@ class CornerHandleWidget extends StatelessWidget {
         visible ? builder(context, handlePosition) : const SizedBox.shrink();
 
     if (enabled) {
+      final double gestureGap =
+          (rotationHandleGestureSize - resizeHandleGestureSize) / 2;
       child = GestureDetector(
         behavior: HitTestBehavior.opaque,
         supportedDevices: supportedDevices,
@@ -104,13 +106,19 @@ class CornerHandleWidget extends StatelessWidget {
         onPanCancel: onPanCancel,
         child: MouseRegion(
           cursor: getResizeCursorForHandle(handlePosition),
-          child: child,
+          child: Padding(
+            padding: rotatable
+                ? getRotationCornerPadding(
+                    handlePosition.opposite,
+                    gestureGap,
+                  )
+                : EdgeInsets.zero,
+            child: child,
+          ),
         ),
       );
 
       if (rotatable) {
-        final double gestureGap =
-            (rotationHandleGestureSize - resizeHandleGestureSize) / 2;
         child = GestureDetector(
           behavior: HitTestBehavior.opaque,
           onPanStart: onRotationStart,
@@ -120,7 +128,7 @@ class CornerHandleWidget extends StatelessWidget {
           child: MouseRegion(
             cursor: getRotationCursorForHandle(handlePosition),
             child: Padding(
-              padding: EdgeInsets.all(gestureGap),
+              padding: getRotationCornerPadding(handlePosition, gestureGap),
               child: ColoredBox(
                 color: Colors.blue.withOpacity(0.5),
                 child: child,
@@ -147,6 +155,19 @@ class CornerHandleWidget extends StatelessWidget {
       height: rotatable ? rotationHandleGestureSize : resizeHandleGestureSize,
       child: child,
     );
+  }
+
+  /// Returns the padding for the rotation gesture area.
+  EdgeInsets getRotationCornerPadding(
+      HandlePosition handlePosition, double value) {
+    return switch (handlePosition) {
+      HandlePosition.topLeft => EdgeInsets.only(left: value, top: value),
+      HandlePosition.topRight => EdgeInsets.only(right: value, top: value),
+      HandlePosition.bottomLeft => EdgeInsets.only(left: value, bottom: value),
+      HandlePosition.bottomRight =>
+        EdgeInsets.only(right: value, bottom: value),
+      _ => throw Exception('Invalid handle position. Corners only.'),
+    };
   }
 
   /// Returns the resize cursor for the given handle position.
@@ -188,9 +209,6 @@ class SideHandleWidget extends StatelessWidget {
 
   /// The builder that is used to build the handle widget.
   final HandleBuilder builder;
-
-  /// The offset of the handle from the edge of the box.
-  final double offset;
 
   /// The thickness of the handle that is used for gesture detection.
   final double resizeHandleGestureSize;
@@ -237,7 +255,6 @@ class SideHandleWidget extends StatelessWidget {
     this.onPanUpdate,
     this.onPanEnd,
     this.onPanCancel,
-    this.offset = 0.0,
     this.rotatable = true,
     this.enabled = true,
     this.visible = true,

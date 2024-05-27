@@ -1,6 +1,22 @@
 import 'package:vector_math/vector_math.dart';
 
+import '../box_transform.dart';
 import 'geometry.dart';
+
+/// Represents the different quadrants of a rectangle.
+enum Quadrant {
+  /// The top left quadrant.
+  topLeft,
+
+  /// The top right quadrant.
+  topRight,
+
+  /// The bottom left quadrant.
+  bottomLeft,
+
+  /// The bottom right quadrant.
+  bottomRight,
+}
 
 /// Represents a resizing handle on corners.
 enum HandlePosition {
@@ -105,6 +121,15 @@ enum HandlePosition {
     HandlePosition.left,
     HandlePosition.right,
   ];
+
+  /// returns the quadrant of a corner handle.
+  Quadrant get quadrant => switch (this) {
+        HandlePosition.topLeft => Quadrant.topLeft,
+        HandlePosition.topRight => Quadrant.topRight,
+        HandlePosition.bottomLeft => Quadrant.bottomLeft,
+        HandlePosition.bottomRight => Quadrant.bottomRight,
+        _ => throw Exception('Invalid handle position. Corners only.'),
+      };
 
   /// Returns the opposite handle position on the horizontal axis.
   HandlePosition flipY() {
