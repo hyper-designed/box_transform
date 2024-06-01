@@ -642,8 +642,8 @@ class Box {
 
     final double newLeft = math.max(left, clampedLeft);
     final double newTop = math.max(top, clampedTop);
-    double newWidth = math.min(width, childWidth);
-    double newHeight = math.min(height, childHeight);
+    final double newWidth = math.min(width, childWidth);
+    final double newHeight = math.min(height, childHeight);
 
     return Box.fromLTWH(
       newLeft,

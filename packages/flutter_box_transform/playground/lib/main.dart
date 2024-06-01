@@ -505,7 +505,9 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
                       ),
                       if (model.clampingEnabled && model.playgroundArea != null)
                         const ClampingRect(),
-                      for (int index = 0; index < model.boxes.length; index++)
+                      for (int index = 0;
+                          index < model.boxes.length;
+                          index++) ...[
                         ImageBox(
                           key: ValueKey(model.boxes[index].name),
                           box: model.boxes[index],
@@ -513,6 +515,38 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
                           onChanged: model.onRectChanged,
                           onSelected: () => model.onBoxSelected(index),
                         ),
+                        // Builder(
+                        //   builder: (context) {
+                        //     final box = model.boxes[index].rect.toBox();
+                        //     final bounding =
+                        //         BoxTransformer.calculateBoundingRect(
+                        //       rotation: model.boxes[index].rotation,
+                        //       unrotatedBox: box,
+                        //     );
+                        //     final clampingBox = model.clampingRect.toBox();
+                        //     final (:Side side, :amount) =
+                        //         getLargestIntersectionDelta(bounding, clampingBox);
+                        //     final Box largestRect = BoxTransformer.stopRectAtClampingRect(
+                        //       initialRect: bounding,
+                        //       rect: bounding,
+                        //       clampingRect: clampingBox,
+                        //     );
+                        //
+                        //     return Positioned.fromRect(
+                        //       rect: largestRect.toRect(),
+                        //       child: IgnorePointer(
+                        //         child: Placeholder(
+                        //           child: Container(
+                        //             decoration: BoxDecoration(
+                        //                 border: Border.all(
+                        //                     color: Colors.yellow, width: 3)),
+                        //           ),
+                        //         ),
+                        //       ),
+                        //     );
+                        //   },
+                        // ),
+                      ],
                       Positioned(
                         left: 16,
                         bottom: 16,

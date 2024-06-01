@@ -21,36 +21,71 @@ final class FreeformResizer extends Resizer {
       rotation: rotation,
       unrotatedBox: effectiveInitialRect,
     );
-
-    final flippedHandle = handle.flip(flip);
-
     final Box effectiveInitialBoundingRect =
         flipRect(initialBoundingRect, flip, handle);
 
-    Box newRect = Box.fromLTRB(
-      max(explodedRect.left, clampingRect.left),
-      max(explodedRect.top, clampingRect.top),
-      min(explodedRect.right, clampingRect.right),
-      min(explodedRect.bottom, clampingRect.bottom),
+    final HandlePosition flippedHandle = handle.flip(flip);
+
+    Box newRect = explodedRect;
+    // Box.fromLTRB(
+    //   max(explodedRect.left, clampingRect.left),
+    //   max(explodedRect.top, clampingRect.top),
+    //   min(explodedRect.right, clampingRect.right),
+    //   min(explodedRect.bottom, clampingRect.bottom),
+    // );
+    newRect = repositionRotatedResizedBox(
+      newRect: newRect,
+      initialRect: initialRect,
+      rotation: rotation,
     );
     Box newBoundingRect = BoxTransformer.calculateBoundingRect(
       rotation: rotation,
       unrotatedBox: newRect,
     );
+    final bool isClamped = isRectClamped(
+      switch (bindingStrategy) {
+        BindingStrategy.originalBox => newRect,
+        BindingStrategy.boundingBox => newBoundingRect,
+      },
+      clampingRect,
+    );
+    bool isBound = true;
+    if (!isClamped) {
+      final Box initialBinding = switch (bindingStrategy) {
+        BindingStrategy.originalBox => initialRect,
+        BindingStrategy.boundingBox => initialBoundingRect,
+      };
+      final Box newBinding = switch (bindingStrategy) {
+        BindingStrategy.originalBox => newRect,
+        BindingStrategy.boundingBox => newBoundingRect,
+      };
 
-    bool isValid = true;
+      final Vector2 correctiveDelta = BoxTransformer.stopRectAtClampingRect(
+        rect: newBinding,
+        clampingRect: clampingRect,
+      );
+
+      newRect = BoxTransformer.applyDelta(
+        initialRect: newRect,
+        delta: correctiveDelta,
+        handle: handle,
+        resizeMode: ResizeMode.freeform,
+        allowFlipping: false,
+      );
+
+      newBoundingRect = BoxTransformer.calculateBoundingRect(
+        rotation: rotation,
+        unrotatedBox: newRect,
+      );
+    }
     if (!constraints.isUnconstrained) {
-      final bindingRect = bindingStrategy == BindingStrategy.originalBox
-          ? newRect
-          : newBoundingRect;
-
       final Dimension constrainedSize = Dimension(
-        bindingRect.width.clamp(constraints.minWidth, constraints.maxWidth),
-        bindingRect.height.clamp(constraints.minHeight, constraints.maxHeight),
+        newRect.width.clamp(constraints.minWidth, constraints.maxWidth),
+        newRect.height.clamp(constraints.minHeight, constraints.maxHeight),
       );
       final Dimension constrainedDelta = Dimension(
-        constrainedSize.width - bindingRect.width,
-        constrainedSize.height - bindingRect.height,
+        constrainedSize.width - newRect.width,
+        constrainedSize.height - newRect.height,
       );
 
       newRect = Box.fromHandle(
@@ -59,54 +94,54 @@ final class FreeformResizer extends Resizer {
         newRect.width + constrainedDelta.width,
         newRect.height + constrainedDelta.height,
       );
-      newBoundingRect = Box.fromHandle(
-        flippedHandle.anchor(effectiveInitialBoundingRect),
-        flippedHandle,
-        newBoundingRect.width + constrainedDelta.width,
-        newBoundingRect.height + constrainedDelta.height,
+      newRect = repositionRotatedResizedBox(
+        newRect: newRect,
+        initialRect: initialRect,
+        rotation: rotation,
       );
-
-      isValid = isValidRect(
-        switch (bindingStrategy) {
-          BindingStrategy.originalBox => newRect,
-          BindingStrategy.boundingBox => newBoundingRect,
-        },
+      newBoundingRect = BoxTransformer.calculateBoundingRect(
+        rotation: rotation,
+        unrotatedBox: newRect,
+      );
+      isBound = isRectBound(
+        newBoundingRect,
         constraints,
         clampingRect,
+        checkConstraints: newRect,
       );
-      if (!isValid) {
+
+      if (!isBound) {
         newRect = Box.fromHandle(
           handle.anchor(initialRect),
           handle,
-          !handle.isSide || handle.isHorizontal
+          handle.influencesHorizontal
               ? constraints.minWidth
-              : newRect.width,
-          !handle.isSide || handle.isVertical
+              : constrainedSize.width,
+          handle.influencesVertical
               ? constraints.minHeight
-              : newRect.height,
+              : constrainedSize.height,
         );
-        newBoundingRect = Box.fromHandle(
-          handle.anchor(initialBoundingRect),
-          handle,
-          !handle.isSide || handle.isHorizontal
-              ? constraints.minWidth
-              : newBoundingRect.width,
-          !handle.isSide || handle.isVertical
-              ? constraints.minHeight
-              : newBoundingRect.height,
+        newRect = repositionRotatedResizedBox(
+          newRect: newRect,
+          initialRect: initialRect,
+          rotation: rotation,
+        );
+        newBoundingRect = BoxTransformer.calculateBoundingRect(
+          rotation: rotation,
+          unrotatedBox: newRect,
         );
       }
     }
 
     if (rotation != 0) {
-      final Vector2 positionDelta = newRect.topLeft - initialRect.topLeft;
-      final Vector2 newPos = BoxTransformer.calculateUnrotatedPos(
-        initialRect,
-        rotation,
-        positionDelta,
-        newRect.size,
-      );
-      newRect = Box.fromLTWH(newPos.x, newPos.y, newRect.width, newRect.height);
+      // final Vector2 positionDelta = newRect.topLeft - initialRect.topLeft;
+      // final Vector2 newPos = BoxTransformer.calculateUnrotatedPos(
+      //   initialRect,
+      //   rotation,
+      //   positionDelta,
+      //   newRect.size,
+      // );
+      // newRect = Box.fromLTWH(newPos.x, newPos.y, newRect.width, newRect.height);
     }
 
     final Box effectiveBindingRect = switch (bindingStrategy) {
@@ -120,11 +155,28 @@ final class FreeformResizer extends Resizer {
 
     // Only used for calculating the correct largest box.
     final Box area = getAvailableAreaForHandle(
-      rect: isValid ? effectiveBindingRect : bindingRect,
-      handle: isValid ? flippedHandle : handle,
+      rect: isBound ? effectiveBindingRect : bindingRect,
+      handle: isBound ? flippedHandle : handle,
       clampingRect: clampingRect,
     );
 
-    return (rect: newRect, largest: area, hasValidFlip: isValid);
+    return (rect: newRect, largest: area, hasValidFlip: isBound);
+  }
+
+  Box repositionRotatedResizedBox({
+    required Box newRect,
+    required Box initialRect,
+    required double rotation,
+  }) {
+    if (rotation == 0) return initialRect;
+
+    final Vector2 positionDelta = newRect.topLeft - initialRect.topLeft;
+    final Vector2 newPos = BoxTransformer.calculateUnrotatedPos(
+      initialRect,
+      rotation,
+      positionDelta,
+      newRect.size,
+    );
+    return Box.fromLTWH(newPos.x, newPos.y, newRect.width, newRect.height);
   }
 }
