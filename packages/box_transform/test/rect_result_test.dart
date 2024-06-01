@@ -19,6 +19,7 @@ void main() {
       largestRect: Box.fromLTRB(100, 100, 1000, 1000),
       rawSize: Dimension(400, 300),
       delta: Vector2(200, 200),
+      rotation: 0,
     );
 
     final result2 = RawTransformResult(
@@ -36,6 +37,7 @@ void main() {
       largestRect: Box.fromLTRB(100, 100, 1000, 1000),
       rawSize: Dimension(400, 300),
       delta: Vector2(200, 200),
+      rotation: 0,
     );
 
     expect(result1, result2);
