@@ -25,6 +25,9 @@ typedef RectChangeEvent = void Function(
   DragUpdateDetails event,
 );
 
+/// A callback that is called when the box is tapped.
+typedef TapEvent = void Function();
+
 /// A callback that is called when the box begins a drag operation.
 typedef RectDragStartEvent = void Function(
   DragStartDetails event,
