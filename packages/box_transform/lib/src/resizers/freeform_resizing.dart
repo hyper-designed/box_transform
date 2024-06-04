@@ -27,12 +27,6 @@ final class FreeformResizer extends Resizer {
     final HandlePosition flippedHandle = handle.flip(flip);
 
     Box newRect = explodedRect;
-    // Box.fromLTRB(
-    //   max(explodedRect.left, clampingRect.left),
-    //   max(explodedRect.top, clampingRect.top),
-    //   min(explodedRect.right, clampingRect.right),
-    //   min(explodedRect.bottom, clampingRect.bottom),
-    // );
     newRect = repositionRotatedResizedBox(
       newRect: newRect,
       initialRect: initialRect,
@@ -43,33 +37,25 @@ final class FreeformResizer extends Resizer {
       unrotatedBox: newRect,
     );
     final bool isClamped = isRectClamped(
-      switch (bindingStrategy) {
-        BindingStrategy.originalBox => newRect,
-        BindingStrategy.boundingBox => newBoundingRect,
-      },
+      newBoundingRect,
+      // switch (bindingStrategy) {
+      //   BindingStrategy.originalBox => newRect,
+      //   BindingStrategy.boundingBox => newBoundingRect,
+      // },
       clampingRect,
     );
-    bool isBound = true;
     if (!isClamped) {
-      final Box initialBinding = switch (bindingStrategy) {
-        BindingStrategy.originalBox => initialRect,
-        BindingStrategy.boundingBox => initialBoundingRect,
-      };
-      final Box newBinding = switch (bindingStrategy) {
-        BindingStrategy.originalBox => newRect,
-        BindingStrategy.boundingBox => newBoundingRect,
-      };
-
       final Vector2 correctiveDelta = BoxTransformer.stopRectAtClampingRect(
-        rect: newBinding,
+        rect: newRect,
         clampingRect: clampingRect,
+        rotation: rotation,
       );
 
       newRect = BoxTransformer.applyDelta(
         initialRect: newRect,
         delta: correctiveDelta,
         handle: handle,
-        resizeMode: ResizeMode.freeform,
+        resizeMode: ResizeMode.scale,
         allowFlipping: false,
       );
 
@@ -78,6 +64,8 @@ final class FreeformResizer extends Resizer {
         unrotatedBox: newRect,
       );
     }
+
+    bool isBound = false;
     if (!constraints.isUnconstrained) {
       final Dimension constrainedSize = Dimension(
         newRect.width.clamp(constraints.minWidth, constraints.maxWidth),
@@ -103,11 +91,10 @@ final class FreeformResizer extends Resizer {
         rotation: rotation,
         unrotatedBox: newRect,
       );
-      isBound = isRectBound(
-        newBoundingRect,
+
+      isBound = isRectConstrained(
+        newRect,
         constraints,
-        clampingRect,
-        checkConstraints: newRect,
       );
 
       if (!isBound) {
