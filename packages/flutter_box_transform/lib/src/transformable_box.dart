@@ -142,6 +142,9 @@ class TransformableBox extends StatefulWidget {
   /// or the flip.
   final RectChangeEvent? onChanged;
 
+  /// A callback that is called every time the [TransformableBox] is tapped.
+  final TapEvent? onTap;
+
   /// A callback that is called when [TransformableBox] triggers a pointer down
   /// event to begin a drag operation.
   final RectDragStartEvent? onDragStart;
@@ -246,6 +249,9 @@ class TransformableBox extends StatefulWidget {
     this.resizable = true,
     this.draggable = true,
     this.allowFlippingWhileResizing = true,
+
+    // Tap events
+    this.onTap,
 
     // Either resize or drag triggers.
     this.onChanged,
@@ -489,6 +495,9 @@ class _TransformableBoxState extends State<TransformableBox> {
     widget.onTerminalSizeReached?.call(false, false, false, false);
   }
 
+  /// Called when the box is tapped.
+  void onTap() => widget.onTap?.call();
+
   /// Called when the box drag event starts.
   void onDragPanStart(DragStartDetails event) {
     // Two fingers were used to start the drag. This produces issues with
@@ -545,6 +554,7 @@ class _TransformableBoxState extends State<TransformableBox> {
     if (widget.draggable) {
       content = GestureDetector(
         behavior: HitTestBehavior.translucent,
+        onTap: onTap,
         onPanStart: onDragPanStart,
         onPanUpdate: onDragPanUpdate,
         onPanEnd: onDragPanEnd,
