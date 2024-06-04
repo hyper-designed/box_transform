@@ -169,6 +169,7 @@ void main() {
       final correctiveDelta = BoxTransformer.stopRectAtClampingRect(
         rect: rect,
         clampingRect: clampingRect,
+        rotation: 0,
       );
 
       expect(correctiveDelta, Vector2.zero());
@@ -181,6 +182,7 @@ void main() {
       final correctiveDelta = BoxTransformer.stopRectAtClampingRect(
         rect: rect,
         clampingRect: clampingRect,
+        rotation: 0,
       );
 
       expect(correctiveDelta, Vector2(0, -100));
@@ -193,6 +195,7 @@ void main() {
       final correctiveDelta = BoxTransformer.stopRectAtClampingRect(
         rect: rect,
         clampingRect: clampingRect,
+        rotation: 0,
       );
 
       expect(correctiveDelta, Vector2(-100, 0));
@@ -205,6 +208,7 @@ void main() {
       final correctiveDelta = BoxTransformer.stopRectAtClampingRect(
         rect: rect,
         clampingRect: clampingRect,
+        rotation: 0,
       );
 
       expect(correctiveDelta, Vector2(0, -100));
@@ -217,6 +221,7 @@ void main() {
       final correctiveDelta = BoxTransformer.stopRectAtClampingRect(
         rect: rect,
         clampingRect: clampingRect,
+        rotation: 0,
       );
 
       expect(correctiveDelta, Vector2(-100, 0));
@@ -229,10 +234,38 @@ void main() {
       final correctiveDelta = BoxTransformer.stopRectAtClampingRect(
         rect: rect,
         clampingRect: clampingRect,
+        rotation: 0,
       );
 
       expect(correctiveDelta..round(), Vector2(-46, -200));
     });
+
+    test('top right intersection - right', () {
+      final rect = Box.fromLTRB(500, -50, 1300, 800); // 0.727272 * 800 =581.8176
+      final clampingRect = Box.fromLTRB(100, 100, 1100, 1100);
+
+      final correctiveDelta = BoxTransformer.stopRectAtClampingRect(
+        rect: rect,
+        clampingRect: clampingRect,
+        rotation: 0,
+      );
+
+      expect(correctiveDelta..round(), Vector2(-200, -250));
+    });
+
+    test('bottom right intersection - bottom', () {
+      final rect = Box.fromLTRB(500, 500, 1300, 1200);
+      final clampingRect = Box.fromLTRB(100, 100, 1100, 1100);
+
+      final correctiveDelta = BoxTransformer.stopRectAtClampingRect(
+        rect: rect,
+        clampingRect: clampingRect,
+        rotation: 0,
+      );
+
+      expect(correctiveDelta..round(), Vector2(-200, -100));
+    });
+
   });
 
   group('flipBox tests', () {

@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -848,7 +849,7 @@ class _TransformableBoxState extends State<TransformableBox> {
                           onHandleRotateEnd(event, handle),
                       onRotationCancel: () => onHandleRotateCancel(handle),
                       builder: widget.cornerHandleBuilder,
-                      debugPaintHandleBounds: false,
+                      debugPaintHandleBounds: kDebugMode,
                     ),
                 if (widget.resizable)
                   for (final handle in HandlePosition.sides.where((handle) =>
@@ -869,37 +870,31 @@ class _TransformableBoxState extends State<TransformableBox> {
                       onPanEnd: (event) => onHandlePanEnd(event, handle),
                       onPanCancel: () => onHandlePanCancel(handle),
                       builder: widget.sideHandleBuilder,
-                      debugPaintHandleBounds: false,
+                      debugPaintHandleBounds: kDebugMode,
                     ),
               ],
             ),
           ),
         ),
-        Positioned(
-          left: unrotatedRect.left,
-          top: unrotatedRect.top,
-          width: unrotatedRect.width,
-          height: unrotatedRect.height,
-          child: IgnorePointer(
-            child: Container(
-              decoration: BoxDecoration(
-                  border: Border.all(color: Colors.green, width: 2)),
-            ),
-          ),
-        ),
-
-        Positioned(
-          left: boundingRect.left,
-          top: boundingRect.top,
-          width: boundingRect.width,
-          height: boundingRect.height,
-          child: IgnorePointer(
-            child: Container(
-              decoration: BoxDecoration(
-                  border: Border.all(color: Colors.red, width: 3)),
-            ),
-          ),
-        ),
+        // Positioned.fromRect(
+        //   rect: unrotatedRect,
+        //   child: IgnorePointer(
+        //     child: Container(
+        //       decoration: BoxDecoration(
+        //           border: Border.all(color: Colors.green, width: 2)),
+        //     ),
+        //   ),
+        // ),
+        //
+        // Positioned.fromRect(
+        //   rect: boundingRect,
+        //   child: IgnorePointer(
+        //     child: Container(
+        //       decoration: BoxDecoration(
+        //           border: Border.all(color: Colors.red, width: 3)),
+        //     ),
+        //   ),
+        // ),
       ],
     );
   }

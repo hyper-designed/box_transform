@@ -119,36 +119,66 @@ class BoxTransformer {
   static Vector2 stopRectAtClampingRect({
     required Box rect,
     required Box clampingRect,
+    required double rotation,
   }) {
-    final (:side, :amount, :singleIntersection) =
-        getLargestIntersectionDelta(rect, clampingRect);
+    final Map<Quadrant, Vector2> rotatedPoints = {
+      for (final MapEntry(key: quadrant, value: point)
+          in rect.sidedPoints.entries)
+        quadrant: rotatePointAroundVec(rect.center, rotation, point)
+    };
 
-    if (singleIntersection) {
-      return switch (side) {
-        Side.top || Side.bottom => Vector2(0, -amount),
-        Side.left || Side.right => Vector2(-amount, 0),
-      };
+    // Check if any rotated point is outside the clamping rect.
+    (
+      Side side,
+      Quadrant quadrant,
+      Vector2 point,
+      double dist
+    )? biggestOutOfBounds;
+    for (final MapEntry(key: quadrant, value: point) in rotatedPoints.entries) {
+      if (biggestOutOfBounds == null) {
+        final (side, dist) = clampingRect.distanceOfPoint(point);
+        biggestOutOfBounds = (side, quadrant, point, dist);
+      } else {
+        final (side, dist) = clampingRect.distanceOfPoint(point);
+        final (_, biggestDist) =
+            clampingRect.distanceOfPoint(biggestOutOfBounds.$3);
+        if (dist < biggestDist) {
+          biggestOutOfBounds = (side, quadrant, point, dist);
+        }
+      }
     }
 
-    if (side.isVertical) {
-      final correctedHeight = rect.height - amount;
-      final aspectRatio = rect.width / correctedHeight;
-      final correctedWidth = rect.width * aspectRatio;
+    assert(biggestOutOfBounds != null);
 
-      final verticalDelta = rect.height - correctedHeight;
-      final horizontalDelta = rect.width - correctedWidth;
+    final side = biggestOutOfBounds!.$1;
+    final quadrant = biggestOutOfBounds.$2;
+    final point = biggestOutOfBounds.$3;
+    final dist = biggestOutOfBounds.$4;
 
-      return Vector2(horizontalDelta, verticalDelta) * -1;
-    } else {
-      final correctedWidth = rect.width - amount;
-      final aspectRatio = rect.height / correctedWidth;
-      final correctedHeight = rect.height * aspectRatio;
+    // Move the out of bounds vector by the perpendicular vector of the side
+    // that was hit.
+    final cardinalCorrection = switch (side) {
+      Side.left => Vector2(-dist, 0),
+      Side.right => Vector2(dist, 0),
+      Side.top => Vector2(0, -dist),
+      Side.bottom => Vector2(0, dist),
+    };
 
-      final horizontalDelta = rect.width - correctedWidth;
-      final verticalDelta = rect.height - correctedHeight;
+    final correctedRotatedPoint =
+        Vector2(point.x + cardinalCorrection.x, point.y + cardinalCorrection.y);
 
-      return Vector2(horizontalDelta, verticalDelta) * -1;
-    }
+    // Rotate back
+    final unrotated =
+        rotatePointAroundVec(rect.center, -rotation, correctedRotatedPoint);
+    final delta = unrotated - rect.pointFromQuadrant(quadrant);
+
+    print('     quad: ${rect.pointFromQuadrant(quadrant)..round()}');
+    print('unrotated: ${unrotated..round()}');
+
+    // Matrix2.rotation(rotation).transform(delta);
+    print('delta: $delta');
+
+    return delta;
   }
 
   /// Resizes the given [initialRect] with given [initialLocalPosition] of
@@ -233,17 +263,17 @@ class BoxTransformer {
       );
     }
 
-    final Box bindingRect = switch (bindingStrategy) {
+    final Box initialBindingRect = switch (bindingStrategy) {
       BindingStrategy.originalBox => initialRect,
       BindingStrategy.boundingBox => initialBoundingRect,
     };
-    final double bindingWidth = bindingRect.width;
-    final double bindingHeight = bindingRect.height;
+    final double initialBindingWidth = initialBindingRect.width;
+    final double initialBindingHeight = initialBindingRect.height;
 
     // Check if clampingRect is smaller than initialRect.
     // If it is, then we return the initialRect and not resize it.
-    if (clampingRect.width < bindingWidth ||
-        clampingRect.height < bindingHeight) {
+    if (clampingRect.width < initialBindingWidth ||
+        clampingRect.height < initialBindingHeight) {
       return ResizeResult(
         rect: initialRect,
         oldRect: initialRect,
@@ -569,40 +599,40 @@ class BoxTransformer {
     );
   }
 
-  static Dimension calculateBoundingSize({
-    required double rotation,
-    required Dimension unrotatedSize,
-  }) {
-    final double sinA = sin(rotation);
-    final double cosA = cos(rotation);
+// static Dimension calculateBoundingSize({
+//   required double rotation,
+//   required Dimension unrotatedSize,
+// }) {
+//   final double sinA = sin(rotation);
+//   final double cosA = cos(rotation);
+//
+//   final double width = unrotatedSize.width;
+//   final double height = unrotatedSize.height;
+//   final double boundingWidth = (width * cosA).abs() + (height * sinA).abs();
+//   final double boundingHeight = (width * sinA).abs() + (height * cosA).abs();
+//
+//   return Dimension(boundingWidth, boundingHeight);
+// }
 
-    final double width = unrotatedSize.width;
-    final double height = unrotatedSize.height;
-    final double boundingWidth = (width * cosA).abs() + (height * sinA).abs();
-    final double boundingHeight = (width * sinA).abs() + (height * cosA).abs();
-
-    return Dimension(boundingWidth, boundingHeight);
-  }
-
-  static Box calculateUnrotatedRect({
-    required Box boundingBox,
-    required double rotation,
-    required double aspectRatio,
-  }) {
-    final Vector2 center = boundingBox.center;
-
-    final double width = boundingBox.width * cos(-rotation) +
-        boundingBox.height * sin(-rotation);
-
-    // derive from aspect ratio.
-    final double height = width / aspectRatio;
-
-    final Box unrotatedRect = Box.fromCenter(
-      center: center,
-      width: width,
-      height: height,
-    );
-
-    return unrotatedRect;
-  }
+// static Box calculateUnrotatedRect({
+//   required Box boundingBox,
+//   required double rotation,
+//   required double aspectRatio,
+// }) {
+//   final Vector2 center = boundingBox.center;
+//
+//   final double width = boundingBox.width * cos(-rotation) +
+//       boundingBox.height * sin(-rotation);
+//
+//   // derive from aspect ratio.
+//   final double height = width / aspectRatio;
+//
+//   final Box unrotatedRect = Box.fromCenter(
+//     center: center,
+//     width: width,
+//     height: height,
+//   );
+//
+//   return unrotatedRect;
+// }
 }

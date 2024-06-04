@@ -517,32 +517,119 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
                         ),
                         // Builder(
                         //   builder: (context) {
-                        //     final box = model.boxes[index].rect.toBox();
+                        //     final box = model.boxes[index];
+                        //     final rect = box.rect.toBox();
                         //     final bounding =
                         //         BoxTransformer.calculateBoundingRect(
-                        //       rotation: model.boxes[index].rotation,
-                        //       unrotatedBox: box,
+                        //       rotation: box.rotation,
+                        //       unrotatedBox: rect,
                         //     );
-                        //     final clampingBox = model.clampingRect.toBox();
-                        //     final (:Side side, :amount) =
-                        //         getLargestIntersectionDelta(bounding, clampingBox);
-                        //     final Box largestRect = BoxTransformer.stopRectAtClampingRect(
-                        //       initialRect: bounding,
-                        //       rect: bounding,
-                        //       clampingRect: clampingBox,
-                        //     );
+                        //     final clampingRect = model.clampingRect.toBox();
+                        //     final (:side, :amount, :singleIntersection) =
+                        //         getLargestIntersectionDelta(
+                        //             bounding, clampingRect);
                         //
-                        //     return Positioned.fromRect(
-                        //       rect: largestRect.toRect(),
-                        //       child: IgnorePointer(
-                        //         child: Placeholder(
-                        //           child: Container(
-                        //             decoration: BoxDecoration(
-                        //                 border: Border.all(
-                        //                     color: Colors.yellow, width: 3)),
+                        //     final Map<Quadrant, Vector2> rotatedPoints = {
+                        //       for (final MapEntry(key: quadrant, value: point)
+                        //           in rect.sidedPoints.entries)
+                        //         quadrant: BoxTransformer.rotatePointAroundVec(
+                        //             rect.center, box.rotation, point)
+                        //     };
+                        //
+                        //     // Check if any rotated point is outside the clamping rect.
+                        //     (
+                        //       Side side,
+                        //       Quadrant quadrant,
+                        //       Vector2 point,
+                        //       double dist
+                        //     )? biggestOutOfBounds;
+                        //     for (final MapEntry(key: quadrant, value: point)
+                        //         in rotatedPoints.entries) {
+                        //       if (biggestOutOfBounds == null) {
+                        //         final (side, dist) =
+                        //             clampingRect.distanceOfPoint(point);
+                        //         biggestOutOfBounds =
+                        //             (side, quadrant, point, dist);
+                        //       } else {
+                        //         final (side, dist) =
+                        //             clampingRect.distanceOfPoint(point);
+                        //         final (_, biggestDist) = clampingRect
+                        //             .distanceOfPoint(biggestOutOfBounds.$3);
+                        //         if (dist < biggestDist) {
+                        //           biggestOutOfBounds =
+                        //               (side, quadrant, point, dist);
+                        //         }
+                        //       }
+                        //     }
+                        //
+                        //     assert(biggestOutOfBounds != null);
+                        //
+                        //     final side2 = biggestOutOfBounds!.$1;
+                        //     Vector2 point = biggestOutOfBounds.$3;
+                        //     final dist = biggestOutOfBounds.$4;
+                        //
+                        //     final correctedVector = switch (side) {
+                        //       Side.left => Vector2(-dist, 0),
+                        //       Side.right => Vector2(dist, 0),
+                        //       Side.top => Vector2(0, -dist),
+                        //       Side.bottom => Vector2(0, dist),
+                        //     };
+                        //
+                        //     final adjusted = Vector2(
+                        //         point.x + correctedVector.x,
+                        //         point.y + correctedVector.y);
+                        //
+                        //     // Rotate back
+                        //     final unrotated =
+                        //         BoxTransformer.rotatePointAroundVec(
+                        //             rect.center, -box.rotation, adjusted);
+                        //
+                        //     return Stack(
+                        //       fit: StackFit.expand,
+                        //       children: [
+                        //         Positioned.fromRect(
+                        //           rect: Rect.fromCenter(
+                        //               center: point.toOffset(),
+                        //               width: 30,
+                        //               height: 30),
+                        //           child: IgnorePointer(
+                        //             child: Container(
+                        //               decoration: BoxDecoration(
+                        //                   shape: BoxShape.circle,
+                        //                   border: Border.all(
+                        //                       color: Colors.yellow, width: 3)),
+                        //             ),
                         //           ),
                         //         ),
-                        //       ),
+                        //         Positioned.fromRect(
+                        //           rect: Rect.fromCenter(
+                        //               center: adjusted.toOffset(),
+                        //               width: 20,
+                        //               height: 20),
+                        //           child: IgnorePointer(
+                        //             child: Container(
+                        //               decoration: BoxDecoration(
+                        //                   shape: BoxShape.circle,
+                        //                   border: Border.all(
+                        //                       color: Colors.yellow, width: 2)),
+                        //             ),
+                        //           ),
+                        //         ),
+                        //         Positioned.fromRect(
+                        //           rect: Rect.fromCenter(
+                        //               center: unrotated.toOffset(),
+                        //               width: 20,
+                        //               height: 20),
+                        //           child: IgnorePointer(
+                        //             child: Container(
+                        //               decoration: BoxDecoration(
+                        //                   shape: BoxShape.circle,
+                        //                   border: Border.all(
+                        //                       color: Colors.green, width: 3)),
+                        //             ),
+                        //           ),
+                        //         ),
+                        //       ],
                         //     );
                         //   },
                         // ),
