@@ -13,53 +13,157 @@ final class FreeformResizer extends Resizer {
     required HandlePosition handle,
     required Constraints constraints,
     required Flip flip,
+    required double rotation,
+    required BindingStrategy bindingStrategy,
   }) {
-    final flippedHandle = handle.flip(flip);
-    Box effectiveInitialRect = flipRect(initialRect, flip, handle);
-
-    Box newRect = Box.fromLTRB(
-      max(explodedRect.left, clampingRect.left),
-      max(explodedRect.top, clampingRect.top),
-      min(explodedRect.right, clampingRect.right),
-      min(explodedRect.bottom, clampingRect.bottom),
+    final Box effectiveInitialRect = flipRect(initialRect, flip, handle);
+    final Box initialBoundingRect = BoxTransformer.calculateBoundingRect(
+      rotation: rotation,
+      unrotatedBox: effectiveInitialRect,
     );
+    final Box effectiveInitialBoundingRect =
+        flipRect(initialBoundingRect, flip, handle);
 
-    bool isValid = true;
+    final HandlePosition flippedHandle = handle.flip(flip);
+
+    Box newRect = explodedRect;
+    newRect = repositionRotatedResizedBox(
+      newRect: newRect,
+      initialRect: initialRect,
+      rotation: rotation,
+    );
+    Box newBoundingRect = BoxTransformer.calculateBoundingRect(
+      rotation: rotation,
+      unrotatedBox: newRect,
+    );
+    final bool isClamped = isRectClamped(
+      newBoundingRect,
+      // switch (bindingStrategy) {
+      //   BindingStrategy.originalBox => newRect,
+      //   BindingStrategy.boundingBox => newBoundingRect,
+      // },
+      clampingRect,
+    );
+    if (!isClamped) {
+      final Vector2 correctiveDelta = BoxTransformer.stopRectAtClampingRect(
+        rect: newRect,
+        clampingRect: clampingRect,
+        rotation: rotation,
+      );
+
+      newRect = BoxTransformer.applyDelta(
+        initialRect: newRect,
+        delta: correctiveDelta,
+        handle: handle,
+        resizeMode: ResizeMode.scale,
+        allowFlipping: false,
+      );
+
+      newBoundingRect = BoxTransformer.calculateBoundingRect(
+        rotation: rotation,
+        unrotatedBox: newRect,
+      );
+    }
+
+    bool isBound = false;
     if (!constraints.isUnconstrained) {
-      final constrainedWidth =
-          newRect.width.clamp(constraints.minWidth, constraints.maxWidth);
-      final constrainedHeight =
-          newRect.height.clamp(constraints.minHeight, constraints.maxHeight);
+      final Dimension constrainedSize = Dimension(
+        newRect.width.clamp(constraints.minWidth, constraints.maxWidth),
+        newRect.height.clamp(constraints.minHeight, constraints.maxHeight),
+      );
+      final Dimension constrainedDelta = Dimension(
+        constrainedSize.width - newRect.width,
+        constrainedSize.height - newRect.height,
+      );
 
       newRect = Box.fromHandle(
         flippedHandle.anchor(effectiveInitialRect),
         flippedHandle,
-        constrainedWidth,
-        constrainedHeight,
+        newRect.width + constrainedDelta.width,
+        newRect.height + constrainedDelta.height,
+      );
+      newRect = repositionRotatedResizedBox(
+        newRect: newRect,
+        initialRect: initialRect,
+        rotation: rotation,
+      );
+      newBoundingRect = BoxTransformer.calculateBoundingRect(
+        rotation: rotation,
+        unrotatedBox: newRect,
       );
 
-      isValid = isValidRect(newRect, constraints, clampingRect);
-      if (!isValid) {
+      isBound = isRectConstrained(
+        newRect,
+        constraints,
+      );
+
+      if (!isBound) {
         newRect = Box.fromHandle(
           handle.anchor(initialRect),
           handle,
-          !handle.isSide || handle.isHorizontal
+          handle.influencesHorizontal
               ? constraints.minWidth
-              : constrainedWidth,
-          !handle.isSide || handle.isVertical
+              : constrainedSize.width,
+          handle.influencesVertical
               ? constraints.minHeight
-              : constrainedHeight,
+              : constrainedSize.height,
+        );
+        newRect = repositionRotatedResizedBox(
+          newRect: newRect,
+          initialRect: initialRect,
+          rotation: rotation,
+        );
+        newBoundingRect = BoxTransformer.calculateBoundingRect(
+          rotation: rotation,
+          unrotatedBox: newRect,
         );
       }
     }
 
-    // Not used but calculating it for returning correct largest box.
+    if (rotation != 0) {
+      // final Vector2 positionDelta = newRect.topLeft - initialRect.topLeft;
+      // final Vector2 newPos = BoxTransformer.calculateUnrotatedPos(
+      //   initialRect,
+      //   rotation,
+      //   positionDelta,
+      //   newRect.size,
+      // );
+      // newRect = Box.fromLTWH(newPos.x, newPos.y, newRect.width, newRect.height);
+    }
+
+    final Box effectiveBindingRect = switch (bindingStrategy) {
+      BindingStrategy.originalBox => effectiveInitialRect,
+      BindingStrategy.boundingBox => effectiveInitialBoundingRect,
+    };
+    final Box bindingRect = switch (bindingStrategy) {
+      BindingStrategy.originalBox => initialRect,
+      BindingStrategy.boundingBox => initialBoundingRect,
+    };
+
+    // Only used for calculating the correct largest box.
     final Box area = getAvailableAreaForHandle(
-      rect: isValid ? effectiveInitialRect : initialRect,
-      handle: isValid ? flippedHandle : handle,
+      rect: isBound ? effectiveBindingRect : bindingRect,
+      handle: isBound ? flippedHandle : handle,
       clampingRect: clampingRect,
     );
 
-    return (rect: newRect, largest: area, hasValidFlip: isValid);
+    return (rect: newRect, largest: area, hasValidFlip: isBound);
+  }
+
+  Box repositionRotatedResizedBox({
+    required Box newRect,
+    required Box initialRect,
+    required double rotation,
+  }) {
+    if (rotation == 0) return newRect;
+
+    final Vector2 positionDelta = newRect.topLeft - initialRect.topLeft;
+    final Vector2 newPos = BoxTransformer.calculateUnrotatedPos(
+      initialRect,
+      rotation,
+      positionDelta,
+      newRect.size,
+    );
+    return Box.fromLTWH(newPos.x, newPos.y, newRect.width, newRect.height);
   }
 }

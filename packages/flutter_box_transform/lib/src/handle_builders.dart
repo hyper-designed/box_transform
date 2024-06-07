@@ -14,8 +14,11 @@ class CornerHandleWidget extends StatelessWidget {
   /// The builder that is used to build the handle widget.
   final HandleBuilder builder;
 
-  /// The size of the handle's gesture response area.
-  final double handleTapSize;
+  /// The size of the resize handle's gesture response area.
+  final double resizeHandleGestureSize;
+
+  /// The size of the rotation handle's gesture response area.
+  final double rotationHandleGestureSize;
 
   /// Called when the handle dragging starts.
   final GestureDragStartCallback? onPanStart;
@@ -29,11 +32,26 @@ class CornerHandleWidget extends StatelessWidget {
   /// Called when the handle dragging is canceled.
   final GestureDragCancelCallback? onPanCancel;
 
+  /// Called when the handle rotates the box.
+  final GestureRotationStartCallback? onRotationStart;
+
+  /// Called when the handle rotates the box.
+  final GestureRotationUpdateCallback? onRotationUpdate;
+
+  /// Called when the handle rotates the box.
+  final GestureRotationEndCallback? onRotationEnd;
+
+  /// Called when the handle rotates the box.
+  final GestureRotationCancelCallback? onRotationCancel;
+
   /// Whether the handle is resizable.
   final bool enabled;
 
   /// Whether the handle is visible.
   final bool visible;
+
+  /// Whether the handle supports rotation.
+  final bool rotatable;
 
   /// Whether to paint the handle's bounds for debugging purposes.
   final bool debugPaintHandleBounds;
@@ -42,14 +60,26 @@ class CornerHandleWidget extends StatelessWidget {
   CornerHandleWidget({
     super.key,
     required this.handlePosition,
-    required this.handleTapSize,
+    required this.resizeHandleGestureSize,
+    required this.rotationHandleGestureSize,
     required this.builder,
+
+    // Resize
     this.onPanStart,
     this.onPanUpdate,
     this.onPanEnd,
     this.onPanCancel,
+
+    // Rotate
+    this.onRotationStart,
+    this.onRotationUpdate,
+    this.onRotationEnd,
+    this.onRotationCancel,
+
+    // Config
     this.enabled = true,
     this.visible = true,
+    this.rotatable = true,
     this.debugPaintHandleBounds = false,
   }) : assert(handlePosition.isDiagonal, 'A corner handle must be diagonal.');
 
@@ -59,6 +89,8 @@ class CornerHandleWidget extends StatelessWidget {
         visible ? builder(context, handlePosition) : const SizedBox.shrink();
 
     if (enabled) {
+      final double gestureGap =
+          (rotationHandleGestureSize - resizeHandleGestureSize) / 2;
       child = GestureDetector(
         behavior: HitTestBehavior.opaque,
         onPanStart: onPanStart,
@@ -66,10 +98,41 @@ class CornerHandleWidget extends StatelessWidget {
         onPanEnd: onPanEnd,
         onPanCancel: onPanCancel,
         child: MouseRegion(
-          cursor: getCursorForHandle(handlePosition),
-          child: child,
+          cursor: getResizeCursorForHandle(handlePosition),
+          child: Padding(
+            padding: rotatable
+                ? getRotationCornerPadding(
+                    handlePosition.opposite,
+                    gestureGap,
+                  )
+                : EdgeInsets.zero,
+            child: child,
+          ),
         ),
       );
+
+      if (rotatable) {
+        if (kDebugMode && debugPaintHandleBounds) {
+          child = ColoredBox(
+              color: Colors.blue.withOpacity(0.5),
+              child: child,
+          );
+        }
+        child = GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onPanStart: onRotationStart,
+          onPanUpdate: onRotationUpdate,
+          onPanEnd: onRotationEnd,
+          onPanCancel: onRotationCancel,
+          child: MouseRegion(
+            cursor: getRotationCursorForHandle(handlePosition),
+            child: Padding(
+              padding: getRotationCornerPadding(handlePosition, gestureGap),
+              child: child,
+            ),
+          ),
+        );
+      }
     }
 
     if (kDebugMode && debugPaintHandleBounds) {
@@ -84,14 +147,42 @@ class CornerHandleWidget extends StatelessWidget {
       right: handlePosition.influencesRight ? 0 : null,
       top: handlePosition.influencesTop ? 0 : null,
       bottom: handlePosition.influencesBottom ? 0 : null,
-      width: handleTapSize,
-      height: handleTapSize,
+      width: rotatable ? rotationHandleGestureSize : resizeHandleGestureSize,
+      height: rotatable ? rotationHandleGestureSize : resizeHandleGestureSize,
       child: child,
     );
   }
 
-  /// Returns the cursor for the given handle position.
-  MouseCursor getCursorForHandle(HandlePosition handle) {
+  /// Returns the padding for the rotation gesture area.
+  EdgeInsets getRotationCornerPadding(
+      HandlePosition handlePosition, double value) {
+    return switch (handlePosition) {
+      HandlePosition.topLeft => EdgeInsets.only(left: value, top: value),
+      HandlePosition.topRight => EdgeInsets.only(right: value, top: value),
+      HandlePosition.bottomLeft => EdgeInsets.only(left: value, bottom: value),
+      HandlePosition.bottomRight =>
+        EdgeInsets.only(right: value, bottom: value),
+      _ => throw Exception('Invalid handle position. Corners only.'),
+    };
+  }
+
+  /// Returns the resize cursor for the given handle position.
+  MouseCursor getResizeCursorForHandle(HandlePosition handle) {
+    switch (handle) {
+      case HandlePosition.topLeft:
+      case HandlePosition.bottomRight:
+        return SystemMouseCursors.resizeUpLeftDownRight;
+      case HandlePosition.topRight:
+      case HandlePosition.bottomLeft:
+        return SystemMouseCursors.resizeUpRightDownLeft;
+      default:
+        throw Exception('Invalid handle position.');
+    }
+  }
+
+  /// Returns the rotation cursor for the given handle position.
+  /// TODO: No rotation cursor in Flutter.
+  MouseCursor getRotationCursorForHandle(HandlePosition handle) {
     switch (handle) {
       case HandlePosition.topLeft:
       case HandlePosition.bottomRight:
@@ -116,7 +207,10 @@ class SideHandleWidget extends StatelessWidget {
   final HandleBuilder builder;
 
   /// The thickness of the handle that is used for gesture detection.
-  final double handleTapSize;
+  final double resizeHandleGestureSize;
+
+  /// The size of the rotation handle's gesture response area.
+  final double rotationHandleGestureSize;
 
   /// Called when the handle dragging starts.
   final GestureDragStartCallback? onPanStart;
@@ -129,6 +223,9 @@ class SideHandleWidget extends StatelessWidget {
 
   /// Called when the handle dragging is canceled.
   final GestureDragCancelCallback? onPanCancel;
+
+  /// Whether the handle is rotatable.
+  final bool rotatable;
 
   /// Whether the handle is resizable.
   final bool enabled;
@@ -143,12 +240,14 @@ class SideHandleWidget extends StatelessWidget {
   SideHandleWidget({
     super.key,
     required this.handlePosition,
-    required this.handleTapSize,
+    required this.resizeHandleGestureSize,
+    required this.rotationHandleGestureSize,
     required this.builder,
     this.onPanStart,
     this.onPanUpdate,
     this.onPanEnd,
     this.onPanCancel,
+    this.rotatable = true,
     this.enabled = true,
     this.visible = true,
     this.debugPaintHandleBounds = false,
@@ -180,29 +279,34 @@ class SideHandleWidget extends StatelessWidget {
       );
     }
 
+    final double gestureSize =
+        rotatable ? rotationHandleGestureSize : resizeHandleGestureSize;
+    final double gestureOffset =
+        gestureSize / 2 - (resizeHandleGestureSize / 2);
+
     return Positioned(
       left: handlePosition.isVertical
-          ? handleTapSize
+          ? gestureSize
           : handlePosition.influencesLeft
-              ? 0
+              ? gestureOffset
               : null,
       right: handlePosition.isVertical
-          ? handleTapSize
+          ? gestureSize
           : handlePosition.influencesRight
-              ? 0
+              ? gestureOffset
               : null,
       top: handlePosition.isHorizontal
-          ? handleTapSize
+          ? gestureSize
           : handlePosition.influencesTop
-              ? 0
+              ? gestureOffset
               : null,
       bottom: handlePosition.isHorizontal
-          ? handleTapSize
+          ? gestureSize
           : handlePosition.influencesBottom
-              ? 0
+              ? gestureOffset
               : null,
-      width: handlePosition.isHorizontal ? handleTapSize : null,
-      height: handlePosition.isVertical ? handleTapSize : null,
+      width: handlePosition.isHorizontal ? resizeHandleGestureSize : null,
+      height: handlePosition.isVertical ? resizeHandleGestureSize : null,
       child: child,
     );
   }
