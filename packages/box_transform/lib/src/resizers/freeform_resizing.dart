@@ -155,7 +155,7 @@ final class FreeformResizer extends Resizer {
     required Box initialRect,
     required double rotation,
   }) {
-    if (rotation == 0) return initialRect;
+    if (rotation == 0) return newRect;
 
     final Vector2 positionDelta = newRect.topLeft - initialRect.topLeft;
     final Vector2 newPos = BoxTransformer.calculateUnrotatedPos(
