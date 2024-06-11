@@ -143,7 +143,7 @@ class TransformableBox extends StatefulWidget {
   final RectChangeEvent? onChanged;
 
   /// A callback that is called every time the [TransformableBox] is tapped.
-  final TapEvent? onTap;
+  final VoidCallback? onTap;
 
   /// A callback that is called when [TransformableBox] triggers a pointer down
   /// event to begin a drag operation.
