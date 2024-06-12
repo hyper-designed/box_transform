@@ -120,17 +120,6 @@ final class FreeformResizer extends Resizer {
       }
     }
 
-    if (rotation != 0) {
-      // final Vector2 positionDelta = newRect.topLeft - initialRect.topLeft;
-      // final Vector2 newPos = BoxTransformer.calculateUnrotatedPos(
-      //   initialRect,
-      //   rotation,
-      //   positionDelta,
-      //   newRect.size,
-      // );
-      // newRect = Box.fromLTWH(newPos.x, newPos.y, newRect.width, newRect.height);
-    }
-
     final Box effectiveBindingRect = switch (bindingStrategy) {
       BindingStrategy.originalBox => effectiveInitialRect,
       BindingStrategy.boundingBox => effectiveInitialBoundingRect,
@@ -150,6 +139,8 @@ final class FreeformResizer extends Resizer {
     return (rect: newRect, largest: area, hasValidFlip: isBound);
   }
 
+  /// Repositions a rotated and resized box back to its original unrotated
+  /// position.
   Box repositionRotatedResizedBox({
     required Box newRect,
     required Box initialRect,

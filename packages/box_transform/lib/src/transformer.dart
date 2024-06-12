@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:math' hide log;
 
 import 'package:vector_math/vector_math.dart';
@@ -219,11 +218,10 @@ class BoxTransformer {
     BindingStrategy bindingStrategy = BindingStrategy.boundingBox,
   }) {
     if (handle == HandlePosition.none) {
-      log('Using bottomRight handle instead of none.');
       handle = HandlePosition.bottomRight;
     }
 
-    final initialBoundingRect = calculateBoundingRect(
+    final Box initialBoundingRect = calculateBoundingRect(
       rotation: rotation,
       unrotatedBox: initialRect,
     );
@@ -567,72 +565,4 @@ class BoxTransformer {
 
     return explodedRect;
   }
-
-  static Constraints calculateBoundingConstraints(
-      {required double rotation, required Constraints constraints}) {
-    final double sinA = sin(rotation);
-    final double cosA = cos(rotation);
-
-    final double maxWidth = constraints.maxWidth;
-    final double maxHeight = constraints.maxHeight;
-    final double minWidth = constraints.minWidth;
-    final double minHeight = constraints.minHeight;
-
-    final double maxBoundingWidth = !maxWidth.isFinite
-        ? double.infinity
-        : (maxWidth * cosA).abs() + (maxHeight * sinA).abs();
-    final double maxBoundingHeight = !maxHeight.isFinite
-        ? double.infinity
-        : (maxWidth * sinA).abs() + (maxHeight * cosA).abs();
-    final double minBoundingWidth = !minWidth.isFinite
-        ? double.infinity
-        : (minWidth * cosA).abs() + (minHeight * sinA).abs();
-    final double minBoundingHeight = !minHeight.isFinite
-        ? double.infinity
-        : (minWidth * sinA).abs() + (minHeight * cosA).abs();
-
-    return Constraints(
-      minWidth: minBoundingWidth,
-      minHeight: minBoundingHeight,
-      maxWidth: maxBoundingWidth,
-      maxHeight: maxBoundingHeight,
-    );
-  }
-
-// static Dimension calculateBoundingSize({
-//   required double rotation,
-//   required Dimension unrotatedSize,
-// }) {
-//   final double sinA = sin(rotation);
-//   final double cosA = cos(rotation);
-//
-//   final double width = unrotatedSize.width;
-//   final double height = unrotatedSize.height;
-//   final double boundingWidth = (width * cosA).abs() + (height * sinA).abs();
-//   final double boundingHeight = (width * sinA).abs() + (height * cosA).abs();
-//
-//   return Dimension(boundingWidth, boundingHeight);
-// }
-
-// static Box calculateUnrotatedRect({
-//   required Box boundingBox,
-//   required double rotation,
-//   required double aspectRatio,
-// }) {
-//   final Vector2 center = boundingBox.center;
-//
-//   final double width = boundingBox.width * cos(-rotation) +
-//       boundingBox.height * sin(-rotation);
-//
-//   // derive from aspect ratio.
-//   final double height = width / aspectRatio;
-//
-//   final Box unrotatedRect = Box.fromCenter(
-//     center: center,
-//     width: width,
-//     height: height,
-//   );
-//
-//   return unrotatedRect;
-// }
 }
