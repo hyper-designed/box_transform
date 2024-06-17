@@ -25,7 +25,7 @@ Packages with other changes:
 - Deny different transform operations when a box is already undergoing.
 - Add optional `resizeModeResolver` override to `onResizeUpdate` in `TransformableBoxController`.
 
-### `box_transform` - `v0.4.3
+#### `box_transform` - `v0.4.3`
 
 - Update dependencies & resolve deprecation warnings.
 - Fix a bug where terminal resize events triggered on the incorrect axis.
