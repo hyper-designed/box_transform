@@ -1,13 +1,7 @@
-import 'dart:ui';
-
-import 'package:box_transform/box_transform.dart';
 import 'package:flutter/material.dart';
 
+import '../flutter_box_transform.dart';
 import 'handle_builders.dart';
-import 'handles.dart';
-import 'transformable_box_controller.dart';
-import 'typedefs.dart';
-import 'ui_result.dart';
 
 /// A widget that allows you to resize and drag a box around a widget.
 class TransformableBox extends StatefulWidget {
@@ -308,10 +302,30 @@ class TransformableBox extends StatefulWidget {
   State<TransformableBox> createState() => _TransformableBoxState();
 }
 
+enum _PrimaryGestureOperation {
+  resize,
+  drag;
+
+  bool get isDragging => this == _PrimaryGestureOperation.drag;
+
+  bool get isResizing => this == _PrimaryGestureOperation.resize;
+}
+
 class _TransformableBoxState extends State<TransformableBox> {
   late TransformableBoxController controller;
 
-  bool isLegalGesture = false;
+  _PrimaryGestureOperation? primaryGestureOperation;
+
+  HandlePosition? lastHandle;
+
+  bool get isDragging => primaryGestureOperation?.isDragging == true;
+
+  bool get isResizing => primaryGestureOperation?.isResizing == true;
+
+  bool get isGestureActive => isDragging || isResizing;
+
+  bool mismatchedHandle(HandlePosition handle) =>
+      lastHandle != null && lastHandle != handle;
 
   @override
   void initState() {
@@ -422,14 +436,10 @@ class _TransformableBoxState extends State<TransformableBox> {
 
   /// Called when the handle drag starts.
   void onHandlePanStart(DragStartDetails event, HandlePosition handle) {
-    // Two fingers were used to start the drag. This produces issues with
-    // the box drag event. Therefore, we ignore it.
-    if (event.kind == PointerDeviceKind.trackpad) {
-      isLegalGesture = false;
-      return;
-    } else {
-      isLegalGesture = true;
-    }
+    if (isGestureActive || mismatchedHandle(handle)) return;
+
+    primaryGestureOperation = _PrimaryGestureOperation.resize;
+    lastHandle = handle;
 
     controller.onResizeStart(event.localPosition);
     widget.onResizeStart?.call(handle, event);
@@ -437,7 +447,7 @@ class _TransformableBoxState extends State<TransformableBox> {
 
   /// Called when the handle drag updates.
   void onHandlePanUpdate(DragUpdateDetails event, HandlePosition handle) {
-    if (!isLegalGesture) return;
+    if (!isResizing || mismatchedHandle(handle)) return;
 
     final UIResizeResult result = controller.onResizeUpdate(
       event.localPosition,
@@ -468,7 +478,10 @@ class _TransformableBoxState extends State<TransformableBox> {
 
   /// Called when the handle drag ends.
   void onHandlePanEnd(DragEndDetails event, HandlePosition handle) {
-    if (!isLegalGesture) return;
+    if (!isResizing || mismatchedHandle(handle)) return;
+
+    primaryGestureOperation = null;
+    lastHandle = null;
 
     controller.onResizeEnd();
     widget.onResizeEnd?.call(handle, event);
@@ -482,7 +495,10 @@ class _TransformableBoxState extends State<TransformableBox> {
   }
 
   void onHandlePanCancel(HandlePosition handle) {
-    if (!isLegalGesture) return;
+    if (!isResizing || mismatchedHandle(handle)) return;
+
+    primaryGestureOperation = null;
+    lastHandle = null;
 
     controller.onResizeEnd();
     widget.onResizeCancel?.call(handle);
@@ -500,14 +516,10 @@ class _TransformableBoxState extends State<TransformableBox> {
 
   /// Called when the box drag event starts.
   void onDragPanStart(DragStartDetails event) {
-    // Two fingers were used to start the drag. This produces issues with
-    // the box drag event. Therefore, we ignore it.
-    if (event.kind == PointerDeviceKind.trackpad) {
-      isLegalGesture = false;
-      return;
-    } else {
-      isLegalGesture = true;
-    }
+    if (isGestureActive) return;
+
+    primaryGestureOperation = _PrimaryGestureOperation.drag;
+    lastHandle = HandlePosition.none;
 
     controller.onDragStart(event.localPosition);
     widget.onDragStart?.call(event);
@@ -515,7 +527,7 @@ class _TransformableBoxState extends State<TransformableBox> {
 
   /// Called when the box drag event updates.
   void onDragPanUpdate(DragUpdateDetails event) {
-    if (!isLegalGesture) return;
+    if (!isDragging) return;
 
     final UIMoveResult result = controller.onDragUpdate(
       event.localPosition,
@@ -527,14 +539,20 @@ class _TransformableBoxState extends State<TransformableBox> {
 
   /// Called when the box drag event ends.
   void onDragPanEnd(DragEndDetails event) {
-    if (!isLegalGesture) return;
+    if (!isDragging) return;
+
+    primaryGestureOperation = null;
+    lastHandle = null;
 
     controller.onDragEnd();
     widget.onDragEnd?.call(event);
   }
 
   void onDragPanCancel() {
-    if (!isLegalGesture) return;
+    if (!isDragging) return;
+
+    primaryGestureOperation = null;
+    lastHandle = null;
 
     controller.onDragEnd();
     widget.onDragCancel?.call();

@@ -261,15 +261,23 @@ class TransformableBoxController extends ChangeNotifier {
   /// Called when the [TransformableBox] is being resized.
   ///
   /// [localPosition] is the position of the pointer relative to the
-  ///                 [TransformableBox] when the resizing starts.
-  ///                 It is used to calculate the new [Rect] of the
-  ///                 [TransformableBox].
+  /// [TransformableBox] when the resizing starts.
+  /// It is used to calculate the new [Rect] of the [TransformableBox].
   ///
   /// [handle] is the handle that is being dragged.
+  ///
+  /// [notify] is a boolean value that determines whether to notify the
+  /// listeners or not. It is set to `true` by default.
+  ///
+  /// [resizeModeResolver] is a callback function that is used to resolve the
+  /// [ResizeMode] based on the pressed keys on the keyboard. It can be
+  /// optionally passed to override the default [resizeModeResolver] of this
+  /// [TransformableBoxController].
   UIResizeResult onResizeUpdate(
     Offset localPosition,
     HandlePosition handle, {
     bool notify = true,
+    ValueGetter<ResizeMode>? resizeModeResolver,
   }) {
     // Calculate the new rect based on the initial rect, initial local position,
     final UIResizeResult result = UIBoxTransform.resize(
@@ -277,7 +285,7 @@ class TransformableBoxController extends ChangeNotifier {
       handle: handle,
       initialRect: initialRect,
       initialLocalPosition: initialLocalPosition,
-      resizeMode: resizeModeResolver(),
+      resizeMode: resizeModeResolver?.call() ?? this.resizeModeResolver(),
       initialFlip: initialFlip,
       clampingRect: clampingRect,
       constraints: constraints,
