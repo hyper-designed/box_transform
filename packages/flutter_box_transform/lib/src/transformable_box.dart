@@ -512,7 +512,11 @@ class _TransformableBoxState extends State<TransformableBox> {
   }
 
   /// Called when the box is tapped.
-  void onTap() => widget.onTap?.call();
+  void onTap() {
+    if (isGestureActive) return;
+
+    widget.onTap?.call();
+  }
 
   /// Called when the box drag event starts.
   void onDragPanStart(DragStartDetails event) {
