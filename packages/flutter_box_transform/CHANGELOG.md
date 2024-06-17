@@ -1,3 +1,10 @@
+## 0.4.3
+
+- Update dependencies & resolve deprecation warnings.
+- Added onTap event to BoxTransformController. (PR #23 by @joakimunge)
+- Deny different transform operations when a box is already undergoing.
+- Add optional `resizeModeResolver` override to `onResizeUpdate` in `TransformableBoxController`.
+
 ## 0.4.2
 
 - Fix an issue where visibleHandles disabled the handles instead of hiding them but keeping them enabled.

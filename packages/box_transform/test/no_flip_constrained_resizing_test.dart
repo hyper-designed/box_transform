@@ -1,6 +1,7 @@
+import 'package:box_transform/box_transform.dart';
 import 'package:test/test.dart';
 import 'package:vector_math/vector_math.dart';
-import 'package:box_transform/box_transform.dart';
+
 import 'utils.dart';
 
 void main() {

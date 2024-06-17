@@ -1,3 +1,8 @@
+## 0.4.3
+
+- Update dependencies & resolve deprecation warnings.
+- Fix a bug where terminal resize events triggered on the incorrect axis.
+
 ## 0.4.1
 
 - Remove `DoubleExt` from package exports.
