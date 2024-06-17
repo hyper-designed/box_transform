@@ -1,18 +1,7 @@
-## 0.4.4-dev.4
+## 0.4.4
 
-- Update root pubspec.yaml name from box_transform to melos_box_transform
-
-## 0.4.4-dev.3
-
-- Revert root pubspec.yaml.
-
-## 0.4.4-dev.2
-
-- Update root pubspec.yaml name from box_transform to melos_box_transform
-
-## 0.4.4-dev.1
-
-- Fix pubspec.yaml repository url.
+- Update root pubspec.yaml name from box_transform to melos_box_transform.
+- Fix repository & homepage url in pubspec.yaml
 
 ## 0.4.3
 

@@ -1,3 +1,8 @@
+## 0.4.4
+
+- Update root pubspec.yaml name from box_transform to melos_box_transform.
+- Fix repository & homepage url in pubspec.yaml
+
 ## 0.4.3
 
 - Update dependencies & resolve deprecation warnings.

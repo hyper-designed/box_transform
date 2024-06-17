@@ -13,6 +13,31 @@ Packages with breaking changes:
 
 Packages with other changes:
 
+- [`flutter_box_transform` - `v0.4.4`](#flutter_box_transform---v044)
+- [`box_transform` - `v0.4.4`](#box_transform---v044)
+
+---
+
+#### `flutter_box_transform` - `v0.4.4`
+
+- Update root pubspec.yaml name from box_transform to melos_box_transform.
+- Fix repository & homepage url in pubspec.yaml
+
+#### `box_transform` - `v0.4.4`
+
+- Update root pubspec.yaml name from box_transform to melos_box_transform.
+- Fix repository & homepage url in pubspec.yaml
+
+## 2024-06-17
+
+---
+
+Packages with breaking changes:
+
+- There are no breaking changes in this release.
+
+Packages with other changes:
+
 - [`flutter_box_transform` - `v0.4.3`](#flutter_box_transform---v043)
 - [`box_transform` - `v0.4.3`](#box_transform---v043)
 
