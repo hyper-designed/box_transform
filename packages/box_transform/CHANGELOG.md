@@ -1,3 +1,7 @@
+## 0.4.4-dev.4
+
+- Update root pubspec.yaml name from box_transform to melos_box_transform
+
 ## 0.4.4-dev.3
 
 - Revert root pubspec.yaml.

@@ -3,8 +3,8 @@ description: A Flutter implementation of box_transform package that provides eas
 
 version: 0.4.3
 
-repository: https://github.com/hyper-designed/box_transform
-homepage: https://github.com/hyper-designed/box_transform
+repository: https://github.com/hyper-designed/box_transform/tree/main/packages/flutter_box_transform
+homepage: https://github.com/hyper-designed/box_transform/tree/main/packages/flutter_box_transform
 issue_tracker: https://github.com/hyper-designed/box_transform/issues
 documentation: https://docs.page/hyper-designed/box_transform
 
