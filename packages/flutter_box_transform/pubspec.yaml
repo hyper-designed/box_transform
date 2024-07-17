@@ -15,7 +15,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  box_transform: ^0.4.4
+  box_transform:
+    path: ../box_transform
   vector_math: ^2.1.4
 
 dev_dependencies:

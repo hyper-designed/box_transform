@@ -378,33 +378,40 @@ class _TransformableBoxState extends State<TransformableBox> {
     bool shouldRecalculatePosition = false;
     bool shouldRecalculateSize = false;
 
-    if (oldWidget.rect != widget.rect) {
+    if (oldWidget.rect != widget.rect || widget.rect != controller.rect) {
       controller.setRect(widget.rect, notify: false);
+      shouldRecalculatePosition = true;
+      shouldRecalculateSize = true;
     }
 
-    if (oldWidget.flip != widget.flip) {
+    if (oldWidget.flip != widget.flip || widget.flip != controller.flip) {
       controller.setFlip(widget.flip, notify: false);
     }
 
-    if (oldWidget.resizeModeResolver != widget.resizeModeResolver) {
+    if (oldWidget.resizeModeResolver != widget.resizeModeResolver ||
+        widget.resizeModeResolver != controller.resizeModeResolver) {
       controller.setResizeModeResolver(
         widget.resizeModeResolver,
         notify: false,
       );
     }
 
-    if (oldWidget.clampingRect != widget.clampingRect) {
+    if (oldWidget.clampingRect != widget.clampingRect ||
+        widget.clampingRect != controller.clampingRect) {
       controller.setClampingRect(widget.clampingRect, notify: false);
       shouldRecalculatePosition = true;
     }
 
-    if (oldWidget.constraints != widget.constraints) {
+    if (oldWidget.constraints != widget.constraints ||
+        widget.constraints != controller.constraints) {
       controller.setConstraints(widget.constraints, notify: false);
       shouldRecalculateSize = true;
     }
 
     if (oldWidget.allowFlippingWhileResizing !=
-        widget.allowFlippingWhileResizing) {
+            widget.allowFlippingWhileResizing ||
+        widget.allowFlippingWhileResizing !=
+            controller.allowFlippingWhileResizing) {
       controller.setAllowFlippingWhileResizing(
         widget.allowFlippingWhileResizing,
         notify: false,
