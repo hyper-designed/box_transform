@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:box_transform/box_transform.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +18,9 @@ class CornerHandleWidget extends StatelessWidget {
 
   /// The size of the handle's gesture response area.
   final double handleTapSize;
+
+  /// The kind of devices that are allowed to be recognized.
+  final Set<PointerDeviceKind> supportedDevices;
 
   /// Called when the handle dragging starts.
   final GestureDragStartCallback? onPanStart;
@@ -43,6 +48,7 @@ class CornerHandleWidget extends StatelessWidget {
     super.key,
     required this.handlePosition,
     required this.handleTapSize,
+    required this.supportedDevices,
     required this.builder,
     this.onPanStart,
     this.onPanUpdate,
@@ -61,6 +67,7 @@ class CornerHandleWidget extends StatelessWidget {
     if (enabled) {
       child = GestureDetector(
         behavior: HitTestBehavior.opaque,
+        supportedDevices: supportedDevices,
         onPanStart: onPanStart,
         onPanUpdate: onPanUpdate,
         onPanEnd: onPanEnd,
@@ -118,6 +125,9 @@ class SideHandleWidget extends StatelessWidget {
   /// The thickness of the handle that is used for gesture detection.
   final double handleTapSize;
 
+  /// The kind of devices that are allowed to be recognized.
+  final Set<PointerDeviceKind> supportedDevices;
+
   /// Called when the handle dragging starts.
   final GestureDragStartCallback? onPanStart;
 
@@ -144,6 +154,7 @@ class SideHandleWidget extends StatelessWidget {
     super.key,
     required this.handlePosition,
     required this.handleTapSize,
+    required this.supportedDevices,
     required this.builder,
     this.onPanStart,
     this.onPanUpdate,
@@ -162,6 +173,7 @@ class SideHandleWidget extends StatelessWidget {
     if (enabled) {
       child = GestureDetector(
         behavior: HitTestBehavior.opaque,
+        supportedDevices: supportedDevices,
         onPanStart: onPanStart,
         onPanUpdate: onPanUpdate,
         onPanEnd: onPanEnd,

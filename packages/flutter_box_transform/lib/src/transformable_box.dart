@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../flutter_box_transform.dart';
@@ -65,6 +66,16 @@ class TransformableBox extends StatefulWidget {
   /// enabled, it will not be interactive. If a handle is enabled but not
   /// visible, it will not be shown and will not be interactive.
   final Set<HandlePosition> visibleHandles;
+
+  /// The kind of devices that are allowed to be recognized for drag events.
+  ///
+  /// By default, events from all device types will be recognized for drag events.
+  final Set<PointerDeviceKind> supportedDragDevices;
+
+  /// The kind of devices that are allowed to be recognized for resize events.
+  ///
+  /// By default, events from all device types will be recognized for resize events.
+  final Set<PointerDeviceKind> supportedResizeDevices;
 
   /// The initial box that will be used to position set the initial size of
   /// the [TransformableBox] widget.
@@ -231,6 +242,8 @@ class TransformableBox extends StatefulWidget {
     this.handleAlignment = HandleAlignment.center,
     this.enabledHandles = const {...HandlePosition.values},
     this.visibleHandles = const {...HandlePosition.values},
+    this.supportedDragDevices = const {...PointerDeviceKind.values},
+    this.supportedResizeDevices = const {...PointerDeviceKind.values},
 
     // Raw values.
     Rect? rect,
@@ -576,6 +589,7 @@ class _TransformableBoxState extends State<TransformableBox> {
     if (widget.draggable) {
       content = GestureDetector(
         behavior: HitTestBehavior.translucent,
+        supportedDevices: widget.supportedDragDevices,
         onTap: onTap,
         onPanStart: onDragPanStart,
         onPanUpdate: onDragPanUpdate,
@@ -606,6 +620,7 @@ class _TransformableBoxState extends State<TransformableBox> {
                 key: ValueKey(handle),
                 handlePosition: handle,
                 handleTapSize: widget.handleTapSize,
+                supportedDevices: widget.supportedResizeDevices,
                 enabled: widget.enabledHandles.contains(handle),
                 visible: widget.visibleHandles.contains(handle),
                 onPanStart: (event) => onHandlePanStart(event, handle),
@@ -622,6 +637,7 @@ class _TransformableBoxState extends State<TransformableBox> {
                 key: ValueKey(handle),
                 handlePosition: handle,
                 handleTapSize: widget.handleTapSize,
+                supportedDevices: widget.supportedResizeDevices,
                 enabled: widget.enabledHandles.contains(handle),
                 visible: widget.visibleHandles.contains(handle),
                 onPanStart: (event) => onHandlePanStart(event, handle),
