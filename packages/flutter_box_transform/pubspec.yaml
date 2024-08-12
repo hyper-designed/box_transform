@@ -1,7 +1,7 @@
 name: flutter_box_transform
 description: A Flutter implementation of box_transform package that provides easy 2D box transform operations with advanced resizing of rect in UI.
 
-version: 0.4.4
+version: 0.4.5
 
 repository: https://github.com/hyper-designed/box_transform/tree/main/packages/flutter_box_transform
 homepage: https://github.com/hyper-designed/box_transform/tree/main/packages/flutter_box_transform

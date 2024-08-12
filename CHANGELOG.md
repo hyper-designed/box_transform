@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 2024-08-12
+
+---
+
+Packages with changes:
+
+- [`flutter_box_transform` - `v0.4.5`](#flutter_box_transform---v045)
+
+#### `flutter_box_transform` - `v0.4.5`
+
+- Add parameters for supported devices. (PR #28 by @Gold872).
+- Upgrade dependencies.
+
 ## 2024-06-17
 
 ---

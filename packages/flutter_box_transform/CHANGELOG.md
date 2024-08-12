@@ -1,3 +1,8 @@
+## 0.4.5
+
+- Add parameters for supported devices. (PR #28 by @Gold872).
+- Upgrade dependencies.
+
 ## 0.4.4
 
 - Update root pubspec.yaml name from box_transform to melos_box_transform.
