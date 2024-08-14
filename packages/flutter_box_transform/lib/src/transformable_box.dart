@@ -371,11 +371,14 @@ class TransformableBox extends StatefulWidget {
 
 enum _PrimaryGestureOperation {
   resize,
-  drag;
+  drag,
+  rotate;
 
   bool get isDragging => this == _PrimaryGestureOperation.drag;
 
   bool get isResizing => this == _PrimaryGestureOperation.resize;
+
+  bool get isRotating => this == _PrimaryGestureOperation.rotate;
 }
 
 class _TransformableBoxState extends State<TransformableBox> {
@@ -389,7 +392,9 @@ class _TransformableBoxState extends State<TransformableBox> {
 
   bool get isResizing => primaryGestureOperation?.isResizing == true;
 
-  bool get isGestureActive => isDragging || isResizing;
+  bool get isRotating => primaryGestureOperation?.isRotating == true;
+
+  bool get isGestureActive => isDragging || isResizing || isRotating;
 
   bool mismatchedHandle(HandlePosition handle) =>
       lastHandle != null && lastHandle != handle;
@@ -595,6 +600,11 @@ class _TransformableBoxState extends State<TransformableBox> {
       };
 
   void onHandleRotateStart(DragStartDetails event, HandlePosition handle) {
+    if (isGestureActive) return;
+
+    primaryGestureOperation = _PrimaryGestureOperation.rotate;
+    lastHandle = handle;
+
     final offset =
         widget.handleAlignment.offset(widget.rotationHandleGestureSize);
     initialPos = rectQuadrantOffset(handle.quadrant) +
@@ -602,21 +612,23 @@ class _TransformableBoxState extends State<TransformableBox> {
         Offset(offset, offset);
     localPos = initialPos;
     setState(() {});
+
     // Two fingers were used to start the drag. This produces issues with
     // the box drag event. Therefore, we ignore it.
-    if (event.kind == PointerDeviceKind.trackpad) {
-      isLegalGesture = false;
-      return;
-    } else {
-      isLegalGesture = true;
-    }
+    // if (event.kind == PointerDeviceKind.trackpad) {
+    // isLegalGesture = false;
+    // return;
+    // } else {
+    //   isLegalGesture = true;
+    // }
 
     controller.onRotateStart(initialPos);
     widget.onRotationStart?.call(handle, event);
   }
 
   void onHandleRotateUpdate(DragUpdateDetails event, HandlePosition handle) {
-    if (!isLegalGesture) return;
+    if (!isGestureActive) return;
+
     final offset =
         widget.handleAlignment.offset(widget.rotationHandleGestureSize);
     localPos = rectQuadrantOffset(handle.quadrant) +
@@ -652,7 +664,10 @@ class _TransformableBoxState extends State<TransformableBox> {
   }
 
   void onHandleRotateEnd(DragEndDetails event, HandlePosition handle) {
-    if (!isLegalGesture) return;
+    if (!isGestureActive) return;
+
+    primaryGestureOperation = null;
+    lastHandle = null;
 
     controller.onRotateEnd();
     widget.onRotationEnd?.call(handle, event);
@@ -666,7 +681,10 @@ class _TransformableBoxState extends State<TransformableBox> {
   }
 
   void onHandleRotateCancel(HandlePosition handle) {
-    if (!isLegalGesture) return;
+    if (!isGestureActive) return;
+
+    primaryGestureOperation = null;
+    lastHandle = null;
 
     controller.onRotateEnd();
     widget.onRotationCancel?.call(handle);
@@ -825,7 +843,8 @@ class _TransformableBoxState extends State<TransformableBox> {
                       resizeHandleGestureSize: widget.resizeHandleGestureSize,
                       rotationHandleGestureSize:
                           widget.rotationHandleGestureSize,
-                      supportedDevices: widget.supportedResizeDevices,enabled: widget.enabledHandles.contains(handle),
+                      supportedDevices: widget.supportedResizeDevices,
+                      enabled: widget.enabledHandles.contains(handle),
                       visible: widget.visibleHandles.contains(handle),
                       rotatable: widget.rotatable,
                       // Resize
@@ -855,7 +874,7 @@ class _TransformableBoxState extends State<TransformableBox> {
                       rotationHandleGestureSize:
                           widget.rotationHandleGestureSize,
                       rotatable: widget.rotatable,
-                supportedDevices: widget.supportedResizeDevices,
+                      supportedDevices: widget.supportedResizeDevices,
                       enabled: widget.enabledHandles.contains(handle),
                       visible: widget.visibleHandles.contains(handle),
                       onPanStart: (event) => onHandlePanStart(event, handle),
