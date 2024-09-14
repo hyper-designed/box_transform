@@ -513,7 +513,7 @@ class _SingleInputDialogState extends State<SingleInputDialog> {
                 validator: widget.validator,
               ),
               const SizedBox(height: 20),
-              ButtonBar(
+              OverflowBar(
                 children: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
@@ -593,7 +593,7 @@ class _ExportDialogState extends State<ExportDialog> {
                 onChanged: (value) =>
                     setState(() => roundValues = value ?? false),
               ),
-              ButtonBar(
+              OverflowBar(
                 children: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
