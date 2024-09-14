@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 2024-09-14
+
+---
+
+Packages with changes:
+
+- [`flutter_box_transform` - `v0.4.6`](#flutter_box_transform---v046)
+
+#### `flutter_box_transform` - `v0.4.6`
+
+- Fix child positioning offset bug. [Issue#27](https://github.com/hyper-designed/box_transform/issues/27)
+
 ## 2024-08-12
 
 ---

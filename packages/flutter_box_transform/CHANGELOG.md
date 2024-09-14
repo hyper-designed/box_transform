@@ -1,3 +1,7 @@
+## 0.4.6
+
+- Fix child positioning offset bug. [Issue#27](https://github.com/hyper-designed/box_transform/issues/27)
+
 ## 0.4.5
 
 - Add parameters for supported devices. (PR #28 by @Gold872).
