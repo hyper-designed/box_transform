@@ -456,14 +456,12 @@ class _TransformableBoxState extends State<TransformableBox> {
       controller.setRect(widget.rect, notify: false, recalculate: false);
     }
 
-    if (oldWidget.rotation != widget.rotation) {
+    if (oldWidget.rotation != widget.rotation || widget.rotation != controller.rotation) {
       controller.setRotation(widget.rotation, notify: false);
     }
 
-    if (oldWidget.bindingStrategy != widget.bindingStrategy) {
+    if (oldWidget.flip != widget.flip || widget.flip != controller.flip) {
       controller.setBindingStrategy(widget.bindingStrategy, notify: false);
-      shouldRecalculatePosition = true;
-      shouldRecalculateSize = true;
     }
 
     if (oldWidget.flip != widget.flip || widget.flip != controller.flip) {
