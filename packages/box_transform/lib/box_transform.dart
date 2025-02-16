@@ -1,4 +1,4 @@
-library box_transform;
+library;
 
 export 'src/enums.dart';
 export 'src/extensions.dart' hide DoubleExt;

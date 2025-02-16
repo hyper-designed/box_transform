@@ -1,4 +1,4 @@
-library resize_handlers;
+library;
 
 import 'dart:math';
 

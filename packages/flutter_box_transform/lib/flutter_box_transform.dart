@@ -1,4 +1,4 @@
-library flutter_box_transform;
+library;
 
 export 'package:box_transform/box_transform.dart';
 

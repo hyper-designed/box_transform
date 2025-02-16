@@ -257,7 +257,7 @@ class _TestRecorderUIState extends State<TestRecorderUI> {
                   style: const TextStyle(fontSize: 18),
                 ),
                 tileColor:
-                    index % 2 == 0 ? Colors.grey.withOpacity(0.07) : null,
+                    index % 2 == 0 ? Colors.grey.withValues(alpha: 0.07) : null,
                 minLeadingWidth: 14,
                 title: Text(
                   test.key,

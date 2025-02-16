@@ -253,7 +253,7 @@ class AngularHandlePainter extends CustomPainter {
           ..strokeCap = StrokeCap.round
           ..style = PaintingStyle.stroke,
         shadowPaint = Paint()
-          ..color = Colors.black.withOpacity(0.15)
+          ..color = Colors.black.withValues(alpha: 0.15)
           ..strokeWidth = thickness + 1
           ..strokeJoin = StrokeJoin.miter
           ..strokeCap = StrokeCap.round

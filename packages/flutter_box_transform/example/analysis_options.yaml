@@ -2,16 +2,5 @@ include: package:flutter_lints/flutter.yaml
 
 linter:
   rules:
-    package_api_docs: true
     use_super_parameters: true
     prefer_relative_imports: true
-
-# analyzer:
-#   exclude:
-#     - path/to/excluded/files/**
-
-# For more information about the core and recommended set of lints, see
-# https://dart.dev/go/core-lints
-
-# For additional information about configuring this file, see
-# https://dart.dev/guides/language/analysis-options
