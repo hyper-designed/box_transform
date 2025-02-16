@@ -452,55 +452,59 @@ class _TransformableBoxState extends State<TransformableBox> {
 
     // Below code should only be executed if the controller is internal.
 
-    if (oldWidget.rect != widget.rect || widget.rect != controller.rect) {
+    bool recalculate = false;
+
+    if (oldWidget.rect != widget.rect) {
       controller.setRect(widget.rect, notify: false, recalculate: false);
     }
 
-    if (oldWidget.rotation != widget.rotation || widget.rotation != controller.rotation) {
+    if (oldWidget.rotation != widget.rotation) {
       controller.setRotation(widget.rotation, notify: false);
+      recalculate = true;
     }
 
-    if (oldWidget.flip != widget.flip || widget.flip != controller.flip) {
+    if (oldWidget.flip != widget.flip) {
       controller.setBindingStrategy(widget.bindingStrategy, notify: false);
+      recalculate = true;
     }
 
-    if (oldWidget.flip != widget.flip || widget.flip != controller.flip) {
+    if (oldWidget.flip != widget.flip) {
       controller.setFlip(widget.flip, notify: false);
+      recalculate = true;
     }
 
-    if (oldWidget.resizeModeResolver != widget.resizeModeResolver ||
-        widget.resizeModeResolver != controller.resizeModeResolver) {
+    if (oldWidget.resizeModeResolver != widget.resizeModeResolver) {
       controller.setResizeModeResolver(
         widget.resizeModeResolver,
         notify: false,
       );
+      recalculate = true;
     }
 
-    if (oldWidget.clampingRect != widget.clampingRect ||
-        widget.clampingRect != controller.clampingRect) {
+    if (oldWidget.clampingRect != widget.clampingRect) {
       controller.setClampingRect(
         widget.clampingRect,
         notify: false,
         recalculate: false,
       );
+      recalculate = true;
     }
 
-    if (oldWidget.constraints != widget.constraints ||
-        widget.constraints != controller.constraints) {
+    if (oldWidget.constraints != widget.constraints) {
       controller.setConstraints(widget.constraints, notify: false);
+      recalculate = true;
     }
 
     if (oldWidget.allowFlippingWhileResizing !=
-            widget.allowFlippingWhileResizing ||
-        widget.allowFlippingWhileResizing !=
-            controller.allowFlippingWhileResizing) {
+        widget.allowFlippingWhileResizing) {
       controller.setAllowFlippingWhileResizing(
         widget.allowFlippingWhileResizing,
         notify: false,
       );
+      recalculate = true;
     }
 
-    controller.recalculate(notify: false);
+    if (recalculate) controller.recalculate(notify: false);
   }
 
   @override
@@ -893,25 +897,25 @@ class _TransformableBoxState extends State<TransformableBox> {
             ),
           ),
         ),
-        // Positioned.fromRect(
-        //   rect: unrotatedRect,
-        //   child: IgnorePointer(
-        //     child: Container(
-        //       decoration: BoxDecoration(
-        //           border: Border.all(color: Colors.green, width: 2)),
-        //     ),
-        //   ),
-        // ),
-        //
-        // Positioned.fromRect(
-        //   rect: boundingRect,
-        //   child: IgnorePointer(
-        //     child: Container(
-        //       decoration: BoxDecoration(
-        //           border: Border.all(color: Colors.red, width: 3)),
-        //     ),
-        //   ),
-        // ),
+        Positioned.fromRect(
+          rect: unrotatedRect,
+          child: IgnorePointer(
+            child: Container(
+              decoration: BoxDecoration(
+                  border: Border.all(color: Colors.green, width: 2)),
+            ),
+          ),
+        ),
+
+        Positioned.fromRect(
+          rect: boundingRect,
+          child: IgnorePointer(
+            child: Container(
+              decoration: BoxDecoration(
+                  border: Border.all(color: Colors.red, width: 3)),
+            ),
+          ),
+        ),
       ],
     );
   }

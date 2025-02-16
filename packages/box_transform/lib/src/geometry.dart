@@ -689,20 +689,20 @@ class Box {
 
   /// Returns the relevant corner of this [Box] based on the given [quadrant].
   Vector2 pointFromQuadrant(Quadrant quadrant) => switch (quadrant) {
-    Quadrant.topLeft => topLeft,
-    Quadrant.topRight => topRight,
-    Quadrant.bottomRight => bottomRight,
-    Quadrant.bottomLeft => bottomLeft,
-  };
+        Quadrant.topLeft => topLeft,
+        Quadrant.topRight => topRight,
+        Quadrant.bottomRight => bottomRight,
+        Quadrant.bottomLeft => bottomLeft,
+      };
 
   /// Returns a value that represents the distances of the passed
   /// [point] relative to the closest edge of this [Box]. If the point is
   /// inside the box, the distance will be positive. If the point is outside
   /// the box, the distance will be negative.
   ///
-  /// Returns the [side] that the point is closest to and the distance to that
+  /// Returns the [side] that the point is closest to and the [distance] to that
   /// side.
-  (Side side, double) distanceOfPoint(Vector2 point) {
+  (Side side, double distance) closestSideTo(Vector2 point) {
     final double left = point.x - this.left;
     final double right = this.right - point.x;
     final double top = point.y - this.top;

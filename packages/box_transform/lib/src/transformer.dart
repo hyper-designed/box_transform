@@ -5,6 +5,19 @@ import 'package:vector_math/vector_math.dart';
 import '../box_transform.dart';
 import 'resizers/resizer.dart';
 
+final class OutstandingPoint {
+  final Vector2 point;
+  final Quadrant quadrant;
+  final Side side;
+  final double distToSide;
+
+  OutstandingPoint(
+      {required this.point,
+      required this.quadrant,
+      required this.side,
+      required this.distToSide});
+}
+
 /// A class that transforms a [Box] in several different supported forms.
 class BoxTransformer {
   /// A private constructor to prevent instantiation.
@@ -120,62 +133,74 @@ class BoxTransformer {
     required Box clampingRect,
     required double rotation,
   }) {
-    final Map<Quadrant, Vector2> rotatedPoints = {
+    // Rotate each side point of [rect] around its center.
+    final rotatedPoints = {
       for (final MapEntry(key: quadrant, value: point)
           in rect.sidedPoints.entries)
         quadrant: rotatePointAroundVec(rect.center, rotation, point)
     };
 
-    // Check if any rotated point is outside the clamping rect.
-    (
-      Side side,
-      Quadrant quadrant,
-      Vector2 point,
-      double dist
-    )? biggestOutOfBounds;
+    // Find all out of bounds points.
+    final List<OutstandingPoint> outstandingPoints = [];
+
     for (final MapEntry(key: quadrant, value: point) in rotatedPoints.entries) {
-      if (biggestOutOfBounds == null) {
-        final (side, dist) = clampingRect.distanceOfPoint(point);
-        biggestOutOfBounds = (side, quadrant, point, dist);
-      } else {
-        final (side, dist) = clampingRect.distanceOfPoint(point);
-        final (_, biggestDist) =
-            clampingRect.distanceOfPoint(biggestOutOfBounds.$3);
-        if (dist < biggestDist) {
-          biggestOutOfBounds = (side, quadrant, point, dist);
-        }
+      // Determine which side is outstanding the clamping rect.
+      final (Side side, double dist) = clampingRect.closestSideTo(point);
+
+      // Negative values are outside the clamping rect.
+      if (dist > 0) continue;
+
+      // De-duplicate the sides in cases of ties.
+      if (outstandingPoints.any((p) => p.side == side)) {
+        continue;
       }
+
+      outstandingPoints.add(
+        OutstandingPoint(
+          point: point,
+          quadrant: quadrant,
+          side: side,
+          distToSide: dist.abs(),
+        ),
+      );
     }
 
-    assert(biggestOutOfBounds != null);
+    // If there's no violation, no correction is needed.
+    if (outstandingPoints.isEmpty) {
+      return Vector2.zero();
+    }
 
-    final side = biggestOutOfBounds!.$1;
-    final quadrant = biggestOutOfBounds.$2;
-    final point = biggestOutOfBounds.$3;
-    final dist = biggestOutOfBounds.$4;
+    Vector2 delta = Vector2.zero();
+    for (final outside in outstandingPoints) {
+      final correctedPoint = switch (outside.side) {
+        Side.left => Vector2(
+            outside.point.x + outside.distToSide,
+            outside.point.y,
+          ),
+        Side.right => Vector2(
+            outside.point.x - outside.distToSide,
+            outside.point.y,
+          ),
+        Side.top => Vector2(
+            outside.point.x,
+            outside.point.y + outside.distToSide,
+          ),
+        Side.bottom => Vector2(
+            outside.point.x,
+            outside.point.y - outside.distToSide,
+          ),
+      };
 
-    // Move the out of bounds vector by the perpendicular vector of the side
-    // that was hit.
-    final cardinalCorrection = switch (side) {
-      Side.left => Vector2(-dist, 0),
-      Side.right => Vector2(dist, 0),
-      Side.top => Vector2(0, -dist),
-      Side.bottom => Vector2(0, dist),
-    };
+      final unrotated = rotatePointAroundVec(
+        rect.center,
+        -rotation,
+        correctedPoint,
+      );
 
-    final correctedRotatedPoint =
-        Vector2(point.x + cardinalCorrection.x, point.y + cardinalCorrection.y);
+      final thisDelta = unrotated - rect.pointFromQuadrant(outside.quadrant);
 
-    // Rotate back
-    final unrotated =
-        rotatePointAroundVec(rect.center, -rotation, correctedRotatedPoint);
-    final delta = unrotated - rect.pointFromQuadrant(quadrant);
-
-    print('     quad: ${rect.pointFromQuadrant(quadrant)..round()}');
-    print('unrotated: ${unrotated..round()}');
-
-    // Matrix2.rotation(rotation).transform(delta);
-    print('delta: $delta');
+      delta += thisDelta;
+    }
 
     return delta;
   }
@@ -494,6 +519,10 @@ class BoxTransformer {
     double radians,
     Vector2 point,
   ) {
+    if (radians == 0) {
+      return point;
+    }
+
     final Matrix4 transform = Matrix4.translationValues(origin.x, origin.y, 0)
       ..rotateZ(radians)
       ..translate(-origin.x, -origin.y, 0);
@@ -505,8 +534,12 @@ class BoxTransformer {
     return Vector2(rotated[0], rotated[1]);
   }
 
-  static Vector2 calculateUnrotatedPos(Box unrotatedRect, double rotation,
-      Vector2 positionDelta, Dimension newSize) {
+  static Vector2 calculateUnrotatedPos(
+    Box unrotatedRect,
+    double rotation,
+    Vector2 positionDelta,
+    Dimension newSize,
+  ) {
     // This was our old rotated position. We will be using it as the point of
     // reference. We're given the [unrotatedRect], but we need it's top left
     // corner rotated to the new position.
@@ -534,9 +567,6 @@ class BoxTransformer {
         );
 
     final Vector2 newCenter = newRotatedXY + (newRotatedBR - newRotatedXY) / 2;
-    // final Vector2 newCenter = Box.fromLTRB(
-    //         newRotatedXY.x, newRotatedXY.y, newRotatedBR.x, newRotatedBR.y)
-    //     .center;
 
     // Now we can rotate the top left point back.
     return rotatePointAroundVec(newCenter, -rotation, newRotatedXY);

@@ -211,7 +211,7 @@ void main() {
         rotation: 0,
       );
 
-      expect(correctiveDelta, Vector2(0, -100));
+      expect(correctiveDelta, Vector2(0, 100));
     });
 
     test('left intersection', () {
@@ -224,7 +224,7 @@ void main() {
         rotation: 0,
       );
 
-      expect(correctiveDelta, Vector2(-100, 0));
+      expect(correctiveDelta, Vector2(100, 0));
     });
 
     test('top right intersection - top', () {
@@ -237,7 +237,7 @@ void main() {
         rotation: 0,
       );
 
-      expect(correctiveDelta..round(), Vector2(-46, -200));
+      expect(correctiveDelta, Vector2(-50, 200));
     });
 
     test('top right intersection - right', () {
@@ -250,7 +250,7 @@ void main() {
         rotation: 0,
       );
 
-      expect(correctiveDelta..round(), Vector2(-200, -250));
+      expect(correctiveDelta, Vector2(-200, 150));
     });
 
     test('bottom right intersection - bottom', () {
@@ -263,7 +263,7 @@ void main() {
         rotation: 0,
       );
 
-      expect(correctiveDelta..round(), Vector2(-200, -100));
+      expect(correctiveDelta, Vector2(-200, -100));
     });
 
   });

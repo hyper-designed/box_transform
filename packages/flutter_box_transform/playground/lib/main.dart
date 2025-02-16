@@ -955,8 +955,8 @@ class _ClampingRectState extends State<ClampingRect> {
         ),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color:
-                (anyTerminalSize ? Colors.orange : mainColor).withValues(alpha: 0.1),
+            color: (anyTerminalSize ? Colors.orange : mainColor)
+                .withValues(alpha: 0.1),
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(6),
             ),
@@ -1185,7 +1185,10 @@ class BoxesPanel extends StatelessWidget {
                   key: ValueKey(box.name),
                   child: Container(
                     color: box.name == model.selectedBox?.name
-                        ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)
+                        ? Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.2)
                         : null,
                     child: ListTile(
                       title: Text(box.name),
@@ -1307,6 +1310,26 @@ class PositionControls extends StatelessWidget {
                     child: ValueText(
                       '${box.rect.center.dx.toInt()} x ${box.rect.center.dy.toStringAsFixed(0)}',
                     ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Row(
+                children: [
+                  Expanded(child: Label('ROTATION')),
+                  Expanded(child: Label('FLIP')),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: ValueText(
+                      (box.rotation * 180 / pi).toStringAsFixed(2),
+                    ),
+                  ),
+                  Expanded(
+                    child: ValueText(box.flip.prettify),
                   ),
                 ],
               ),
@@ -2354,8 +2377,10 @@ class KeyboardListenerIndicator extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color:
-                      Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.2),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onPrimary
+                      .withValues(alpha: 0.2),
                   blurRadius: 1,
                   offset: const Offset(1, 3),
                 ),

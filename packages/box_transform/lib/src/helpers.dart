@@ -584,7 +584,6 @@ bool isRectClamped(
       clampingRect.right.roundToPrecision(4) < rect.right.roundToPrecision(4) ||
       clampingRect.bottom.roundToPrecision(4) <
           rect.bottom.roundToPrecision(4)) {
-    print('Hit clamping rect.');
     return false;
   }
 
@@ -617,7 +616,6 @@ bool isRectBound(
           checkClamp.right.roundToPrecision(4) ||
       clampingRect.bottom.roundToPrecision(4) <
           checkClamp.bottom.roundToPrecision(4)) {
-    print('Hit clamping rect.');
     return false;
   }
   if (!constraints.isUnconstrained) {
@@ -630,7 +628,6 @@ bool isRectBound(
             constraints.minHeight.roundToPrecision(4) ||
         box.height.roundToPrecision(4) >
             constraints.maxHeight.roundToPrecision(4)) {
-      print('Hit constraints.');
       return false;
     }
   }
