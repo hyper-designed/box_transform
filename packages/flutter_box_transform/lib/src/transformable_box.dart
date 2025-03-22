@@ -125,10 +125,6 @@ class TransformableBox extends StatefulWidget {
   /// all moving operations.
   final bool draggable;
 
-  /// Whether the box ignores tap events and allows them to pass through to widgets
-  /// behind it. Dragging and resizing interactions are still possible.
-  final bool tapThrough;
-
   /// Whether to allow flipping of the box while resizing. If this is set to
   /// true, the box will flip when the user drags the handles to opposite
   /// corners of the rect.
@@ -259,7 +255,6 @@ class TransformableBox extends StatefulWidget {
     // Additional controls.
     this.resizable = true,
     this.draggable = true,
-    this.tapThrough = false,
     this.allowFlippingWhileResizing = true,
 
     // Tap events
@@ -602,7 +597,7 @@ class _TransformableBoxState extends State<TransformableBox> {
       content = GestureDetector(
         behavior: HitTestBehavior.translucent,
         supportedDevices: widget.supportedDragDevices,
-        onTap: widget.tapThrough ? null : onTap,
+        onTap: widget.onTap == null ? null : onTap,
         onPanStart: onDragPanStart,
         onPanUpdate: onDragPanUpdate,
         onPanEnd: onDragPanEnd,
