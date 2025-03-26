@@ -79,14 +79,8 @@ final class FreeformResizer extends Resizer {
     );
 
     // Check if the new bounding rectangle is clamped within the allowed area.
-    // [ISSUE] The commented-out switch below indicates that the bindingStrategy
-    // should affect which rect is checked. Currently, only newBoundingRect is used.
     final bool isClamped = isRectClamped(
       newBoundingRect,
-      // switch (bindingStrategy) {
-      //   BindingStrategy.originalBox => newRect,
-      //   BindingStrategy.boundingBox => newBoundingRect,
-      // },
       clampingRect,
     );
 
@@ -99,45 +93,23 @@ final class FreeformResizer extends Resizer {
       );
       print('correctiveDelta: $correctiveDelta');
 
-      if (correctiveDelta.x != 0 || correctiveDelta.y != 0) {
-        // Resize
-        if (correctiveDelta.x > 0) {
-          newRect = Box.fromLTWH(
-            newRect.left + correctiveDelta.x,
-            newRect.top,
-            newRect.width - correctiveDelta.x,
-            newRect.height,
-          );
-        } else {
-          newRect = Box.fromLTWH(
-            newRect.left,
-            newRect.top,
-            newRect.width + correctiveDelta.x,
-            newRect.height,
-          );
-        }
-        if (correctiveDelta.y > 0) {
-          newRect = Box.fromLTWH(
-            newRect.left,
-            newRect.top + correctiveDelta.y,
-            newRect.width,
-            newRect.height - correctiveDelta.y,
-          );
-        } else {
-          newRect = Box.fromLTWH(
-            newRect.left,
-            newRect.top,
-            newRect.width,
-            newRect.height + correctiveDelta.y,
-          );
-        }
+      final dx = correctiveDelta.x;
+      final dy = correctiveDelta.y;
+
+      if (dx != 0 || dy != 0) {
+        newRect = Box.fromLTWH(
+          newRect.left + (dx > 0 ? dx : 0),
+          newRect.top + (dy > 0 ? dy : 0),
+          newRect.width - dx.abs(),
+          newRect.height - dy.abs(),
+        );
       }
 
-      newRect = repositionRotatedResizedBox(
-        newRect: newRect,
-        initialRect: initialRect,
-        rotation: rotation,
-      );
+      // newRect = repositionRotatedResizedBox(
+      //   newRect: newRect,
+      //   initialRect: initialRect,
+      //   rotation: rotation,
+      // );
 
       // Recalculate the bounding rectangle after applying the corrective delta.
       newBoundingRect = BoxTransformer.calculateBoundingRect(

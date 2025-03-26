@@ -134,75 +134,64 @@ class BoxTransformer {
     required double rotation,
   }) {
     // Rotate each side point of [rect] around its center.
-    final rotatedPoints = {
-      for (final MapEntry(key: quadrant, value: point)
-          in rect.sidedPoints.entries)
-        quadrant: rotatePointAroundVec(rect.center, rotation, point)
-    };
+    final rotatedPoints = [
+      for (final entry in rect.sidedPoints.entries)
+        rotatePointAroundVec(rect.center, rotation, entry.value)
+    ];
 
-    // Find all out of bounds points.
-    final List<OutstandingPoint> outstandingPoints = [];
+    // For each side, store the maximum violation (the largest abs(distance)).
+    final Map<Side, double> sideViolations = {};
 
-    for (final MapEntry(key: quadrant, value: point) in rotatedPoints.entries) {
-      // Determine which side is outstanding the clamping rect.
+    for (final point in rotatedPoints) {
+      // Assume that closestSideTo returns a tuple (Side, double)
+      // where a negative distance means the point is out-of-bounds.
       final (Side side, double dist) = clampingRect.closestSideTo(point);
+      if (dist > 0) continue; // Point is inside, so no correction needed.
 
-      // Negative values are outside the clamping rect.
-      if (dist > 0) continue;
-
-      // De-duplicate the sides in cases of ties.
-      if (outstandingPoints.any((p) => p.side == side)) {
-        continue;
+      final violation = dist.abs();
+      // If a violation for this side already exists, use the maximum violation.
+      if (!sideViolations.containsKey(side) ||
+          sideViolations[side]! < violation) {
+        sideViolations[side] = violation;
       }
-
-      outstandingPoints.add(
-        OutstandingPoint(
-          point: point,
-          quadrant: quadrant,
-          side: side,
-          distToSide: dist.abs(),
-        ),
-      );
     }
 
-    // If there's no violation, no correction is needed.
-    if (outstandingPoints.isEmpty) {
-      return Vector2.zero();
+    // If there are no violations, no correction is needed.
+    if (sideViolations.isEmpty) return Vector2.zero();
+
+    // Compute recommended corrections in the rotated (clamping) coordinate space.
+    // For horizontal axis:
+    double horizontalCorrection = 0.0;
+    final bool hasLeft = sideViolations.containsKey(Side.left);
+    final bool hasRight = sideViolations.containsKey(Side.right);
+    if (hasLeft && hasRight) {
+      // Left side: move right by violation amount.
+      // Right side: move left by violation amount.
+      // Averaging them leads toward the center.
+      horizontalCorrection =
+          (sideViolations[Side.left]! - sideViolations[Side.right]!) / 2;
+    } else if (hasLeft) {
+      horizontalCorrection = sideViolations[Side.left]!;
+    } else if (hasRight) {
+      horizontalCorrection = -sideViolations[Side.right]!;
     }
 
-    Vector2 delta = Vector2.zero();
-    for (final outside in outstandingPoints) {
-      final correctedPoint = switch (outside.side) {
-        Side.left => Vector2(
-            outside.point.x + outside.distToSide,
-            outside.point.y,
-          ),
-        Side.right => Vector2(
-            outside.point.x - outside.distToSide,
-            outside.point.y,
-          ),
-        Side.top => Vector2(
-            outside.point.x,
-            outside.point.y + outside.distToSide,
-          ),
-        Side.bottom => Vector2(
-            outside.point.x,
-            outside.point.y - outside.distToSide,
-          ),
-      };
-
-      final unrotated = rotatePointAroundVec(
-        rect.center,
-        -rotation,
-        correctedPoint,
-      );
-
-      final thisDelta = unrotated - rect.pointFromQuadrant(outside.quadrant);
-
-      delta += thisDelta;
+    // For vertical axis:
+    double verticalCorrection = 0.0;
+    final bool hasTop = sideViolations.containsKey(Side.top);
+    final bool hasBottom = sideViolations.containsKey(Side.bottom);
+    if (hasTop && hasBottom) {
+      // Top side: move down by violation amount.
+      // Bottom side: move up by violation amount.
+      verticalCorrection =
+          (sideViolations[Side.top]! - sideViolations[Side.bottom]!) / 2;
+    } else if (hasTop) {
+      verticalCorrection = sideViolations[Side.top]!;
+    } else if (hasBottom) {
+      verticalCorrection = -sideViolations[Side.bottom]!;
     }
 
-    return delta;
+    return Vector2(horizontalCorrection, verticalCorrection);
   }
 
   /// Resizes the given [initialRect] with given [initialLocalPosition] of
