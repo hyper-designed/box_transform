@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 2025-03-26
+
+---
+
+Packages with changes:
+
+- [`flutter_box_transform` - `v0.4.7`](#flutter_box_transform---v047)
+
+#### `flutter_box_transform` - `v0.4.7`
+
+- Fix taps should pass through when onTap is not set. [Issue#31](https://github.com/hyper-designed/box_transform/issues/31)
+
 ## 2024-09-14
 
 ---

@@ -1,3 +1,6 @@
+## 0.4.7
+- Fix taps should pass through when onTap is not set. [Issue#31](https://github.com/hyper-designed/box_transform/issues/31)
+
 ## 0.4.6
 
 - Fix child positioning offset bug. [Issue#27](https://github.com/hyper-designed/box_transform/issues/27)
