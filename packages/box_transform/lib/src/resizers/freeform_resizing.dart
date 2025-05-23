@@ -78,113 +78,131 @@ final class FreeformResizer extends Resizer {
       unrotatedBox: newRect,
     );
 
-    // Check if the new bounding rectangle is clamped within the allowed area.
-    final bool isClamped = isRectClamped(
-      newBoundingRect,
-      clampingRect,
-    );
-
-    // If the rectangle is not clamped, compute a corrective delta to adjust it.
-    if (!isClamped) {
-      Vector2 correctiveDelta = BoxTransformer.stopRectAtClampingRect(
-        rect: newRect,
-        clampingRect: clampingRect,
-        rotation: rotation,
+    // For rotation=0, use simple clamping like the original version
+    if (rotation == 0) {
+      newRect = Box.fromLTRB(
+        max(newRect.left, clampingRect.left),
+        max(newRect.top, clampingRect.top),
+        min(newRect.right, clampingRect.right),
+        min(newRect.bottom, clampingRect.bottom),
       );
-      print('correctiveDelta: $correctiveDelta');
+    } else {
+      // For rotation!=0, use the complex rotation-aware clamping
+      final bool isClamped = isRectClamped(
+        newBoundingRect,
+        clampingRect,
+      );
 
-      final dx = correctiveDelta.x;
-      final dy = correctiveDelta.y;
+      if (!isClamped) {
+        Vector2 correctiveDelta = BoxTransformer.stopRectAtClampingRect(
+          rect: newRect,
+          clampingRect: clampingRect,
+          rotation: rotation,
+        );
 
-      if (dx != 0 || dy != 0) {
-        newRect = Box.fromLTWH(
-          newRect.left + (dx > 0 ? dx : 0),
-          newRect.top + (dy > 0 ? dy : 0),
-          newRect.width - dx.abs(),
-          newRect.height - dy.abs(),
+        final dx = correctiveDelta.x;
+        final dy = correctiveDelta.y;
+
+        if (dx != 0 || dy != 0) {
+          newRect = Box.fromLTWH(
+            newRect.left + dx,
+            newRect.top + dy,
+            newRect.width,
+            newRect.height,
+          );
+        }
+
+        // Recalculate the bounding rectangle after applying the corrective delta.
+        newBoundingRect = BoxTransformer.calculateBoundingRect(
+          rotation: rotation,
+          unrotatedBox: newRect,
         );
       }
+    }
 
-      // newRect = repositionRotatedResizedBox(
-      //   newRect: newRect,
-      //   initialRect: initialRect,
-      //   rotation: rotation,
-      // );
+    bool isValid = true;
+    if (!constraints.isUnconstrained) {
+      final constrainedWidth =
+          newRect.width.clamp(constraints.minWidth, constraints.maxWidth);
+      final constrainedHeight =
+          newRect.height.clamp(constraints.minHeight, constraints.maxHeight);
 
-      // Recalculate the bounding rectangle after applying the corrective delta.
+      if (newRect.width != constrainedWidth ||
+          newRect.height != constrainedHeight) {
+        isValid = false;
+      }
+
+      final constrainedRect = Box.fromHandle(
+        flippedHandle.anchor(effectiveInitialRect),
+        flippedHandle,
+        constrainedWidth,
+        constrainedHeight,
+      );
+
+      // Reposition again after applying constraints if there's rotation.
+      if (rotation != 0) {
+        newRect = repositionRotatedResizedBox(
+          newRect: constrainedRect,
+          initialRect: initialRect,
+          rotation: rotation,
+        );
+      } else {
+        newRect = constrainedRect;
+      }
+
+      // Update the bounding rectangle to reflect the constrained rect.
       newBoundingRect = BoxTransformer.calculateBoundingRect(
         rotation: rotation,
         unrotatedBox: newRect,
       );
-    }
 
-    bool isBound = false;
-    // Apply size constraints if they are set.
-    // if (!constraints.isUnconstrained) {
-    //   // Clamp the current width and height to within allowed limits.
-    //   final Dimension constrainedSize = Dimension(
-    //     newRect.width.clamp(constraints.minWidth, constraints.maxWidth),
-    //     newRect.height.clamp(constraints.minHeight, constraints.maxHeight),
-    //   );
-    //
-    //   // Calculate how much adjustment is needed to reach the constrained size.
-    //   final Dimension constrainedDelta = Dimension(
-    //     constrainedSize.width - newRect.width,
-    //     constrainedSize.height - newRect.height,
-    //   );
-    //
-    //   // Recalculate the rectangle using the flipped handle's anchor.
-    //   newRect = Box.fromHandle(
-    //     flippedHandle.anchor(effectiveInitialRect),
-    //     flippedHandle,
-    //     newRect.width + constrainedDelta.width,
-    //     newRect.height + constrainedDelta.height,
-    //   );
-    //
-    //   // Reposition again after applying constraints.
-    //   newRect = repositionRotatedResizedBox(
-    //     newRect: newRect,
-    //     initialRect: initialRect,
-    //     rotation: rotation,
-    //   );
-    //
-    //   // Update the bounding rectangle to reflect the constrained, repositioned rect.
-    //   newBoundingRect = BoxTransformer.calculateBoundingRect(
-    //     rotation: rotation,
-    //     unrotatedBox: newRect,
-    //   );
-    //
-    //   // Check if the new rectangle satisfies the constraints.
-    //   isBound = isRectConstrained(
-    //     newRect,
-    //     constraints,
-    //   );
-    //
-    //   // If the rectangle is still not properly constrained, fall back to minimum sizes.
-    //   if (!isBound) {
-    //     newRect = Box.fromHandle(
-    //       handle.anchor(initialRect),
-    //       handle,
-    //       handle.influencesHorizontal
-    //           ? constraints.minWidth
-    //           : constrainedSize.width,
-    //       handle.influencesVertical
-    //           ? constraints.minHeight
-    //           : constrainedSize.height,
-    //     );
-    //     // [ISSUE] Falling back to the unflipped handle and initialRect may ignore
-    //     // the rotation context, leading to inconsistencies.
-    //     newRect = repositionRotatedResizedBox(
-    //       newRect: newRect,
-    //       initialRect: initialRect,
-    //       rotation: rotation,
-    //     );
-    //     newBoundingRect = BoxTransformer.calculateBoundingRect(
-    //       rotation: rotation,
-    //       unrotatedBox: newRect,
-    //     );
-    //   }
-    // }
+      // Check if the constrained rectangle is valid (both constrained and clamped)
+      final bool isRectValid = isRectConstrained(newRect, constraints) && 
+                              (rotation == 0 ? isRectClamped(newRect, clampingRect) 
+                                             : isRectClamped(newBoundingRect, clampingRect));
+
+      if (!isRectValid) {
+        // Instead of falling back to minimum size, find the largest size that fits
+        // within clamping bounds while respecting constraints
+        // Constraint/clamping conflict detected, finding max size
+        if (rotation != 0) {
+          // For rotated boxes, we need to find a size where the bounding rect fits
+          newRect = _findMaxSizeWithinClampingBounds(
+            anchor: handle.anchor(initialRect),
+            handle: handle,
+            clampingRect: clampingRect,
+            constraints: constraints,
+            rotation: rotation,
+            initialRect: initialRect,
+          );
+        } else {
+          // For non-rotated boxes, use direct clamping
+          newRect = Box.fromLTRB(
+            max(newRect.left, clampingRect.left),
+            max(newRect.top, clampingRect.top),
+            min(newRect.right, clampingRect.right),
+            min(newRect.bottom, clampingRect.bottom),
+          );
+          
+          // Ensure we still respect constraints
+          final clampedWidth = newRect.width.clamp(constraints.minWidth, constraints.maxWidth);
+          final clampedHeight = newRect.height.clamp(constraints.minHeight, constraints.maxHeight);
+          
+          newRect = Box.fromHandle(
+            handle.anchor(initialRect),
+            handle,
+            clampedWidth,
+            clampedHeight,
+          );
+        }
+
+        newBoundingRect = BoxTransformer.calculateBoundingRect(
+          rotation: rotation,
+          unrotatedBox: newRect,
+        );
+        isValid = true;
+      }
+    }
 
     final Box effectiveBindingRect = switch (bindingStrategy) {
       BindingStrategy.originalBox => effectiveInitialRect,
@@ -196,12 +214,12 @@ final class FreeformResizer extends Resizer {
     };
 
     final Box area = getAvailableAreaForHandle(
-      rect: isBound ? effectiveBindingRect : bindingRect,
-      handle: isBound ? flippedHandle : handle,
+      rect: isValid ? effectiveBindingRect : bindingRect,
+      handle: isValid ? flippedHandle : handle,
       clampingRect: clampingRect,
     );
 
-    return (rect: newRect, largest: area, hasValidFlip: isBound);
+    return (rect: newRect, largest: area, hasValidFlip: isValid);
   }
 
   /// Repositions a rotated and resized box back to its original unrotated
@@ -239,5 +257,179 @@ final class FreeformResizer extends Resizer {
 
     // Return a new Box with the repositioned top-left coordinates.
     return Box.fromLTWH(newPos.x, newPos.y, newRect.width, newRect.height);
+  }
+
+  /// Finds the maximum size rectangle that fits within clamping bounds when rotated
+  /// while respecting constraints.
+  Box _findMaxSizeWithinClampingBounds({
+    required Vector2 anchor,
+    required HandlePosition handle,
+    required Box clampingRect,
+    required Constraints constraints,
+    required double rotation,
+    required Box initialRect,
+  }) {
+    // Start with a conservative estimate - the clamping rect dimensions
+    // For rotation, the max unrotated size that could fit is roughly clampingRect size / sqrt(2)
+    final maxPossibleWidth = clampingRect.width;
+    final maxPossibleHeight = clampingRect.height;
+    
+    double width = min(constraints.maxWidth, maxPossibleWidth);
+    double height = min(constraints.maxHeight, maxPossibleHeight);
+    
+    // Binary search to find the maximum size that fits
+    // We'll search for width and height independently if it's a corner handle
+    // or just the relevant dimension for side handles
+    
+    if (handle.isDiagonal) {
+      // For corner handles, search for the optimal size as a whole
+      final result = _binarySearchOptimalSize(
+        anchor: anchor,
+        handle: handle,
+        clampingRect: clampingRect,
+        constraints: constraints,
+        rotation: rotation,
+        initialRect: initialRect,
+      );
+      width = result.width;
+      height = result.height;
+    } else if (handle.isHorizontal) {
+      // For horizontal handles, only adjust width
+      width = _binarySearchMaxDimension(
+        anchor: anchor,
+        handle: handle,
+        clampingRect: clampingRect,
+        constraints: constraints,
+        rotation: rotation,
+        initialRect: initialRect,
+        isWidth: true,
+        otherDimension: initialRect.height,
+      );
+      height = initialRect.height;
+    } else {
+      // For vertical handles, only adjust height
+      height = _binarySearchMaxDimension(
+        anchor: anchor,
+        handle: handle,
+        clampingRect: clampingRect,
+        constraints: constraints,
+        rotation: rotation,
+        initialRect: initialRect,
+        isWidth: false,
+        otherDimension: initialRect.width,
+      );
+      width = initialRect.width;
+    }
+    
+    // Create the final rectangle
+    final result = Box.fromHandle(anchor, handle, width, height);
+    // Found max size within clamping bounds
+    
+    // Reposition for rotation
+    return repositionRotatedResizedBox(
+      newRect: result,
+      initialRect: initialRect,
+      rotation: rotation,
+    );
+  }
+
+  /// Binary search to find the maximum dimension (width or height) that fits within clamping bounds
+  double _binarySearchMaxDimension({
+    required Vector2 anchor,
+    required HandlePosition handle,
+    required Box clampingRect,
+    required Constraints constraints,
+    required double rotation,
+    required Box initialRect,
+    required bool isWidth,
+    required double otherDimension,
+  }) {
+    final minConstraint = isWidth ? constraints.minWidth : constraints.minHeight;
+    final maxConstraint = isWidth ? constraints.maxWidth : constraints.maxHeight;
+    final clampingDimension = isWidth ? clampingRect.width : clampingRect.height;
+    
+    double low = minConstraint;
+    double high = min(maxConstraint, clampingDimension);
+    double best = minConstraint;
+    
+    // Binary search with reasonable precision
+    for (int i = 0; i < 20; i++) {
+      final mid = (low + high) / 2;
+      
+      final testWidth = isWidth ? mid : otherDimension;
+      final testHeight = isWidth ? otherDimension : mid;
+      
+      final testRect = Box.fromHandle(anchor, handle, testWidth, testHeight);
+      final repositionedRect = repositionRotatedResizedBox(
+        newRect: testRect,
+        initialRect: initialRect,
+        rotation: rotation,
+      );
+      
+      final boundingRect = BoxTransformer.calculateBoundingRect(
+        rotation: rotation,
+        unrotatedBox: repositionedRect,
+      );
+      
+      if (isRectClamped(boundingRect, clampingRect)) {
+        best = mid;
+        low = mid;
+      } else {
+        high = mid;
+      }
+    }
+    
+    return best;
+  }
+
+  /// Binary search for optimal size for diagonal handles where width and height interact
+  ({double width, double height}) _binarySearchOptimalSize({
+    required Vector2 anchor,
+    required HandlePosition handle,
+    required Box clampingRect,
+    required Constraints constraints,
+    required double rotation,
+    required Box initialRect,
+  }) {
+    // Start with constraint limits
+    double bestWidth = constraints.minWidth;
+    double bestHeight = constraints.minHeight;
+    
+    // Try different scaling factors to find the largest that fits
+    double lowScale = 0.1;
+    double highScale = 5.0; // Start high and work down
+    
+    for (int i = 0; i < 25; i++) {
+      final scale = (lowScale + highScale) / 2;
+      
+      // Try proportional scaling from initial rect
+      final testWidth = (initialRect.width * scale).clamp(constraints.minWidth, constraints.maxWidth);
+      final testHeight = (initialRect.height * scale).clamp(constraints.minHeight, constraints.maxHeight);
+      
+      final testRect = Box.fromHandle(anchor, handle, testWidth, testHeight);
+      final repositionedRect = repositionRotatedResizedBox(
+        newRect: testRect,
+        initialRect: initialRect,
+        rotation: rotation,
+      );
+      
+      final boundingRect = BoxTransformer.calculateBoundingRect(
+        rotation: rotation,
+        unrotatedBox: repositionedRect,
+      );
+      
+      if (isRectClamped(boundingRect, clampingRect) && 
+          isRectConstrained(repositionedRect, constraints)) {
+        // This size works, try bigger
+        bestWidth = testWidth;
+        bestHeight = testHeight;
+        lowScale = scale;
+      } else {
+        // Too big, try smaller
+        highScale = scale;
+      }
+    }
+    
+    return (width: bestWidth, height: bestHeight);
   }
 }

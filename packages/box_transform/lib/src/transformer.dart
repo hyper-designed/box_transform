@@ -133,65 +133,80 @@ class BoxTransformer {
     required Box clampingRect,
     required double rotation,
   }) {
-    // Rotate each side point of [rect] around its center.
-    final rotatedPoints = [
-      for (final entry in rect.sidedPoints.entries)
-        rotatePointAroundVec(rect.center, rotation, entry.value)
-    ];
-
-    // For each side, store the maximum violation (the largest abs(distance)).
-    final Map<Side, double> sideViolations = {};
-
-    for (final point in rotatedPoints) {
-      // Assume that closestSideTo returns a tuple (Side, double)
-      // where a negative distance means the point is out-of-bounds.
-      final (Side side, double dist) = clampingRect.closestSideTo(point);
-      if (dist > 0) continue; // Point is inside, so no correction needed.
-
-      final violation = dist.abs();
-      // If a violation for this side already exists, use the maximum violation.
-      if (!sideViolations.containsKey(side) ||
-          sideViolations[side]! < violation) {
-        sideViolations[side] = violation;
+    if (rotation == 0) {
+      // Simple case: no rotation
+      double dx = 0.0;
+      double dy = 0.0;
+      
+      if (rect.left < clampingRect.left) {
+        dx = clampingRect.left - rect.left;
+      } else if (rect.right > clampingRect.right) {
+        dx = clampingRect.right - rect.right;
       }
+      
+      if (rect.top < clampingRect.top) {
+        dy = clampingRect.top - rect.top;
+      } else if (rect.bottom > clampingRect.bottom) {
+        dy = clampingRect.bottom - rect.bottom;
+      }
+      
+      return Vector2(dx, dy);
     }
 
-    // If there are no violations, no correction is needed.
-    if (sideViolations.isEmpty) return Vector2.zero();
+    // Calculate midpoints of each edge after rotation
+    final leftTopRotated = rotatePointAroundVec(rect.center, rotation, rect.topLeft);
+    final leftBottomRotated = rotatePointAroundVec(rect.center, rotation, rect.bottomLeft);
+    final rightTopRotated = rotatePointAroundVec(rect.center, rotation, rect.topRight);
+    final rightBottomRotated = rotatePointAroundVec(rect.center, rotation, rect.bottomRight);
+    
+    final leftMidpoint = (leftTopRotated + leftBottomRotated) / 2;
+    final rightMidpoint = (rightTopRotated + rightBottomRotated) / 2;
+    final topMidpoint = (leftTopRotated + rightTopRotated) / 2;
+    final bottomMidpoint = (leftBottomRotated + rightBottomRotated) / 2;
 
-    // Compute recommended corrections in the rotated (clamping) coordinate space.
-    // For horizontal axis:
-    double horizontalCorrection = 0.0;
-    final bool hasLeft = sideViolations.containsKey(Side.left);
-    final bool hasRight = sideViolations.containsKey(Side.right);
-    if (hasLeft && hasRight) {
-      // Left side: move right by violation amount.
-      // Right side: move left by violation amount.
-      // Averaging them leads toward the center.
-      horizontalCorrection =
-          (sideViolations[Side.left]! - sideViolations[Side.right]!) / 2;
-    } else if (hasLeft) {
-      horizontalCorrection = sideViolations[Side.left]!;
-    } else if (hasRight) {
-      horizontalCorrection = -sideViolations[Side.right]!;
+    // Find violations for each side based on edge midpoints
+    double leftViolation = 0.0;
+    double rightViolation = 0.0;
+    double topViolation = 0.0;
+    double bottomViolation = 0.0;
+
+    if (leftMidpoint.x < clampingRect.left) {
+      leftViolation = clampingRect.left - leftMidpoint.x;
+    }
+    if (rightMidpoint.x > clampingRect.right) {
+      rightViolation = rightMidpoint.x - clampingRect.right;
+    }
+    if (topMidpoint.y < clampingRect.top) {
+      topViolation = clampingRect.top - topMidpoint.y;
+    }
+    if (bottomMidpoint.y > clampingRect.bottom) {
+      bottomViolation = bottomMidpoint.y - clampingRect.bottom;
     }
 
-    // For vertical axis:
-    double verticalCorrection = 0.0;
-    final bool hasTop = sideViolations.containsKey(Side.top);
-    final bool hasBottom = sideViolations.containsKey(Side.bottom);
-    if (hasTop && hasBottom) {
-      // Top side: move down by violation amount.
-      // Bottom side: move up by violation amount.
-      verticalCorrection =
-          (sideViolations[Side.top]! - sideViolations[Side.bottom]!) / 2;
-    } else if (hasTop) {
-      verticalCorrection = sideViolations[Side.top]!;
-    } else if (hasBottom) {
-      verticalCorrection = -sideViolations[Side.bottom]!;
+    // Calculate correction in rotated space
+    double dx = 0.0;
+    double dy = 0.0;
+
+    if (leftViolation > 0 && rightViolation > 0) {
+      // Conflicting violations - move towards center
+      dx = (leftViolation - rightViolation) / 2;
+    } else if (leftViolation > 0) {
+      dx = leftViolation;
+    } else if (rightViolation > 0) {
+      dx = -rightViolation;
     }
 
-    return Vector2(horizontalCorrection, verticalCorrection);
+    if (topViolation > 0 && bottomViolation > 0) {
+      // Conflicting violations - move towards center
+      dy = (topViolation - bottomViolation) / 2;
+    } else if (topViolation > 0) {
+      dy = topViolation;
+    } else if (bottomViolation > 0) {
+      dy = -bottomViolation;
+    }
+
+    // Rotate the correction vector back to the unrotated coordinate system
+    return rotatePointAroundVec(Vector2.zero(), -rotation, Vector2(dx, dy));
   }
 
   /// Resizes the given [initialRect] with given [initialLocalPosition] of
@@ -284,8 +299,9 @@ class BoxTransformer {
 
     // Check if clampingRect is smaller than initialRect.
     // If it is, then we return the initialRect and not resize it.
-    if (clampingRect.width < initialBindingWidth ||
-        clampingRect.height < initialBindingHeight) {
+    // Skip this check for rotated boxes as the geometry is more complex.
+    if (rotation == 0.0 && (clampingRect.width < initialBindingWidth ||
+        clampingRect.height < initialBindingHeight)) {
       return ResizeResult(
         rect: initialRect,
         oldRect: initialRect,
@@ -440,6 +456,7 @@ class BoxTransformer {
     );
   }
 
+  /// Applies a delta to a box given a handle position and resize mode.
   static Box applyDelta({
     required Box initialRect,
     required HandlePosition handle,
@@ -523,6 +540,7 @@ class BoxTransformer {
     return Vector2(rotated[0], rotated[1]);
   }
 
+  /// Calculates the unrotated position for a box given rotation and delta.
   static Vector2 calculateUnrotatedPos(
     Box unrotatedRect,
     double rotation,
@@ -561,6 +579,7 @@ class BoxTransformer {
     return rotatePointAroundVec(newCenter, -rotation, newRotatedXY);
   }
 
+  /// Calculates the bounding box of a rotated rectangle.
   static Box calculateBoundingRect({
     required double rotation,
     required Box unrotatedBox,

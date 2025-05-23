@@ -789,10 +789,6 @@ class _TransformableBoxState extends State<TransformableBox> {
     };
     final double handleOffset = widget.handleAlignment.offset(gestureSize);
 
-    final double gestureGap =
-        (widget.rotationHandleGestureSize - widget.resizeHandleGestureSize) / 2;
-    final double offset = widget.resizeHandleGestureSize / 2 +
-        (widget.rotatable ? widget.rotationHandleGestureSize / 2 : 0);
     final Rect inflatedRect = unrotatedRect.inflate(handleOffset);
 
     return Stack(
@@ -921,11 +917,18 @@ class _TransformableBoxState extends State<TransformableBox> {
   }
 }
 
+/// Custom painter that renders rotation arrows for visual feedback during rotation.
 class RenderRotationArrows extends CustomPainter {
+  /// The initial position where rotation started.
   final Offset initialPosition;
+  
+  /// The current position during rotation.
   final Offset currentPosition;
+  
+  /// The rect being rotated.
   final Rect rect;
 
+  /// Creates a rotation arrows painter.
   const RenderRotationArrows({
     required this.initialPosition,
     required this.currentPosition,

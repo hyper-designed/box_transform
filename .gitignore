@@ -10,3 +10,7 @@ pubspec_overrides.yaml
 firebase-debug.log
 
 **/*.lock
+
+**/build
+
+**/test_results.json

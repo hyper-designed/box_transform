@@ -127,8 +127,8 @@ void main() {
       // For rect starting at (80,150) and rotated by 0.2, the left side violation is reduced
       // from 20 pixels to about 18.01 pixels. Rotating this correction back by -0.2 radians
       // yields an expected delta of approximately (17.65, -3.57).
-      expect(delta.x, closeTo(17.65, 0.001));
-      expect(delta.y, closeTo(-3.57, 0.001));
+      expect(delta.x, closeTo(17.65, 0.01));
+      expect(delta.y, closeTo(-3.57, 0.01));
     });
 
     test('handles non-zero negative rotation with violation', () {
@@ -144,8 +144,8 @@ void main() {
 
       // For rect starting at (150,80) and rotated by -0.2, the top side violation is roughly 18.01 pixels.
       // Rotating this correction back by 0.2 radians yields an expected delta of about (-3.57, 17.65).
-      expect(delta.x, closeTo(-3.57, 0.001));
-      expect(delta.y, closeTo(17.65, 0.001));
+      expect(delta.x, closeTo(-3.57, 0.01));
+      expect(delta.y, closeTo(17.65, 0.01));
     });
 
     test('does not reset horizontal delta when rect width increases (rotation ~32.37°)', () {

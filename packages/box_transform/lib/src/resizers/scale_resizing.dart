@@ -25,6 +25,17 @@ final class ScaleResizer extends Resizer {
       flip: flip,
     );
 
+    // Apply rotation handling if there's rotation
+    if (rotation != 0 && result.hasValidFlip) {
+      result = _applyRotationHandling(
+        result: result,
+        initialRect: initialRect,
+        clampingRect: clampingRect,
+        constraints: constraints,
+        rotation: rotation,
+      );
+    }
+
     if (!result.hasValidFlip) {
       // Since we can't flip the box, explodedRect (which is a raw rect with delta applied)
       // would be flipped so we can't use that because it would make the size
@@ -38,6 +49,32 @@ final class ScaleResizer extends Resizer {
         flip: Flip.none,
         constraints: constraints,
       );
+
+      // Apply rotation handling to the fallback result if there's rotation
+      if (rotation != 0 && newResult.hasValidFlip) {
+        final rotatedNewResult = _applyRotationHandling(
+          result: newResult,
+          initialRect: initialRect,
+          clampingRect: clampingRect,
+          constraints: constraints,
+          rotation: rotation,
+        );
+        
+        if (!rotatedNewResult.hasValidFlip) {
+          // This should never happen. If it does, it means that the box is
+          // invalid even after flipping it back to the original state and we
+          // can't flip it back again. This means that the box might be invalid
+          // in the first place or something catastrophic happened!!! Contact
+          // the package author if this happens.
+          return (
+            rect: initialRect,
+            largest: result.largest,
+            hasValidFlip: false
+          );
+        }
+
+        return rotatedNewResult;
+      }
 
       if (!newResult.hasValidFlip) {
         // This should never happen. If it does, it means that the box is
@@ -693,5 +730,144 @@ final class ScaleResizer extends Resizer {
     final isValid = isRectBound(rect, constraints, clampingRect);
 
     return (rect: rect, largest: largest, hasValidFlip: isValid);
+  }
+
+  /// Applies rotation handling to a resize result.
+  /// This includes repositioning, clamping, and validation for rotated rectangles.
+  ({Box rect, Box largest, bool hasValidFlip}) _applyRotationHandling({
+    required ({Box rect, Box largest, bool hasValidFlip}) result,
+    required Box initialRect,
+    required Box clampingRect,
+    required Constraints constraints,
+    required double rotation,
+  }) {
+    Box rect = result.rect;
+
+    // Apply rotation repositioning
+    rect = _repositionRotatedResizedBox(
+      newRect: rect,
+      initialRect: initialRect,
+      rotation: rotation,
+    );
+
+    // Apply rotation-aware clamping
+    final newBoundingRect = BoxTransformer.calculateBoundingRect(
+      rotation: rotation,
+      unrotatedBox: rect,
+    );
+
+    final bool isClamped = isRectClamped(
+      newBoundingRect,
+      clampingRect,
+    );
+
+    if (!isClamped) {
+      // For scale mode, we need to scale down while maintaining aspect ratio
+      // Try to find the maximum scale factor that fits within clamping bounds
+      rect = _scaleToFitClampingBounds(
+        rect: rect,
+        clampingRect: clampingRect,
+        rotation: rotation,
+        constraints: constraints,
+      );
+    }
+
+    // Update validation to handle rotation
+    final newBoundingRectFinal = BoxTransformer.calculateBoundingRect(
+      rotation: rotation,
+      unrotatedBox: rect,
+    );
+    final bool isValid = isRectConstrained(rect, constraints) && 
+                         isRectClamped(newBoundingRectFinal, clampingRect);
+
+    return (rect: rect, largest: result.largest, hasValidFlip: isValid);
+  }
+
+  /// Repositions a resized box when rotation is applied to maintain proper
+  /// handle anchoring.
+  Box _repositionRotatedResizedBox({
+    required Box newRect,
+    required Box initialRect,
+    required double rotation,
+  }) {
+    // If there is no rotation, no repositioning is needed.
+    if (rotation == 0) return newRect;
+
+    // Compute the delta between the top-left corners of the new and initial
+    // rectangles.
+    final Vector2 positionDelta = newRect.topLeft - initialRect.topLeft;
+
+    // Calculate the new position in the unrotated space.
+    final Vector2 newPos = BoxTransformer.calculateUnrotatedPos(
+      initialRect,
+      rotation,
+      positionDelta,
+      newRect.size,
+    );
+
+    // Return a new Box with the repositioned top-left coordinates.
+    return Box.fromLTWH(newPos.x, newPos.y, newRect.width, newRect.height);
+  }
+
+  /// Scales a rectangle down to fit within clamping bounds while maintaining aspect ratio
+  Box _scaleToFitClampingBounds({
+    required Box rect,
+    required Box clampingRect,
+    required double rotation,
+    required Constraints constraints,
+  }) {
+    final aspectRatio = rect.width / rect.height;
+    final center = rect.center;
+    
+    // Binary search for the maximum scale that fits
+    double lowScale = 0.1;
+    double highScale = 1.0;
+    double bestScale = lowScale;
+    
+    for (int i = 0; i < 20; i++) {
+      final scale = (lowScale + highScale) / 2;
+      
+      final scaledWidth = (rect.width * scale).clamp(constraints.minWidth, constraints.maxWidth);
+      final scaledHeight = (rect.height * scale).clamp(constraints.minHeight, constraints.maxHeight);
+      
+      // Maintain aspect ratio by adjusting the smaller dimension
+      double finalWidth, finalHeight;
+      if (scaledWidth / scaledHeight > aspectRatio) {
+        finalHeight = scaledHeight;
+        finalWidth = finalHeight * aspectRatio;
+      } else {
+        finalWidth = scaledWidth;
+        finalHeight = finalWidth / aspectRatio;
+      }
+      
+      final testRect = Box.fromCenter(
+        center: center,
+        width: finalWidth,
+        height: finalHeight,
+      );
+      
+      final testBoundingRect = BoxTransformer.calculateBoundingRect(
+        rotation: rotation,
+        unrotatedBox: testRect,
+      );
+      
+      if (isRectClamped(testBoundingRect, clampingRect) && 
+          isRectConstrained(testRect, constraints)) {
+        bestScale = scale;
+        lowScale = scale;
+      } else {
+        highScale = scale;
+      }
+    }
+    
+    // Apply the best scale found
+    final finalWidth = (rect.width * bestScale).clamp(constraints.minWidth, constraints.maxWidth);
+    final finalHeight = (rect.height * bestScale).clamp(constraints.minHeight, constraints.maxHeight);
+    
+    return Box.fromCenter(
+      center: center,
+      width: finalWidth,
+      height: finalHeight,
+    );
   }
 }

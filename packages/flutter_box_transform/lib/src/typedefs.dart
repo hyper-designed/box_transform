@@ -3,9 +3,16 @@ import 'package:flutter/widgets.dart';
 
 import 'ui_result.dart';
 
+/// Callback for when a rotation gesture starts.
 typedef GestureRotationStartCallback = GestureDragStartCallback;
+
+/// Callback for when a rotation gesture updates.
 typedef GestureRotationUpdateCallback = GestureDragUpdateCallback;
+
+/// Callback for when a rotation gesture ends.
 typedef GestureRotationEndCallback = GestureDragEndCallback;
+
+/// Callback for when a rotation gesture is canceled.
 typedef GestureRotationCancelCallback = GestureDragCancelCallback;
 
 /// A callback that expects a [Widget] that represents any of the handles.
