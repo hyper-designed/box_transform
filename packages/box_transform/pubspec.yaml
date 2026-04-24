@@ -9,13 +9,15 @@ issue_tracker: https://github.com/hyper-designed/box_transform/issues
 documentation: https://docs.page/hyper-designed/box_transform
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: ^3.6.0
+
+resolution: workspace
 
 dependencies:
   vector_math: ^2.1.4
 
 dev_dependencies:
-  lints: ^5.1.1
+  lints: ^6.0.0
   test: ^1.25.15
   coverage: ^1.11.1
 

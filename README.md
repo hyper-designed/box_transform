@@ -2,7 +2,7 @@
 
 # Box Transform
 
-[![melos](https://img.shields.io/badge/maintained%20with-melos-f700ff.svg?style=flat-square)](https://github.com/invertase/melos) [![Build](https://github.com/hyper-designed/box_transform/actions/workflows/build.yml/badge.svg)](https://github.com/hyper-designed/box_transform/actions/workflows/build.yml) [![Tests](https://github.com/hyper-designed/box_transform/workflows/Tests/badge.svg?branch=main)](https://github.com/hyper-designed/box_transform/actions) [![codecov](https://codecov.io/gh/BirjuVachhani/box_transform/branch/main/graph/badge.svg?token=SX5FXDUD7A)](https://codecov.io/gh/BirjuVachhani/box_transform)
+[![Build](https://github.com/hyper-designed/box_transform/actions/workflows/build.yml/badge.svg)](https://github.com/hyper-designed/box_transform/actions/workflows/build.yml) [![Tests](https://github.com/hyper-designed/box_transform/workflows/Tests/badge.svg?branch=main)](https://github.com/hyper-designed/box_transform/actions) [![codecov](https://codecov.io/gh/BirjuVachhani/box_transform/branch/main/graph/badge.svg?token=SX5FXDUD7A)](https://codecov.io/gh/BirjuVachhani/box_transform)
 
 [Box Transform][github] provides packages that allows you to programmatically handle box resizing and dragging. 
 It provides highly flexible, programmatically resizable and draggable boxes that can be used in any Dart or Flutter 
@@ -24,6 +24,7 @@ project.
 * 🎨 **Flexible Resizing Modes:** Choose from four different resizing modes for more flexibility in how boxes are resized.
 * 📍 **Customizable Anchor Points:** Define resizing corner-handles to anchor different parts of the box when resizing.
 * 🎨 **Customizable Handles:** Use default resizing handles or define your own custom handles.
+* 🌀 **Rotation Support:** Rotate boxes around their center, with full rotated-aware drag, resize, flip, and clamping. Choose between `BindingStrategy.originalBox` (the unrotated logical rect stays in the clamp; rotated corners may extend outside) and `BindingStrategy.boundingBox` (the rendered axis-aligned footprint stays inside). Rotation gestures slide-then-freeze: when the requested angle would force the rect outside the clamp, the box slides into available slack first, then caps at the last feasible angle. Rotated force-flip also falls back to the natural direction when the flipped state can't fit, so the rect stays clamp-pinned instead of jumping or freezing.
 * 🚀 **Easy Integration:** Integrate Box Transform into your Dart or Flutter project with ease.
 
 ## Getting Started

@@ -1,3 +1,31 @@
+## Unreleased
+
+- **[BREAKING]** `defaultResizeModeResolver()` is now `TransformableBoxController.defaultResizeModeResolver()`. The top-level function has been removed; consumers that referenced it directly (e.g. as a default for `resizeModeResolver`) must update to the qualified static.
+- **[BREAKING]** Top-level rotated-layout helpers are now static methods on `RotatedLayout`:
+  - `rotateOffsetAround(...)` → `RotatedLayout.rotateOffsetAround(...)`
+  - `handleCornerInParent(...)` → `RotatedLayout.handleCornerInParent(...)`
+  - `rotatedCornerInWorld(...)` → `RotatedLayout.rotatedCornerInWorld(...)`
+  - `anchorInHandle(...)` → `RotatedLayout.anchorInHandle(...)`
+  - `handleTopLeftInWorld(...)` → `RotatedLayout.handleTopLeftInWorld(...)`
+  - `sideHandleRectInWorld(...)` → `RotatedLayout.sideHandleRectInWorld(...)`
+  - `computeEffectiveContainmentRect(...)` (formerly in `extensions.dart`) → `RotatedLayout.computeEffectiveContainmentRect(...)`
+- **[BREAKING]** Default handle builders moved from file-private functions to public statics on `HandleBuilders`. Use `HandleBuilders.defaultCorner` / `HandleBuilders.defaultSide` if you need to reference them explicitly.
+- Add `rotation`, `rotatable`, and `bindingStrategy` parameters on `TransformableBox`.
+- **[BREAKING]** Default `bindingStrategy` flipped from `originalBox` to `boundingBox` on `TransformableBox`, `TransformableBoxController`, and `UIBoxTransform.move/resize/rotate`. Existing apps that relied on the unrotated-logical-rect semantic must pass `BindingStrategy.originalBox` explicitly.
+- Add per-corner rotation gesture: an outer ring around each corner-handle captures rotation when `rotatable: true`. Size via `rotationHandleGestureSize` (default 64 px). New rotation callbacks: `onRotationStart` / `onRotationUpdate` / `onRotationEnd` / `onRotationCancel`.
+- `TransformableBoxController` adds `rotation`, `initialRotation`, `bindingStrategy`, and rotation lifecycle methods (`onRotateStart` / `onRotateUpdate` / `onRotateEnd` / `onRotateCancel`).
+- `onResizeUpdate` and `onRotateUpdate` skip state writes when `result.feasible == false` and override `result.rect` / `result.rotation` to the controller's last feasible value. Consumers binding their visible state via callbacks (`box.rect = result.rect`) now stay clamp-pinned at the last feasible position rather than snapping back to gesture-start when a gesture exceeds what clamp + constraints permit.
+- Side handles render rotated under non-zero rotation; gesture coordinates are translated into the box's un-rotated frame so resize tracks the cursor visually.
+- Hit-testing gates corner taps to the rotated polygon (not the AABB) so rotated boxes don't capture clicks in their AABB wedges.
+- Playground gains a rotation slider, a `bindingStrategy` toggle, debug overlays for rotated/unrotated bounds, and a tick-by-tick test recorder that captures full gesture sequences (rotation + bindingStrategy aware) for regression replay.
+- Bumps `box_transform` dependency to the rotation-aware release.
+- **[BREAKING]** The rotated-clamping LP entry points re-exported from `box_transform` were relocated into `RotatedClampingSolver` (static surface). Apps that called these directly must qualify the names:
+  - `buildCornerIneqsInto(...)` → `RotatedClampingSolver.buildCornerIneqsInto(...)`
+  - `buildSideHandleIneqsInto(...)` → `RotatedClampingSolver.buildSideHandleIneqsInto(...)`
+  - `buildCenterIneqsInto(...)` → `RotatedClampingSolver.buildCenterIneqsInto(...)`
+  - `projectOntoFeasibleRegionFlat(...)` → `RotatedClampingSolver.projectOntoFeasibleRegionFlat(...)`
+- **[BREAKING]** Re-exported clamp/handle/flip/line-geometry helpers from `box_transform` are now `static` members of `ClampHelpers` instead of top-level functions. See the `box_transform` CHANGELOG for the full rename list. Migration is mechanical: prepend `ClampHelpers.` to each call (e.g. `flipRect(...)` → `ClampHelpers.flipRect(...)`).
+
 ## 0.4.7
 - Fix taps should pass through when onTap is not set. [Issue#31](https://github.com/hyper-designed/box_transform/issues/31)
 

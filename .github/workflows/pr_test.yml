@@ -24,14 +24,13 @@ jobs:
           cache: true
       - name: Flutter version
         run: flutter --version
-      - name: Install melos
-        run: dart pub global activate melos
-      - name: Setup melos
-        run:  melos bootstrap
       - name: Install dependencies
-        run: melos deps
+        run: flutter pub get
       - name: Run tests with coverage
-        run: melos run lcov
+        working-directory: packages/box_transform
+        run: |
+          flutter pub run coverage:test_with_coverage
+          flutter pub run coverage:format_coverage --packages=../../.dart_tool/package_config.json --lcov -i coverage/coverage.json -o coverage/lcov.info
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:

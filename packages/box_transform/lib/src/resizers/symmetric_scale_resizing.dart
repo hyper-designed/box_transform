@@ -70,7 +70,8 @@ final class SymmetricScaleResizer extends Resizer {
       availableArea = clampingRect;
     }
 
-    final maxRect = scaledSymmetricClampingRect(initialRect, availableArea);
+    final maxRect =
+        ClampHelpers.scaledSymmetricClampingRect(initialRect, availableArea);
 
     final Box minRect;
     if (!constraints.isUnconstrained) {
@@ -151,7 +152,8 @@ final class SymmetricScaleResizer extends Resizer {
       availableArea = clampingRect;
     }
 
-    final maxRect = scaledSymmetricClampingRect(initialRect, availableArea);
+    final maxRect =
+        ClampHelpers.scaledSymmetricClampingRect(initialRect, availableArea);
 
     final Box minRect;
     if (!constraints.isUnconstrained) {

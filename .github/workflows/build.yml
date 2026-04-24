@@ -19,16 +19,11 @@ jobs:
         with:
           channel: stable
           cache: true
-      - name: Install Melos
-        run: flutter pub global activate melos
-      - name: Setup Melos
-        run: melos bootstrap
-      - name: Get Dependencies
-        run: melos deps
+      - name: Install dependencies
+        run: flutter pub get
       - name: Build Example
-        run: |
-          cd packages/flutter_box_transform/example
-          flutter build web --release
+        working-directory: packages/flutter_box_transform/example
+        run: flutter build web --release
       - name: Deploy example
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
@@ -38,9 +33,8 @@ jobs:
           projectId: box-transform-example
           target: example
       - name: Build Playground
-        run: |
-          cd packages/flutter_box_transform/playground
-          flutter build web --release
+        working-directory: packages/flutter_box_transform/playground
+        run: flutter build web --release
       - name: Deploy playground
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:

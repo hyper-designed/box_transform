@@ -1,4 +1,4 @@
-import 'package:vector_math/vector_math.dart';
+import 'package:vector_math/vector_math_64.dart';
 
 import 'enums.dart';
 import 'geometry.dart';
@@ -15,6 +15,9 @@ typedef RawResizeResult = ResizeResult<Box, Vector2, Dimension>;
 /// A convenient typedef for [TransformResult] with [Box], [Vector2], and
 /// [Dimension] as the generic types that is used by [BoxTransformer].
 typedef RawTransformResult = TransformResult<Box, Vector2, Dimension>;
+
+/// A convenient typedef for a rotate result with core Dart types.
+typedef RawRotateResult = RotateResult<Box, Vector2, Dimension>;
 
 /// An abstract class that represents the result of a transform operation.
 abstract class RectResult {
@@ -38,7 +41,7 @@ abstract class RectResult {
 /// usually [Box] or [Rect]. It represents the bounds of a rectangle.
 ///
 /// V is the type of the [Vector2] that is used by the [BoxTransformer]. This is
-/// usually [Vector2] or [Offset]. It represents the delta of the transform.
+/// usually [Vector2] or `Offset`. It represents the delta of the transform.
 ///
 /// D is the type of the [Dimension] that is used by the [BoxTransformer]. This
 /// is usually [Dimension] or [Size]. It represents the size of the rect.
@@ -59,9 +62,9 @@ class TransformResult<B extends Object, V extends Object, D extends Object>
   /// The [ResizeMode] of the node after the resize.
   final ResizeMode resizeMode;
 
-  /// The new [Dimension] of the node after the resize. Unlike [newRect], this
+  /// The new [Dimension] of the node after the resize. Unlike [rect], this
   /// reflects flip state. For example, if the node is flipped horizontally,
-  /// the width of the [newSize] will be negative.
+  /// the width of [rawSize] will be negative.
   final D rawSize;
 
   /// Whether the resizing rect hit its maximum possible width.
@@ -83,6 +86,17 @@ class TransformResult<B extends Object, V extends Object, D extends Object>
   /// Handle used to resize the rect.
   final HandlePosition handle;
 
+  /// Rotation (radians) of the box after the transform. Zero = axis-aligned.
+  final double rotation;
+
+  /// Axis-aligned bounding box of the rotated [rect]. When [rotation] is 0,
+  /// this equals [rect].
+  final B boundingRect;
+
+  /// Axis-aligned bounding box of the rotated [oldRect]. When [rotation] is 0,
+  /// this equals [oldRect].
+  final B oldBoundingRect;
+
   /// Creates a [ResizeResult] object.
   const TransformResult({
     required this.rect,
@@ -97,7 +111,11 @@ class TransformResult<B extends Object, V extends Object, D extends Object>
     required this.maxHeightReached,
     required this.largestRect,
     required this.handle,
-  });
+    this.rotation = 0.0,
+    B? boundingRect,
+    B? oldBoundingRect,
+  })  : boundingRect = boundingRect ?? rect,
+        oldBoundingRect = oldBoundingRect ?? oldRect;
 
   @override
   bool operator ==(Object other) {
@@ -115,7 +133,10 @@ class TransformResult<B extends Object, V extends Object, D extends Object>
         other.minHeightReached == minHeightReached &&
         other.maxHeightReached == maxHeightReached &&
         other.largestRect == largestRect &&
-        other.handle == handle;
+        other.handle == handle &&
+        other.rotation == rotation &&
+        other.boundingRect == boundingRect &&
+        other.oldBoundingRect == oldBoundingRect;
   }
 
   @override
@@ -132,6 +153,9 @@ class TransformResult<B extends Object, V extends Object, D extends Object>
         maxHeightReached,
         largestRect,
         handle,
+        rotation,
+        boundingRect,
+        oldBoundingRect,
       );
 
   @override
@@ -162,6 +186,9 @@ class MoveResult<B extends Object, V extends Object, D extends Object>
     required super.delta,
     required super.rawSize,
     required super.largestRect,
+    super.rotation = 0.0,
+    super.boundingRect,
+    super.oldBoundingRect,
   }) : super(
           flip: Flip.none,
           resizeMode: ResizeMode.freeform,
@@ -186,6 +213,14 @@ class MoveResult<B extends Object, V extends Object, D extends Object>
 /// An object that represents the result of a resize operation.
 class ResizeResult<B extends Object, V extends Object, D extends Object>
     extends TransformResult<B, V, D> {
+  /// Whether the requested resize could be honored under the supplied
+  /// `clampingRect`, `constraints`, and `bindingStrategy`. When `false`,
+  /// [rect] and [flip] equal the gesture-start values: the engine cannot
+  /// satisfy the target without leaking the clamp. Callers (controllers)
+  /// should skip their state update on `false`, holding the rect at the
+  /// last feasible state instead of snapping back to gesture start.
+  final bool feasible;
+
   /// Creates a [ResizeResult] object.
   const ResizeResult({
     required super.rect,
@@ -200,6 +235,10 @@ class ResizeResult<B extends Object, V extends Object, D extends Object>
     required super.maxHeightReached,
     required super.largestRect,
     required super.handle,
+    super.rotation = 0.0,
+    super.boundingRect,
+    super.oldBoundingRect,
+    this.feasible = true,
   });
 
   @override
@@ -215,6 +254,46 @@ class ResizeResult<B extends Object, V extends Object, D extends Object>
       'minHeightReached: $minHeightReached, '
       'maxHeightReached: $maxHeightReached, '
       'largestBox: $largestRect, '
-      'handle: $handle'
+      'handle: $handle, '
+      'feasible: $feasible'
       ')';
+}
+
+/// Result of a rotate-only operation.
+class RotateResult<B extends Object, V extends Object, D extends Object>
+    extends TransformResult<B, V, D> {
+  /// Whether the requested rotation could be honored under the supplied
+  /// `clampingRect` and `bindingStrategy`. When `false`, [rotation] equals
+  /// the gesture-start rotation and [rect] equals the gesture-start rect:
+  /// the rotation was rejected because no translation could keep the box
+  /// inside the clamp at the desired angle. Callers (e.g. controllers)
+  /// should skip their state update on `false` so the rotation effectively
+  /// freezes at the cap.
+  final bool feasible;
+
+  /// Creates a [RotateResult].
+  const RotateResult({
+    required super.rect,
+    required super.oldRect,
+    required super.delta,
+    required super.rawSize,
+    required super.largestRect,
+    required super.rotation,
+    super.boundingRect,
+    super.oldBoundingRect,
+    this.feasible = true,
+  }) : super(
+          flip: Flip.none,
+          resizeMode: ResizeMode.freeform,
+          minWidthReached: false,
+          maxWidthReached: false,
+          minHeightReached: false,
+          maxHeightReached: false,
+          handle: HandlePosition.none,
+        );
+
+  @override
+  String toString() =>
+      'RotateResult(rect: $rect, oldRect: $oldRect, rotation: $rotation, '
+      'feasible: $feasible)';
 }

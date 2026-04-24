@@ -84,6 +84,35 @@ This will disallow the box from growing or shrinking beyond 100x100 and 500x500 
 `ResizeResult.minWidthReached`, `ResizeResult.minHeightReached`, `ResizeResult.maxWidthReached` and
 `ResizeResult.maxHeightReached` are `bool` values that indicate whether the resizing was constrained or not.
 
+## Resizing a rotated box
+
+`BoxTransformer.resize` accepts `rotation` (radians around the box's center) and `bindingStrategy` parameters and
+dispatches to dedicated rotated paths internally. Freeform, scale, symmetric, symmetricScale, side handles, and
+force-flip all stay correct under arbitrary rotation:
+
+```dart title="Resizing under rotation"
+  final ResizeResult result = BoxTransformer.resize(
+    handle: HandlePosition.bottomRight,
+    initialRect: Box.fromLTWH(50, 50, 100, 100, rotation: 0.4),
+    initialLocalPosition: gestureStartCursor,
+    localPosition: currentCursor,
+    resizeMode: ResizeMode.freeform,
+    initialFlip: Flip.none,
+    rotation: 0.4,
+    bindingStrategy: BindingStrategy.boundingBox,
+    clampingRect: clamp,
+    constraints: constraints,
+    allowFlipping: true,
+  );
+```
+
+`ResizeResult.feasible` is `false` when the engine could not satisfy the requested target — the caller should hold
+its last feasible state instead of writing the returned rect (which is a gesture-start sentinel). Force-flip into
+an infeasible state automatically falls back to the natural (un-flipped) direction so the rect tracks the cursor by
+clamp-pinning at the natural wall instead of leaking.
+
+See [Rotating](/rotating) and [Binding Strategies](/binding_strategies) for the rotation-specific semantics.
+
 [boxTransform]: https://github.com/hyper-designed/box_transform/tree/main/packages/box_transform
 [flutterBoxTransform]: https://github.com/hyper-designed/box_transform/tree/main/packages/flutter_box_transform
 [flutter]: https://flutter.dev

@@ -3,6 +3,48 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## Unreleased — Rotation support
+
+---
+
+Packages with breaking changes:
+
+- [`box_transform` - `Unreleased`](#box_transform---unreleased): the default `bindingStrategy` on `BoxTransformer.move/resize/rotate` flips from `originalBox` to `boundingBox`. The old behavior is preserved for callers that pass the strategy explicitly. The list-based LP inspection API (`LinearInequality`, `ProjectionResult`, `buildCornerInequalities`, `buildCenterInequalities`, `projectOntoFeasibleRegion`) is removed; production callers go through the flat-buffer hot path (`IneqBuffer` + `*Into` builders + `projectOntoFeasibleRegionFlat`), and tests use a private test helper at `test/lp_inspect.dart`.
+- [`flutter_box_transform` - `Unreleased`](#flutter_box_transform---unreleased): the default `bindingStrategy` on `TransformableBox`, `TransformableBoxController`, and `UIBoxTransform.*` flips from `originalBox` to `boundingBox`. Existing apps will see a behavior change at non-zero rotation: the rendered footprint is now the containment surface, not the unrotated logical rect. Top-level rotated-layout helpers (`rotateOffsetAround`, `handleCornerInParent`, `rotatedCornerInWorld`, `anchorInHandle`, `handleTopLeftInWorld`, `sideHandleRectInWorld`, `computeEffectiveContainmentRect`) are relocated as static methods on `RotatedLayout`; the file-private default handle builders are promoted to `HandleBuilders.defaultCorner` / `HandleBuilders.defaultSide`. The top-level `defaultResizeModeResolver()` is relocated to `TransformableBoxController.defaultResizeModeResolver()`.
+
+Packages with other changes:
+
+- [`box_transform` - `Unreleased`](#box_transform---unreleased)
+- [`flutter_box_transform` - `Unreleased`](#flutter_box_transform---unreleased)
+
+---
+
+#### `box_transform` - `Unreleased`
+
+- Add first-class rotation support around a box's center via `Box.rotation` and a new `BoxTransformer.rotate(...)` entry point.
+- Add `BindingStrategy` enum: `originalBox` keeps the unrotated logical rect inside the clamp; `boundingBox` keeps the rendered rotated polygon (and therefore its axis-aligned bounding box) fully inside.
+- **[BREAKING]** Default `bindingStrategy` flipped from `originalBox` to `boundingBox` on `BoxTransformer.move/resize/rotate`. Pass `BindingStrategy.originalBox` explicitly to restore the previous behavior.
+- `BoxTransformer.move()`, `.resize()`, `.rotate()` are all rotation-aware. Freeform, scale, symmetric, symmetricScale, side-handle, and force-flip resize paths each honor rotation under both binding strategies.
+- Rotation gestures slide-then-freeze: when the requested angle would push the rect outside the clamp, the engine first tries to translate into available slack; if no translation rescues it, the rotation caps at the last feasible angle.
+- Force-flip on a rotated rect falls back to natural direction when the flipped state can't fit clamp + constraints. The rect tracks the cursor by clamp-pinning at the natural wall instead of leaking the clamp or freezing.
+- Add `feasible` field to `RotateResult` and `ResizeResult`. `false` means the engine could not honor the requested target without leaking; consumers (controllers) use it to hold the last feasible state.
+- Solver: dedicated rotated-clamping LP with corner-, side-, and center-anchored inequality builders, an L2 projector with 1D fallback at saturation, and a unified violator-priority loop. `FlatProjection` now exposes `feasible` + `worstResidual`.
+- Tests: extensive rotated-resize, rotated-move, rotated-flip, side-handle, scale, symmetric, symmetricScale, and clamp-invariant coverage. New `clamp_invariants_test.dart` asserts engine invariants (clamp containment, side-handle scope, constraint compliance) on recorded playground scenarios.
+
+#### `flutter_box_transform` - `Unreleased`
+
+- **[BREAKING]** Top-level rotated-layout helpers are now static methods on `RotatedLayout` (`rotateOffsetAround`, `handleCornerInParent`, `rotatedCornerInWorld`, `anchorInHandle`, `handleTopLeftInWorld`, `sideHandleRectInWorld`, and `computeEffectiveContainmentRect`). The previous top-level forms are removed.
+- **[BREAKING]** Default handle builders moved from file-private functions to public statics on `HandleBuilders` (`HandleBuilders.defaultCorner`, `HandleBuilders.defaultSide`).
+- Add `rotation`, `rotatable`, and `bindingStrategy` parameters on `TransformableBox`.
+- **[BREAKING]** Default `bindingStrategy` flipped from `originalBox` to `boundingBox` on `TransformableBox`, `TransformableBoxController`, and `UIBoxTransform.move/resize/rotate`. Existing apps that relied on the unrotated-logical-rect semantic must pass `BindingStrategy.originalBox` explicitly.
+- Add per-corner rotation gesture: an outer ring around each corner-handle captures rotation when `rotatable: true`. Sized via `rotationHandleGestureSize` (default 64 px). Add rotation callbacks: `onRotationStart` / `onRotationUpdate` / `onRotationEnd` / `onRotationCancel`.
+- `TransformableBoxController` adds `rotation`, `initialRotation`, `bindingStrategy`, `onRotateStart` / `onRotateUpdate` / `onRotateEnd` / `onRotateCancel`. `onResizeUpdate` and `onRotateUpdate` skip state writes on `result.feasible == false` and override `result.rect`/`result.rotation` to the controller's last feasible value, so consumers binding visible state via callbacks (`box.rect = result.rect`) stay clamp-pinned at the last feasible position rather than snapping back to gesture-start.
+- Side handles render rotated under non-zero rotation and translate gesture coordinates into the box's un-rotated frame so resize tracks the cursor visually.
+- Hit-testing gates corner taps to the rotated polygon (not the AABB) so rotated boxes don't capture clicks in their AABB wedges.
+- Playground gains a rotation slider, `bindingStrategy` toggle, debug overlays for rotated/unrotated bounds, and a tick-by-tick test recorder that captures full gesture sequences (rotation + bindingStrategy aware) for regression replay.
+- Tests: rotated controller gestures, rotated layout, rotated drag hit-gating, rotated gesture integration, clamp-shrink continuity under rotation, and a force-flip fallback regression test.
+- **[BREAKING]** `defaultResizeModeResolver()` is now `TransformableBoxController.defaultResizeModeResolver()`. The top-level function has been removed; consumers that referenced it directly (e.g. as a default for `resizeModeResolver`) must update to the qualified static.
+
 ## 2025-03-26
 
 ---

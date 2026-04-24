@@ -44,6 +44,10 @@
         [
           "Resize Modes",
           "/resize_modes"
+        ],
+        [
+          "Binding Strategies",
+          "/binding_strategies"
         ]
       ]
     ],
@@ -63,6 +67,10 @@
           "/flutter_resizing"
         ],
         [
+          "Rotating",
+          "/flutter_rotating"
+        ],
+        [
           "Handles",
           "/handles"
         ],
@@ -71,7 +79,7 @@
           "/flutter_controller"
         ],
         [
-          "API Reference \uD83D\uDD17",
+          "API Reference 🔗",
           "https://pub.dev/documentation/flutter_box_transform/latest/"
         ]
       ]
@@ -92,10 +100,18 @@
           "/resizing"
         ],
         [
-          "API Reference \uD83D\uDD17",
+          "Rotating",
+          "/rotating"
+        ],
+        [
+          "API Reference 🔗",
           "https://pub.dev/documentation/box_transform/latest/"
         ]
       ]
+    ],
+    [
+      "Benchmarks",
+      "/benchmarks"
     ],
     [
       "License",

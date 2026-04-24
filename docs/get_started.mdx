@@ -62,4 +62,24 @@ You can use `BoxTransformer.move` to move a box.
   result.position; // the new position of the box
 ```
 
+You can use `BoxTransformer.rotate` to rotate a box around its center.
+
+```dart title="Rotating a box"
+  final Box rect = Box.fromLTWH(0, 0, 100, 100);
+  final RotateResult result = BoxTransformer.rotate(
+    initialRect: rect,
+    initialLocalPosition: Vector2(100, 50), // pointer at gesture start
+    localPosition: Vector2(50, 100),        // pointer now
+    initialRotation: 0.0,
+  );
+
+  result.rotation; // new rotation, in radians
+  result.rect;     // rect, possibly translated to fit clamp at this angle
+  result.feasible; // false when the angle could not be honored
+```
+
+`Box.rotation`, `BoxTransformer.rotate`, and the `BindingStrategy` enum (which controls whether clamp + constraints
+apply to the unrotated logical rect or to the rendered axis-aligned bounding box) are documented in detail on the
+[Rotating](/rotating) and [Binding Strategies](/binding_strategies) pages.
+
 [boxTransform]: https://github.com/hyper-designed/box_transform

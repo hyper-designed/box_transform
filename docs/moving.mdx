@@ -35,3 +35,22 @@ area.
 
   result.position; // the new position of the box
 ```
+
+## Moving a rotated box
+
+`BoxTransformer.move` accepts `rotation` (radians) and `bindingStrategy` parameters. The solver computes the joint
+feasible translation interval that keeps the rect inside the clamp under the active strategy and slides into it; if
+the requested delta would push the box past the clamp, the result is clamped to the wall.
+
+```dart title="Moving a rotated box"
+  final MoveResult result = BoxTransformer.move(
+    initialRect: Box.fromLTWH(50, 50, 100, 100, rotation: 0.4),
+    initialLocalPosition: startCursor,
+    localPosition: currentCursor,
+    rotation: 0.4,
+    bindingStrategy: BindingStrategy.boundingBox,
+    clampingRect: clamp,
+  );
+```
+
+See [Rotating](/rotating) and [Binding Strategies](/binding_strategies) for the rotation-specific semantics.

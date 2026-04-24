@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'transformable_box.dart';
 
 /// Default width of the border of the handles.
-const kDefaultHandleBorderWidth = 1.5;
+const _kDefaultHandleBorderWidth = 1.5;
 
 /// Alignment of the handle.
 enum HandleAlignment {
@@ -83,7 +83,7 @@ class DefaultCornerHandle extends StatelessWidget {
       shape: BoxShape.circle,
       border: Border.all(
         color: Theme.of(context).colorScheme.primary,
-        width: kDefaultHandleBorderWidth,
+        width: _kDefaultHandleBorderWidth,
       ),
     );
   }
@@ -145,7 +145,7 @@ class DefaultSideHandle extends StatelessWidget {
       shape: StadiumBorder(
         side: BorderSide(
           color: Theme.of(context).colorScheme.primary,
-          width: kDefaultHandleBorderWidth,
+          width: _kDefaultHandleBorderWidth,
         ),
       ),
     );
