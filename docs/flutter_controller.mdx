@@ -82,6 +82,38 @@ You can limit the movements of the controller using the `setClampingBox` method.
   controller.setClampingRect(Rect.fromLTWH(0, 0, 1000, 1000));
 ```
 
+### Rotation
+
+The controller carries a `rotation` field (radians around the box's center) plus an `initialRotation` snapshot
+captured at gesture start, and a `bindingStrategy` (`originalBox` vs `boundingBox`). It exposes the rotation gesture
+lifecycle directly:
+
+```dart title="Rotation lifecycle on the controller"
+controller.onRotateStart(localPosition);
+final result = controller.onRotateUpdate(localPosition, handle);
+controller.onRotateEnd();
+```
+
+`onRotateUpdate` returns a `UIRotateResult` with a `feasible` field. When `feasible == false`, the engine could
+not honor the requested angle — the controller **does not** advance its internal `rotation` or `rect`, and overrides
+`result.rect`/`result.rotation` to its last feasible state. Consumers that bind their visible state via callbacks
+(`box.rotation = result.rotation`) stay clamp-pinned at the last feasible angle rather than snapping back to
+gesture-start.
+
+```dart title="Programmatic rotation control"
+// Set rotation directly (radians, around the box's center).
+controller.setRotation(0.4);
+
+// Toggle the binding strategy at runtime — the controller reconciles the
+// current rect against the new strategy by translating into clamp slack
+// if needed.
+controller.setBindingStrategy(BindingStrategy.boundingBox);
+```
+
+`onResizeUpdate` follows the same `feasible`-aware semantic: when the rotated freeform/symmetric resize signals it
+cannot satisfy clamp + constraints, the controller holds the last feasible state and overrides the result's
+`rect`/`flip` accordingly. See the [Rotating](/flutter_rotating) page for the full story.
+
 ### Other things you can do with a controller
 
 The `TransformableBoxController` almost mirrors the constructor parameters of the `TransformableBox`. You can do things
@@ -102,4 +134,10 @@ controller.setClampingRect(clampingRect);
 
 // Disable flipping the rect while resizing
 controller.setAllowFlippingWhileResizing(false);
+
+// Change rotation programmatically
+controller.setRotation(0.4);
+
+// Change binding strategy
+controller.setBindingStrategy(BindingStrategy.boundingBox);
 ```

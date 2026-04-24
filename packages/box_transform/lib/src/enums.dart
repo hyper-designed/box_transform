@@ -1,4 +1,4 @@
-import 'package:vector_math/vector_math.dart';
+import 'package:vector_math/vector_math_64.dart';
 
 import 'geometry.dart';
 
@@ -303,7 +303,7 @@ enum Flip {
 
   /// Creates a new [Flip] by combining this [Flip] with the given.
   /// See [influencedBy] for more details.
-  operator *(Flip other) => influencedBy(other);
+  Flip operator *(Flip other) => influencedBy(other);
 
   /// Creates a new [Flip] by combining this [Flip] with the given
   /// [other] flip making the resulting flip influenced by [other].
@@ -412,4 +412,26 @@ enum ResizeMode {
   /// Used to determine whether the resize should be symmetric and
   /// w.r.t the center.
   bool get hasSymmetry => isSymmetric || isSymmetricScale;
+}
+
+/// Controls whether size and clamping constraints apply to the box's unrotated
+/// dimensions or to its rendered axis-aligned bounding box.
+///
+/// This only matters when [Box.rotation] is non-zero.
+enum BindingStrategy {
+  /// Constraints and clamping apply to the box's unrotated [Box.width] and
+  /// [Box.height]. The rotated corners may extend beyond the clamping rect
+  /// if rotation makes them do so.
+  ///
+  /// Typical intent: "my image is intrinsically 100x100; keep the logical
+  /// image on-screen."
+  originalBox,
+
+  /// Constraints and clamping apply to the rendered axis-aligned bounding
+  /// box of the rotated box. The rotated corners are guaranteed to stay
+  /// within the clamping rect.
+  ///
+  /// Typical intent: "I want the rendered footprint to stay 100px wide
+  /// regardless of rotation angle."
+  boundingBox,
 }

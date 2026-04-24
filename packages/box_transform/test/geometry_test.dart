@@ -1,6 +1,6 @@
 import 'package:box_transform/box_transform.dart';
 import 'package:test/test.dart';
-import 'package:vector_math/vector_math.dart';
+import 'package:vector_math/vector_math_64.dart';
 
 void main() {
   group('Dimension tests', () {
@@ -784,6 +784,37 @@ void main() {
           Constraints.unconstrained()
               .constrainRect(Box.fromLTRB(100, 100, 400, 300)),
           Box.fromLTRB(100, 100, 400, 300));
+    });
+  });
+
+  group('Box rotation field', () {
+    test('defaults to 0.0 for all constructors', () {
+      expect(Box.fromLTRB(0, 0, 100, 100).rotation, 0.0);
+      expect(Box.fromLTWH(0, 0, 100, 100).rotation, 0.0);
+      expect(
+          Box.fromCenter(center: Vector2.zero(), width: 10, height: 10)
+              .rotation,
+          0.0);
+      expect(Box.fromPoints(Vector2.zero(), Vector2(10, 10)).rotation, 0.0);
+      expect(Box.zero.rotation, 0.0);
+      expect(Box.largest.rotation, 0.0);
+    });
+
+    test('can be constructed with explicit rotation', () {
+      final b = Box.fromLTRB(0, 0, 100, 100, rotation: 1.23);
+      expect(b.rotation, 1.23);
+    });
+
+    test('equality distinguishes rotation', () {
+      final a = Box.fromLTRB(0, 0, 100, 100);
+      final b = Box.fromLTRB(0, 0, 100, 100, rotation: 0.5);
+      expect(a, isNot(equals(b)));
+      expect(a.hashCode, isNot(equals(b.hashCode)));
+    });
+
+    test('translate preserves rotation', () {
+      final b = Box.fromLTRB(0, 0, 100, 100, rotation: 0.5);
+      expect(b.translate(10, 20).rotation, 0.5);
     });
   });
 }

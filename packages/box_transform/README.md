@@ -2,7 +2,7 @@
 
 # Box Transform
 
-[![melos](https://img.shields.io/badge/maintained%20with-melos-f700ff.svg?style=flat-square)](https://github.com/invertase/melos) [![Build](https://github.com/hyper-designed/box_transform/actions/workflows/build.yml/badge.svg)](https://github.com/hyper-designed/box_transform/actions/workflows/build.yml) [![Tests](https://github.com/hyper-designed/box_transform/workflows/Tests/badge.svg?branch=main)](https://github.com/hyper-designed/box_transform/actions) [![Pub Version](https://img.shields.io/pub/v/box_transform?label=Pub)](https://pub.dev/packages/box_transform)
+[![Build](https://github.com/hyper-designed/box_transform/actions/workflows/build.yml/badge.svg)](https://github.com/hyper-designed/box_transform/actions/workflows/build.yml) [![Tests](https://github.com/hyper-designed/box_transform/workflows/Tests/badge.svg?branch=main)](https://github.com/hyper-designed/box_transform/actions) [![Pub Version](https://img.shields.io/pub/v/box_transform?label=Pub)](https://pub.dev/packages/box_transform)
 
 [Box Transform](https://github.com/hyper-designed/box_transform) is a pure-Dart base package that allows you to
 programmatically handle box resizing and dragging without relying on Flutter. It provides highly flexible,
@@ -17,6 +17,13 @@ programmatically resizable and draggable boxes that can be used in any Dart proj
 * 🎨 **Flexible Resizing Modes:** Choose from four different resizing modes for more flexibility in how boxes are
   resized.
 * 📍 **Customizable Anchor Points:** Define resizing corner-handles to anchor different parts of the box when resizing.
+* 🌀 **Rotation Support:** First-class rotation around the box's center via `Box.rotation` plus a dedicated
+  `BoxTransformer.rotate(...)` entry point. Move, resize, scale, symmetric, side-handle, and force-flip all work
+  under arbitrary rotation. `BindingStrategy.originalBox` keeps the unrotated logical rect inside the clamp, while
+  `BindingStrategy.boundingBox` keeps the rendered AABB (rotated corners + unrotated rect) fully contained. Rotation
+  gestures use slide-then-freeze: the box slides into available clamp slack to honor the requested angle, capping at
+  the last feasible angle when no translation rescues it. `RotateResult.feasible` and `ResizeResult.feasible` expose
+  this signal to callers (`false` ⇒ engine could not honor the gesture; the controller holds the last feasible state).
 * 🚀 **Easy Integration:** Integrate Box Transform into your Dart or Flutter project with ease.
 
 ## Getting started

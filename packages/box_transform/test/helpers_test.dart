@@ -1,70 +1,86 @@
 import 'package:box_transform/box_transform.dart';
 import 'package:test/test.dart';
-import 'package:vector_math/vector_math.dart';
+import 'package:vector_math/vector_math_64.dart';
 
 void main() {
   group('flipBox tests', () {
     test('flipBox test with bottom-right handle', () {
       final box = Box.fromLTWH(500, 500, 400, 300);
 
-      Box flipped = flipRect(box, Flip.none, HandlePosition.bottomRight);
+      Box flipped =
+          ClampHelpers.flipRect(box, Flip.none, HandlePosition.bottomRight);
       expect(box, flipped);
 
-      flipped = flipRect(box, Flip.horizontal, HandlePosition.bottomRight);
+      flipped = ClampHelpers.flipRect(
+          box, Flip.horizontal, HandlePosition.bottomRight);
       expect(flipped.topLeft, Vector2(100, 500));
 
-      flipped = flipRect(box, Flip.vertical, HandlePosition.bottomRight);
+      flipped =
+          ClampHelpers.flipRect(box, Flip.vertical, HandlePosition.bottomRight);
       expect(flipped.topLeft, Vector2(500, 200));
 
-      flipped = flipRect(box, Flip.diagonal, HandlePosition.bottomRight);
+      flipped =
+          ClampHelpers.flipRect(box, Flip.diagonal, HandlePosition.bottomRight);
       expect(flipped.topLeft, Vector2(100, 200));
     });
 
     test('flipBox test with top-right handle', () {
       final box = Box.fromLTWH(500, 500, 400, 300);
 
-      Box flipped = flipRect(box, Flip.none, HandlePosition.topRight);
+      Box flipped =
+          ClampHelpers.flipRect(box, Flip.none, HandlePosition.topRight);
       expect(box, flipped);
 
-      flipped = flipRect(box, Flip.horizontal, HandlePosition.topRight);
+      flipped =
+          ClampHelpers.flipRect(box, Flip.horizontal, HandlePosition.topRight);
       expect(flipped.topLeft, Vector2(100, 500));
 
-      flipped = flipRect(box, Flip.vertical, HandlePosition.topRight);
+      flipped =
+          ClampHelpers.flipRect(box, Flip.vertical, HandlePosition.topRight);
       expect(flipped.topLeft, Vector2(500, 800));
 
-      flipped = flipRect(box, Flip.diagonal, HandlePosition.topRight);
+      flipped =
+          ClampHelpers.flipRect(box, Flip.diagonal, HandlePosition.topRight);
       expect(flipped.topLeft, Vector2(100, 800));
     });
 
     test('flipBox test with top-left handle', () {
       final box = Box.fromLTWH(500, 500, 400, 300);
 
-      Box flipped = flipRect(box, Flip.none, HandlePosition.topLeft);
+      Box flipped =
+          ClampHelpers.flipRect(box, Flip.none, HandlePosition.topLeft);
       expect(box, flipped);
 
-      flipped = flipRect(box, Flip.horizontal, HandlePosition.topLeft);
+      flipped =
+          ClampHelpers.flipRect(box, Flip.horizontal, HandlePosition.topLeft);
       expect(flipped.topLeft, Vector2(900, 500));
 
-      flipped = flipRect(box, Flip.vertical, HandlePosition.topLeft);
+      flipped =
+          ClampHelpers.flipRect(box, Flip.vertical, HandlePosition.topLeft);
       expect(flipped.topLeft, Vector2(500, 800));
 
-      flipped = flipRect(box, Flip.diagonal, HandlePosition.topLeft);
+      flipped =
+          ClampHelpers.flipRect(box, Flip.diagonal, HandlePosition.topLeft);
       expect(flipped.topLeft, Vector2(900, 800));
     });
 
     test('flipBox test with bottom-left handle', () {
       final box = Box.fromLTWH(500, 500, 400, 300);
 
-      Box flipped = flipRect(box, Flip.none, HandlePosition.bottomLeft);
+      Box flipped =
+          ClampHelpers.flipRect(box, Flip.none, HandlePosition.bottomLeft);
       expect(box, flipped);
 
-      flipped = flipRect(box, Flip.horizontal, HandlePosition.bottomLeft);
+      flipped = ClampHelpers.flipRect(
+          box, Flip.horizontal, HandlePosition.bottomLeft);
       expect(flipped.topLeft, Vector2(900, 500));
 
-      flipped = flipRect(box, Flip.vertical, HandlePosition.bottomLeft);
+      flipped =
+          ClampHelpers.flipRect(box, Flip.vertical, HandlePosition.bottomLeft);
       expect(flipped.topLeft, Vector2(500, 200));
 
-      flipped = flipRect(box, Flip.diagonal, HandlePosition.bottomLeft);
+      flipped =
+          ClampHelpers.flipRect(box, Flip.diagonal, HandlePosition.bottomLeft);
       expect(flipped.topLeft, Vector2(900, 200));
     });
   });
@@ -73,7 +89,7 @@ void main() {
     test('getFlipForBox test for bottom-right handle', () {
       final box = Box.fromLTWH(500, 500, 400, 300);
 
-      Flip flip = getFlipForRect(
+      Flip flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(-500, -400),
         HandlePosition.bottomRight,
@@ -81,7 +97,7 @@ void main() {
       );
       expect(flip, Flip.diagonal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(-500, 10),
         HandlePosition.bottomRight,
@@ -89,7 +105,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(10, -400),
         HandlePosition.bottomRight,
@@ -97,7 +113,7 @@ void main() {
       );
       expect(flip, Flip.vertical);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(10, 10),
         HandlePosition.bottomRight,
@@ -105,7 +121,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(500, 500),
         HandlePosition.topLeft,
@@ -113,7 +129,7 @@ void main() {
       );
       expect(flip, Flip.diagonal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(500, -10),
         HandlePosition.topLeft,
@@ -121,7 +137,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(-10, 500),
         HandlePosition.topLeft,
@@ -129,7 +145,7 @@ void main() {
       );
       expect(flip, Flip.vertical);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(-10, -10),
         HandlePosition.topLeft,
@@ -137,7 +153,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(10, -10),
         HandlePosition.topRight,
@@ -145,7 +161,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(10, 500),
         HandlePosition.topRight,
@@ -153,7 +169,7 @@ void main() {
       );
       expect(flip, Flip.vertical);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(-500, 500),
         HandlePosition.topRight,
@@ -161,7 +177,7 @@ void main() {
       );
       expect(flip, Flip.diagonal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(-500, -10),
         HandlePosition.topRight,
@@ -169,7 +185,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(500, 10),
         HandlePosition.bottomLeft,
@@ -177,7 +193,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(-10, 10),
         HandlePosition.bottomLeft,
@@ -185,7 +201,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(-10, -500),
         HandlePosition.bottomLeft,
@@ -193,7 +209,7 @@ void main() {
       );
       expect(flip, Flip.vertical);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(500, -500),
         HandlePosition.bottomLeft,
@@ -205,7 +221,7 @@ void main() {
     test('getFlipForBox test for top-left handle', () {
       final box = Box.fromLTWH(0, 0, 400, 300);
 
-      Flip flip = getFlipForRect(
+      Flip flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(500, 500),
         HandlePosition.topLeft,
@@ -213,7 +229,7 @@ void main() {
       );
       expect(flip, Flip.diagonal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(500, -10),
         HandlePosition.topLeft,
@@ -221,7 +237,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(-10, 500),
         HandlePosition.topLeft,
@@ -229,7 +245,7 @@ void main() {
       );
       expect(flip, Flip.vertical);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(-10, -10),
         HandlePosition.topLeft,
@@ -237,7 +253,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(-10, -10),
         HandlePosition.topLeft,
@@ -245,7 +261,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(500, 500),
         HandlePosition.topLeft,
@@ -253,7 +269,7 @@ void main() {
       );
       expect(flip, Flip.diagonal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(500, -10),
         HandlePosition.topLeft,
@@ -261,7 +277,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(-10, 500),
         HandlePosition.topLeft,
@@ -269,7 +285,7 @@ void main() {
       );
       expect(flip, Flip.vertical);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(-10, -10),
         HandlePosition.topLeft,
@@ -277,7 +293,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(300, 200),
         HandlePosition.topLeft,
@@ -285,7 +301,7 @@ void main() {
       );
       expect(flip, Flip.diagonal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(800, -10),
         HandlePosition.topLeft,
@@ -293,7 +309,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(-10, 500),
         HandlePosition.topLeft,
@@ -301,7 +317,7 @@ void main() {
       );
       expect(flip, Flip.vertical);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(-10, -10),
         HandlePosition.topLeft,
@@ -309,7 +325,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(800, 500),
         HandlePosition.topLeft,
@@ -317,7 +333,7 @@ void main() {
       );
       expect(flip, Flip.diagonal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(300, 0),
         HandlePosition.topLeft,
@@ -325,7 +341,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(0, 200),
         HandlePosition.topLeft,
@@ -337,7 +353,7 @@ void main() {
     test('getFlipForBox test for top-right handle', () {
       final box = Box.fromLTWH(0, 0, 400, 300);
 
-      Flip flip = getFlipForRect(
+      Flip flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(500, 500),
         HandlePosition.topRight,
@@ -345,7 +361,7 @@ void main() {
       );
       expect(flip, Flip.vertical);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(-500, 500),
         HandlePosition.topRight,
@@ -353,7 +369,7 @@ void main() {
       );
       expect(flip, Flip.diagonal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(-500, 0),
         HandlePosition.topRight,
@@ -361,7 +377,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(-10, -10),
         HandlePosition.topRight,
@@ -369,7 +385,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(-10, -10),
         HandlePosition.topRight,
@@ -377,7 +393,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(500, 500),
         HandlePosition.topRight,
@@ -385,7 +401,7 @@ void main() {
       );
       expect(flip, Flip.vertical);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(-500, 500),
         HandlePosition.topRight,
@@ -393,7 +409,7 @@ void main() {
       );
       expect(flip, Flip.diagonal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(-500, 0),
         HandlePosition.topRight,
@@ -401,7 +417,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(-10, -10),
         HandlePosition.topRight,
@@ -409,7 +425,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(100, 200),
         HandlePosition.topRight,
@@ -417,7 +433,7 @@ void main() {
       );
       expect(flip, Flip.vertical);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(-300, 200),
         HandlePosition.topRight,
@@ -425,7 +441,7 @@ void main() {
       );
       expect(flip, Flip.diagonal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(-500, 0),
         HandlePosition.topRight,
@@ -433,7 +449,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(-10, -10),
         HandlePosition.topRight,
@@ -441,7 +457,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(500, 500),
         HandlePosition.topRight,
@@ -449,7 +465,7 @@ void main() {
       );
       expect(flip, Flip.vertical);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(-500, 0),
         HandlePosition.topRight,
@@ -457,7 +473,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(-20, 20),
         HandlePosition.topRight,
@@ -469,7 +485,7 @@ void main() {
     test('getFlipForBox test for bottom-left handle', () {
       final box = Box.fromLTWH(0, 0, 400, 300);
 
-      Flip flip = getFlipForRect(
+      Flip flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(500, -400),
         HandlePosition.bottomLeft,
@@ -477,7 +493,7 @@ void main() {
       );
       expect(flip, Flip.diagonal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(500, 500),
         HandlePosition.bottomLeft,
@@ -485,7 +501,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(0, -400),
         HandlePosition.bottomLeft,
@@ -493,7 +509,7 @@ void main() {
       );
       expect(flip, Flip.vertical);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(20, -20),
         HandlePosition.bottomLeft,
@@ -501,7 +517,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(20, -20),
         HandlePosition.bottomLeft,
@@ -509,7 +525,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(500, -400),
         HandlePosition.bottomLeft,
@@ -517,7 +533,7 @@ void main() {
       );
       expect(flip, Flip.diagonal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(500, 500),
         HandlePosition.bottomLeft,
@@ -525,7 +541,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(0, -400),
         HandlePosition.bottomLeft,
@@ -533,7 +549,7 @@ void main() {
       );
       expect(flip, Flip.vertical);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(20, -20),
         HandlePosition.bottomLeft,
@@ -541,7 +557,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(300, -200),
         HandlePosition.bottomLeft,
@@ -549,7 +565,7 @@ void main() {
       );
       expect(flip, Flip.diagonal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(800, 500),
         HandlePosition.bottomLeft,
@@ -557,7 +573,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(0, -200),
         HandlePosition.bottomLeft,
@@ -565,7 +581,7 @@ void main() {
       );
       expect(flip, Flip.vertical);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(20, -20),
         HandlePosition.bottomLeft,
@@ -573,7 +589,7 @@ void main() {
       );
       expect(flip, Flip.none);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(300, -200),
         HandlePosition.bottomLeft,
@@ -581,7 +597,7 @@ void main() {
       );
       expect(flip, Flip.diagonal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(800, 500),
         HandlePosition.bottomLeft,
@@ -589,7 +605,7 @@ void main() {
       );
       expect(flip, Flip.horizontal);
 
-      flip = getFlipForRect(
+      flip = ClampHelpers.getFlipForRect(
         box,
         Vector2(0, -200),
         HandlePosition.bottomLeft,
@@ -604,7 +620,7 @@ void main() {
     final Box rect = Box.fromLTRB(400, 600, 400, 300);
 
     expect(
-      getAvailableAreaForHandle(
+      ClampHelpers.getAvailableAreaForHandle(
           rect: rect,
           clampingRect: clampingRect,
           handle: HandlePosition.bottomRight),
@@ -612,7 +628,7 @@ void main() {
     );
 
     expect(
-      getAvailableAreaForHandle(
+      ClampHelpers.getAvailableAreaForHandle(
           rect: rect,
           clampingRect: clampingRect,
           handle: HandlePosition.topLeft),
@@ -620,7 +636,7 @@ void main() {
     );
 
     expect(
-      getAvailableAreaForHandle(
+      ClampHelpers.getAvailableAreaForHandle(
           rect: rect,
           clampingRect: clampingRect,
           handle: HandlePosition.bottomLeft),
@@ -629,7 +645,7 @@ void main() {
     );
 
     expect(
-      getAvailableAreaForHandle(
+      ClampHelpers.getAvailableAreaForHandle(
           rect: rect,
           clampingRect: clampingRect,
           handle: HandlePosition.topRight),
@@ -638,7 +654,7 @@ void main() {
     );
 
     expect(
-      getAvailableAreaForHandle(
+      ClampHelpers.getAvailableAreaForHandle(
           rect: rect,
           clampingRect: clampingRect,
           handle: HandlePosition.bottom),
@@ -647,14 +663,14 @@ void main() {
     );
 
     expect(
-      getAvailableAreaForHandle(
+      ClampHelpers.getAvailableAreaForHandle(
           rect: rect, clampingRect: clampingRect, handle: HandlePosition.right),
       Box.fromLTRB(
           rect.left, clampingRect.top, clampingRect.right, clampingRect.bottom),
     );
 
     expect(
-      getAvailableAreaForHandle(
+      ClampHelpers.getAvailableAreaForHandle(
           rect: rect, clampingRect: clampingRect, handle: HandlePosition.left),
       Box.fromLTRB(
           clampingRect.left, clampingRect.top, rect.right, clampingRect.bottom),
@@ -665,21 +681,26 @@ void main() {
     Box rect = Box.fromLTWH(200, 300, 400, 300);
     Box clampingRect = Box.fromLTWH(100, 100, 1000, 1000);
 
-    expect(getClosestEdge(rect, clampingRect), HandlePosition.left);
+    expect(
+        ClampHelpers.getClosestEdge(rect, clampingRect), HandlePosition.left);
 
     rect = Box.fromLTWH(200, 150, 400, 300);
-    expect(getClosestEdge(rect, clampingRect), HandlePosition.top);
+    expect(ClampHelpers.getClosestEdge(rect, clampingRect), HandlePosition.top);
 
     rect = Box.fromLTWH(200, 900, 400, 300);
-    expect(getClosestEdge(rect, clampingRect), HandlePosition.bottom);
+    expect(
+        ClampHelpers.getClosestEdge(rect, clampingRect), HandlePosition.bottom);
 
     rect = Box.fromLTWH(900, 300, 400, 300);
-    expect(getClosestEdge(rect, clampingRect), HandlePosition.right);
+    expect(
+        ClampHelpers.getClosestEdge(rect, clampingRect), HandlePosition.right);
 
     rect = Box.fromLTWH(900, 900, 400, 300);
-    expect(getClosestEdge(rect, clampingRect), HandlePosition.right);
+    expect(
+        ClampHelpers.getClosestEdge(rect, clampingRect), HandlePosition.right);
 
     rect = Box.fromLTWH(900, 150, 400, 300);
-    expect(getClosestEdge(rect, clampingRect), HandlePosition.right);
+    expect(
+        ClampHelpers.getClosestEdge(rect, clampingRect), HandlePosition.right);
   });
 }

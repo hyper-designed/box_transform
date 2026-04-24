@@ -1,8 +1,11 @@
+import 'dart:math' as math;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../flutter_box_transform.dart';
-import 'handle_builders.dart';
+import 'rotated_hit_gate.dart';
 
 /// A widget that allows you to resize and drag a box around a widget.
 class TransformableBox extends StatefulWidget {
@@ -34,6 +37,23 @@ class TransformableBox extends StatefulWidget {
   /// Note that this will build for all four sides of the rectangle.
   final HandleBuilder sideHandleBuilder;
 
+  /// Optional override for the [MouseCursor] shown over each handle's gesture
+  /// zone. Receives the [HandlePosition] and a [HandleCursorKind] indicating
+  /// the resize zone vs. the rotation ring (the latter only on corners when
+  /// [rotatable] is true).
+  ///
+  /// This applies to the handle's gesture zones, not to pixels painted by
+  /// [cornerHandleBuilder] or [sideHandleBuilder] — a custom builder that
+  /// wraps its output in its own [MouseRegion] will win on its own footprint.
+  ///
+  /// Return `null` for any case to fall back to the package defaults — the
+  /// appropriate diagonal/cardinal `SystemMouseCursors.resize*` for resize
+  /// zones, and the diagonal resize cursor for rotation rings (Flutter has
+  /// no native rotation cursor; pair with the
+  /// [`custom_mouse_cursor`](https://pub.dev/packages/custom_mouse_cursor)
+  /// package if you want to ship a real rotate glyph).
+  final HandleCursorResolver? cursorResolver;
+
   /// The size of the gesture response area of the handles. If you don't
   /// specify it, the default value will be used.
   ///
@@ -46,6 +66,23 @@ class TransformableBox extends StatefulWidget {
   ///
   /// The default value is 24 pixels in diameter.
   final double handleTapSize;
+
+  /// Size of the rotation gesture capture ring surrounding a corner handle.
+  /// Must be >= [handleTapSize]. Only used when [rotatable] is true. Default
+  /// 64 pixels.
+  final double rotationHandleGestureSize;
+
+  /// Whether corner handles should capture rotation gestures in an outer
+  /// ring around the resize zone. Default false.
+  final bool rotatable;
+
+  /// The current rotation angle (radians) of the box around its center.
+  /// Ignored if a [controller] is provided.
+  final double rotation;
+
+  /// Controls whether size constraints and clamping apply to the unrotated
+  /// box or its rendered bounding rect. Ignored if a [controller] is provided.
+  final BindingStrategy bindingStrategy;
 
   /// A set containing handles that are enabled. This is different from
   /// [visibleHandles].
@@ -187,6 +224,18 @@ class TransformableBox extends StatefulWidget {
   /// A callback function that triggers when the box cancels resizing.
   final RectResizeCancel? onResizeCancel;
 
+  /// Fires when a rotation gesture begins on a corner handle.
+  final RectRotateStart? onRotationStart;
+
+  /// Fires during a rotation gesture.
+  final RectRotateUpdateEvent? onRotationUpdate;
+
+  /// Fires when a rotation gesture ends.
+  final RectRotateEnd? onRotationEnd;
+
+  /// Fires when a rotation gesture is cancelled.
+  final RectRotateCancel? onRotationCancel;
+
   /// A callback function that triggers when the box reaches its minimum width
   /// when resizing.
   final TerminalEdgeEvent? onMinWidthReached;
@@ -230,14 +279,30 @@ class TransformableBox extends StatefulWidget {
   /// Whether to paint the handle's bounds for debugging purposes.
   final bool debugPaintHandleBounds;
 
+  /// When true, paints a red border around the rotated axis-aligned bounding
+  /// box of the box. Useful for visualizing the rendered footprint at non-zero
+  /// [rotation]. Only active in debug mode.
+  final bool debugShowBoundingRect;
+
+  /// When true, paints a green border around the unrotated rect. Useful for
+  /// visualizing the logical (pre-rotation) box. Only active in debug mode.
+  final bool debugShowUnrotatedRect;
+
+  /// When true, renders red+blue arrows during a rotation gesture: from box
+  /// center to the initial pointer position, and to the current pointer
+  /// position. Only active in debug mode.
+  final bool debugShowRotationArrows;
+
   /// Creates a [TransformableBox] widget.
   const TransformableBox({
     super.key,
     required this.contentBuilder,
     this.controller,
-    this.cornerHandleBuilder = _defaultCornerHandleBuilder,
-    this.sideHandleBuilder = _defaultSideHandleBuilder,
+    this.cornerHandleBuilder = HandleBuilders.defaultCorner,
+    this.sideHandleBuilder = HandleBuilders.defaultSide,
+    this.cursorResolver,
     this.handleTapSize = 24,
+    this.rotationHandleGestureSize = 64,
     this.allowContentFlipping = true,
     this.handleAlignment = HandleAlignment.center,
     this.enabledHandles = const {...HandlePosition.values},
@@ -251,10 +316,13 @@ class TransformableBox extends StatefulWidget {
     Rect? clampingRect,
     BoxConstraints? constraints,
     ValueGetter<ResizeMode>? resizeModeResolver,
+    double? rotation,
+    this.bindingStrategy = BindingStrategy.boundingBox,
 
     // Additional controls.
     this.resizable = true,
     this.draggable = true,
+    this.rotatable = false,
     this.allowFlippingWhileResizing = true,
 
     // Tap events
@@ -275,6 +343,12 @@ class TransformableBox extends StatefulWidget {
     this.onDragEnd,
     this.onDragCancel,
 
+    // Rotation Events.
+    this.onRotationStart,
+    this.onRotationUpdate,
+    this.onRotationEnd,
+    this.onRotationCancel,
+
     // Terminal update events.
     this.onMinWidthReached,
     this.onMaxWidthReached,
@@ -284,20 +358,26 @@ class TransformableBox extends StatefulWidget {
     this.onTerminalHeightReached,
     this.onTerminalSizeReached,
     this.debugPaintHandleBounds = false,
+    this.debugShowBoundingRect = false,
+    this.debugShowUnrotatedRect = false,
+    this.debugShowRotationArrows = false,
   })  : assert(
           (controller == null) ||
               ((rect == null) &&
                   (flip == null) &&
                   (clampingRect == null) &&
                   (constraints == null) &&
-                  (resizeModeResolver == null)),
+                  (resizeModeResolver == null) &&
+                  (rotation == null)),
           'If a controller is provided, the raw values should not be provided.',
         ),
         rect = rect ?? Rect.zero,
         flip = flip ?? Flip.none,
         clampingRect = clampingRect ?? Rect.largest,
         constraints = constraints ?? const BoxConstraints.expand(),
-        resizeModeResolver = resizeModeResolver ?? defaultResizeModeResolver;
+        rotation = rotation ?? 0.0,
+        resizeModeResolver = resizeModeResolver ??
+            TransformableBoxController.defaultResizeModeResolver;
 
   /// Returns the [TransformableBox] of the closest ancestor.
   static TransformableBox? widgetOf(BuildContext context) {
@@ -317,11 +397,14 @@ class TransformableBox extends StatefulWidget {
 
 enum _PrimaryGestureOperation {
   resize,
-  drag;
+  drag,
+  rotate;
 
   bool get isDragging => this == _PrimaryGestureOperation.drag;
 
   bool get isResizing => this == _PrimaryGestureOperation.resize;
+
+  bool get isRotating => this == _PrimaryGestureOperation.rotate;
 }
 
 class _TransformableBoxState extends State<TransformableBox> {
@@ -331,11 +414,27 @@ class _TransformableBoxState extends State<TransformableBox> {
 
   HandlePosition? lastHandle;
 
+  /// Current pointer position during a rotation gesture, in this widget's
+  /// local coordinate space. Used by the rotation-arrows debug overlay.
+  Offset? _rotationArrowPointer;
+
+  /// Offset to add to `event.globalPosition` to yield a world/parent-frame
+  /// coordinate. Captured at gesture start so subsequent updates are immune
+  /// to the widget moving during the gesture.
+  ///
+  /// Flutter's `event.localPosition` is transformed using the hit-test-time
+  /// transform; once the widget moves mid-gesture, `localPosition` goes
+  /// stale. `globalPosition` stays accurate in screen coordinates, and a
+  /// captured offset gives a stable global→world conversion.
+  Offset? _gestureGlobalToWorldOffset;
+
   bool get isDragging => primaryGestureOperation?.isDragging == true;
 
   bool get isResizing => primaryGestureOperation?.isResizing == true;
 
-  bool get isGestureActive => isDragging || isResizing;
+  bool get isRotating => primaryGestureOperation?.isRotating == true;
+
+  bool get isGestureActive => isDragging || isResizing || isRotating;
 
   bool mismatchedHandle(HandlePosition handle) =>
       lastHandle != null && lastHandle != handle;
@@ -357,6 +456,8 @@ class _TransformableBoxState extends State<TransformableBox> {
         constraints: widget.constraints,
         resizeModeResolver: widget.resizeModeResolver,
         allowFlippingWhileResizing: widget.allowFlippingWhileResizing,
+        rotation: widget.rotation,
+        bindingStrategy: widget.bindingStrategy,
       );
     }
   }
@@ -381,6 +482,8 @@ class _TransformableBoxState extends State<TransformableBox> {
         constraints: widget.constraints,
         resizeModeResolver: widget.resizeModeResolver,
         allowFlippingWhileResizing: widget.allowFlippingWhileResizing,
+        rotation: widget.rotation,
+        bindingStrategy: widget.bindingStrategy,
       );
     }
 
@@ -391,10 +494,33 @@ class _TransformableBoxState extends State<TransformableBox> {
     bool shouldRecalculatePosition = false;
     bool shouldRecalculateSize = false;
 
-    if (oldWidget.rect != widget.rect || widget.rect != controller.rect) {
-      controller.setRect(widget.rect, notify: false);
-      shouldRecalculatePosition = true;
-      shouldRecalculateSize = true;
+    // Two distinct cases:
+    //
+    //  * Real rect change (caller supplied a new widget.rect): needs a full
+    //    recalc to honour constraints + clamping.
+    //  * Drift mismatch (widget.rect unchanged across rebuilds, but
+    //    controller.rect has drifted): happens when an external rebuild
+    //    trigger (parent setState, new clampingRect / constraints, etc.)
+    //    fires while the controller carries a translation that the parent
+    //    hasn't mirrored back via onChanged. Snapping controller.rect back
+    //    to widget.rect without re-applying position recalc produces a
+    //    visible snap-back — e.g. at clamp saturation, when the clamp
+    //    branch doesn't fire so nothing re-translates the box. We push
+    //    widget.rect in (restoring caller source-of-truth) and then let
+    //    the end-of-method recalculatePosition re-apply any clamp-driven
+    //    translation. Size is NOT recalculated on drift-only — that would
+    //    reintroduce V7's clamp-induced scale shrink.
+    final bool rectChangedByCaller = oldWidget.rect != widget.rect;
+    final bool rectMismatch = widget.rect != controller.rect;
+    if (rectChangedByCaller || rectMismatch) {
+      controller.setRect(widget.rect, notify: false, recalculate: false);
+      if (rectChangedByCaller) {
+        shouldRecalculatePosition = true;
+        shouldRecalculateSize = true;
+      } else {
+        // Drift-only: re-apply clamp translation, but do not resize.
+        shouldRecalculatePosition = true;
+      }
     }
 
     if (oldWidget.flip != widget.flip || widget.flip != controller.flip) {
@@ -411,8 +537,18 @@ class _TransformableBoxState extends State<TransformableBox> {
 
     if (oldWidget.clampingRect != widget.clampingRect ||
         widget.clampingRect != controller.clampingRect) {
-      controller.setClampingRect(widget.clampingRect, notify: false);
+      // `recalculate: false` + position-only reconciliation. A clamp change
+      // should translate the box to stay inside the clamp, not resize it.
+      // setClampingRect's internal recalculate() runs recalculateSize via a
+      // zero-delta scale resize; for a rotated box against a tight clamp
+      // that picks the largest (w, h) that fits the new clamp, which is
+      // strictly smaller than the current box by a sliver. Repeated clamp
+      // repumps (e.g. parent drags the clamp in tiny ticks) accumulate the
+      // slivers into a visible shrink + off-edge flick.
+      controller.setClampingRect(widget.clampingRect,
+          notify: false, recalculate: false);
       shouldRecalculatePosition = true;
+      // Intentionally do NOT set shouldRecalculateSize.
     }
 
     if (oldWidget.constraints != widget.constraints ||
@@ -429,6 +565,16 @@ class _TransformableBoxState extends State<TransformableBox> {
         widget.allowFlippingWhileResizing,
         notify: false,
       );
+    }
+
+    if (oldWidget.rotation != widget.rotation ||
+        widget.rotation != controller.rotation) {
+      controller.setRotation(widget.rotation, notify: false);
+    }
+
+    if (oldWidget.bindingStrategy != widget.bindingStrategy ||
+        widget.bindingStrategy != controller.bindingStrategy) {
+      controller.setBindingStrategy(widget.bindingStrategy, notify: false);
     }
 
     if (shouldRecalculatePosition) {
@@ -448,29 +594,94 @@ class _TransformableBoxState extends State<TransformableBox> {
   }
 
   /// Called when the controller is updated.
+  ///
+  /// Trigger a rebuild for any observable controller state that the widget
+  /// renders: rect, flip, rotation, or bindingStrategy.
   void onControllerUpdate() {
-    if (widget.rect != controller.rect || widget.flip != controller.flip) {
+    if (widget.rect != controller.rect ||
+        widget.flip != controller.flip ||
+        widget.rotation != controller.rotation ||
+        widget.bindingStrategy != controller.bindingStrategy) {
       if (mounted) setState(() {});
     }
   }
 
   /// Called when the handle drag starts.
-  void onHandlePanStart(DragStartDetails event, HandlePosition handle) {
-    if (isGestureActive || mismatchedHandle(handle)) return;
-
+  ///
+  /// Any new gesture start forcibly clears prior state (defensive guard
+  /// against stale `primaryGestureOperation` from a previous gesture whose
+  /// end/cancel event was dropped).
+  ///
+  /// [handleTopLeftWorld] is the parent-frame offset of the handle widget's
+  /// top-left. It's combined with [event.localPosition] to produce the
+  /// starting world-frame pointer position, and with [event.globalPosition]
+  /// to capture a stable global→world offset used by subsequent updates.
+  void onHandlePanStart(
+    DragStartDetails event,
+    HandlePosition handle,
+    Offset handleTopLeftWorld, {
+    double rotation = 0.0,
+    Offset? rotationPivotWorld,
+    Size? widgetSize,
+  }) {
     primaryGestureOperation = _PrimaryGestureOperation.resize;
     lastHandle = handle;
 
-    controller.onResizeStart(event.localPosition);
+    final Offset worldPos = _eventToWorld(
+      event.localPosition,
+      handleTopLeftWorld: handleTopLeftWorld,
+      rotation: rotation,
+      rotationPivotWorld: rotationPivotWorld,
+      widgetSize: widgetSize,
+    );
+    _gestureGlobalToWorldOffset = worldPos - event.globalPosition;
+    controller.onResizeStart(worldPos);
     widget.onResizeStart?.call(handle, event);
   }
 
+  /// Converts a gesture event's local-frame position to world coords.
+  ///
+  /// For axis-aligned handles (corners and side handles when rotation == 0)
+  /// this is a translation: `worldPos = handleTopLeftWorld + localPos`.
+  ///
+  /// For side handles wrapped in `Transform.rotate(rotation, alignment:
+  /// center)`, the gesture's local frame is the strip's pre-rotation
+  /// rectangle. We undo the Transform by rotating the offset-from-center
+  /// around the strip's world center.
+  Offset _eventToWorld(
+    Offset localPos, {
+    required Offset handleTopLeftWorld,
+    required double rotation,
+    required Offset? rotationPivotWorld,
+    required Size? widgetSize,
+  }) {
+    if (rotation == 0.0 || widgetSize == null || rotationPivotWorld == null) {
+      return handleTopLeftWorld + localPos;
+    }
+    final Offset localCenter = Offset(
+      widgetSize.width / 2,
+      widgetSize.height / 2,
+    );
+    final Offset off = localPos - localCenter;
+    final double c = math.cos(rotation);
+    final double s = math.sin(rotation);
+    final Offset rotated =
+        Offset(off.dx * c - off.dy * s, off.dx * s + off.dy * c);
+    return rotationPivotWorld + rotated;
+  }
+
   /// Called when the handle drag updates.
-  void onHandlePanUpdate(DragUpdateDetails event, HandlePosition handle) {
+  void onHandlePanUpdate(
+    DragUpdateDetails event,
+    HandlePosition handle,
+    Offset handleTopLeftWorld,
+  ) {
     if (!isResizing || mismatchedHandle(handle)) return;
 
+    final Offset worldPos =
+        event.globalPosition + (_gestureGlobalToWorldOffset ?? Offset.zero);
     final UIResizeResult result = controller.onResizeUpdate(
-      event.localPosition,
+      worldPos,
       handle,
     );
 
@@ -531,6 +742,61 @@ class _TransformableBoxState extends State<TransformableBox> {
     widget.onTerminalSizeReached?.call(false, false, false, false);
   }
 
+  /// Called when a rotation gesture starts on a handle's outer ring.
+  /// Force-clears any stale gesture state.
+  void onHandleRotateStart(
+    DragStartDetails event,
+    HandlePosition handle,
+    Offset handleTopLeftWorld,
+  ) {
+    primaryGestureOperation = _PrimaryGestureOperation.rotate;
+    lastHandle = handle;
+    final Offset worldPos = handleTopLeftWorld + event.localPosition;
+    _gestureGlobalToWorldOffset = worldPos - event.globalPosition;
+    controller.onRotateStart(worldPos);
+    widget.onRotationStart?.call(handle, event);
+  }
+
+  /// Called during a rotation gesture.
+  void onHandleRotateUpdate(
+    DragUpdateDetails event,
+    HandlePosition handle,
+    Offset handleTopLeftWorld,
+  ) {
+    if (!isRotating || mismatchedHandle(handle)) return;
+    final Offset worldPos =
+        event.globalPosition + (_gestureGlobalToWorldOffset ?? Offset.zero);
+    final result = controller.onRotateUpdate(worldPos, handle);
+    if (widget.debugShowRotationArrows) {
+      setState(() => _rotationArrowPointer = worldPos);
+    }
+    widget.onRotationUpdate?.call(result, event);
+  }
+
+  /// Called when a rotation gesture ends.
+  void onHandleRotateEnd(DragEndDetails event, HandlePosition handle) {
+    if (!isRotating || mismatchedHandle(handle)) return;
+    primaryGestureOperation = null;
+    lastHandle = null;
+    controller.onRotateEnd();
+    if (_rotationArrowPointer != null) {
+      setState(() => _rotationArrowPointer = null);
+    }
+    widget.onRotationEnd?.call(handle, event);
+  }
+
+  /// Called when a rotation gesture is cancelled.
+  void onHandleRotateCancel(HandlePosition handle) {
+    if (!isRotating || mismatchedHandle(handle)) return;
+    primaryGestureOperation = null;
+    lastHandle = null;
+    controller.onRotateCancel();
+    if (_rotationArrowPointer != null) {
+      setState(() => _rotationArrowPointer = null);
+    }
+    widget.onRotationCancel?.call(handle);
+  }
+
   /// Called when the box is tapped.
   void onTap() {
     if (isGestureActive) return;
@@ -539,23 +805,27 @@ class _TransformableBoxState extends State<TransformableBox> {
   }
 
   /// Called when the box drag event starts.
-  void onDragPanStart(DragStartDetails event) {
-    if (isGestureActive) return;
-
+  ///
+  /// [dragTopLeftWorld] is the parent-frame top-left of the drag hit region.
+  /// Combined with [event.localPosition] to seed the world pointer, and with
+  /// [event.globalPosition] to capture the stable global→world offset.
+  void onDragPanStart(DragStartDetails event, Offset dragTopLeftWorld) {
     primaryGestureOperation = _PrimaryGestureOperation.drag;
     lastHandle = HandlePosition.none;
 
-    controller.onDragStart(event.localPosition);
+    final Offset worldPos = dragTopLeftWorld + event.localPosition;
+    _gestureGlobalToWorldOffset = worldPos - event.globalPosition;
+    controller.onDragStart(worldPos);
     widget.onDragStart?.call(event);
   }
 
   /// Called when the box drag event updates.
-  void onDragPanUpdate(DragUpdateDetails event) {
+  void onDragPanUpdate(DragUpdateDetails event, Offset dragTopLeftWorld) {
     if (!isDragging) return;
 
-    final UIMoveResult result = controller.onDragUpdate(
-      event.localPosition,
-    );
+    final Offset worldPos =
+        event.globalPosition + (_gestureGlobalToWorldOffset ?? Offset.zero);
+    final UIMoveResult result = controller.onDragUpdate(worldPos);
 
     widget.onChanged?.call(result, event);
     widget.onDragUpdate?.call(result, event);
@@ -586,89 +856,330 @@ class _TransformableBoxState extends State<TransformableBox> {
   Widget build(BuildContext context) {
     final Flip flip = controller.flip;
     final Rect rect = controller.rect;
+    final double rotation = controller.rotation;
+    final Rect boundingRect = controller.boundingRect;
 
-    Widget content = Transform.scale(
-      scaleX: widget.allowContentFlipping && flip.isHorizontal ? -1 : 1,
-      scaleY: widget.allowContentFlipping && flip.isVertical ? -1 : 1,
-      child: widget.contentBuilder(context, rect, flip),
+    final double handleTap = widget.handleTapSize;
+    final double outerHandleSize =
+        widget.rotatable ? widget.rotationHandleGestureSize : handleTap;
+
+    // --- Outer Positioned bounds ---------------------------------------------
+    // Must contain the visually rotated box AND all handle hit regions.
+    // We take the union of boundingRect (rotated AABB) and rect (unrotated,
+    // since side handles at theta=0 hang off rect's edges), then inflate to
+    // accommodate handle gesture zones.
+    final Rect paintRect = Rect.fromLTRB(
+      (boundingRect.left < rect.left ? boundingRect.left : rect.left) -
+          outerHandleSize,
+      (boundingRect.top < rect.top ? boundingRect.top : rect.top) -
+          outerHandleSize,
+      (boundingRect.right > rect.right ? boundingRect.right : rect.right) +
+          outerHandleSize,
+      (boundingRect.bottom > rect.bottom ? boundingRect.bottom : rect.bottom) +
+          outerHandleSize,
+    );
+    final Offset origin = paintRect.topLeft;
+
+    // --- Visual content (rotated + flipped, never receives gestures) --------
+    Widget visualContent = Transform.rotate(
+      angle: rotation,
+      alignment: Alignment.center,
+      child: Transform.scale(
+        scaleX: widget.allowContentFlipping && flip.isHorizontal ? -1 : 1,
+        scaleY: widget.allowContentFlipping && flip.isVertical ? -1 : 1,
+        child: widget.contentBuilder(context, rect, flip),
+      ),
+    );
+    // Visual content is NOT wrapped in IgnorePointer: consumers may put a
+    // tap/hover detector inside [contentBuilder] and those need to see
+    // pointer events. The drag GestureDetector is a sibling (in Stack) with
+    // HitTestBehavior.translucent so events reach content underneath too.
+    final Widget contentLayer = Positioned(
+      left: rect.left - origin.dx,
+      top: rect.top - origin.dy,
+      width: rect.width,
+      height: rect.height,
+      child: visualContent,
     );
 
+    // --- Drag detector (axis-aligned, covers the visually-rotated AABB) ----
+    Widget? dragLayer;
     if (widget.draggable) {
-      content = GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        supportedDevices: widget.supportedDragDevices,
-        onTap: widget.onTap == null ? null : onTap,
-        onPanStart: onDragPanStart,
-        onPanUpdate: onDragPanUpdate,
-        onPanEnd: onDragPanEnd,
-        onPanCancel: onDragPanCancel,
-        child: content,
+      final Rect dragRect = boundingRect;
+      final Offset dragTopLeftWorld = dragRect.topLeft;
+      dragLayer = Positioned(
+        left: dragRect.left - origin.dx,
+        top: dragRect.top - origin.dy,
+        width: dragRect.width,
+        height: dragRect.height,
+        child: RotatedHitGate(
+          unrotatedRectInWorld: rect,
+          rotation: rotation,
+          hitBoxTopLeftInWorld: dragRect.topLeft,
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            supportedDevices: widget.supportedDragDevices,
+            onTap: widget.onTap == null ? null : onTap,
+            onPanStart: (event) => onDragPanStart(event, dragTopLeftWorld),
+            onPanUpdate: (event) => onDragPanUpdate(event, dragTopLeftWorld),
+            onPanEnd: onDragPanEnd,
+            onPanCancel: onDragPanCancel,
+          ),
+        ),
       );
     }
 
+    // --- Corner handles (at visually-rotated corners, axis-aligned) --------
+    final List<Widget> handleWidgets = [];
+    // When rotatable, CornerHandleWidget wraps its resize GestureDetector in
+    // a Padding(EdgeInsets.all(gestureGap)), so its event.localPosition is
+    // reported relative to the inner resize zone, not the outer widget.
+    // The rotation GestureDetector is NOT inside that Padding — it fills the
+    // whole outer zone — so its event.localPosition is relative to the outer.
+    // NOTE: the current CornerHandleWidget Padding is symmetric (centered),
+    // which only matches the anchor math when `handleAlignment == center`.
+    // `rotatable: true` currently requires center alignment; non-center
+    // alignments would put the inner resize zone off the box corner.
+    assert(
+      !widget.rotatable || widget.handleAlignment == HandleAlignment.center,
+      'rotatable: true currently requires handleAlignment == center. '
+      'Non-center alignments under rotation are not yet implemented '
+      '(CornerHandleWidget pads the inner resize zone symmetrically).',
+    );
+    final double gestureGap =
+        widget.rotatable ? (outerHandleSize - handleTap) / 2 : 0.0;
+    if (widget.resizable) {
+      for (final handle in HandlePosition.corners) {
+        final bool visible = widget.visibleHandles.contains(handle);
+        final bool enabled = widget.enabledHandles.contains(handle);
+        if (!visible && !enabled) continue;
+        final Offset outerTopLeftWorld = RotatedLayout.handleTopLeftInWorld(
+          rect: rect,
+          handle: handle,
+          rotation: rotation,
+          handleSize: outerHandleSize,
+          alignment: widget.handleAlignment,
+        );
+        // Inner resize zone's top-left in world. For rotatable=false,
+        // gestureGap == 0 and innerTopLeftWorld == outerTopLeftWorld.
+        final Offset innerTopLeftWorld =
+            outerTopLeftWorld + Offset(gestureGap, gestureGap);
+        handleWidgets.add(Positioned(
+          left: outerTopLeftWorld.dx - origin.dx,
+          top: outerTopLeftWorld.dy - origin.dy,
+          width: outerHandleSize,
+          height: outerHandleSize,
+          child: CornerHandleWidget(
+            key: ValueKey(handle),
+            handlePosition: handle,
+            handleTapSize: handleTap,
+            rotationHandleGestureSize: outerHandleSize,
+            rotatable: widget.rotatable,
+            rotation: rotation,
+            supportedDevices: widget.supportedResizeDevices,
+            enabled: enabled,
+            visible: visible,
+            // Resize callbacks: use inner top-left (event.localPosition is
+            // local to the inner padded resize zone).
+            onPanStart: (event) =>
+                onHandlePanStart(event, handle, innerTopLeftWorld),
+            onPanUpdate: (event) =>
+                onHandlePanUpdate(event, handle, innerTopLeftWorld),
+            onPanEnd: (event) => onHandlePanEnd(event, handle),
+            onPanCancel: () => onHandlePanCancel(handle),
+            // Rotation callbacks: use outer top-left (event.localPosition is
+            // local to the full 64x64 outer zone).
+            onRotationStart: widget.rotatable
+                ? (event) =>
+                    onHandleRotateStart(event, handle, outerTopLeftWorld)
+                : null,
+            onRotationUpdate: widget.rotatable
+                ? (event) =>
+                    onHandleRotateUpdate(event, handle, outerTopLeftWorld)
+                : null,
+            onRotationEnd: widget.rotatable
+                ? (event) => onHandleRotateEnd(event, handle)
+                : null,
+            onRotationCancel:
+                widget.rotatable ? () => onHandleRotateCancel(handle) : null,
+            builder: widget.cornerHandleBuilder,
+            cursorResolver: widget.cursorResolver,
+            debugPaintHandleBounds: widget.debugPaintHandleBounds,
+          ),
+        ));
+      }
+      // Side handles: rendered under any rotation. The rotated resize
+      // methods route side handles through `_buildSideRotatedRect` with
+      // the appropriate locked dimension per mode.
+      for (final handle in HandlePosition.sides) {
+        final bool visible = widget.visibleHandles.contains(handle);
+        final bool enabled = widget.enabledHandles.contains(handle);
+        if (!visible && !enabled) continue;
+        // Strip's natural (unrotated) AABB along the rect's edge.
+        final Rect sideRect = RotatedLayout.sideHandleRectInWorld(
+          rect,
+          handle,
+          handleTapSize: handleTap,
+          alignment: widget.handleAlignment,
+        );
+        // Place the strip's rotation pivot at its rotated edge midpoint in
+        // world space. The strip widget itself is laid out axis-aligned at
+        // (pivot − size/2, pivot + size/2), then a Transform.rotate around
+        // its local center realigns it with the rotated edge.
+        final Offset stripCenterWorld = rotation == 0.0
+            ? sideRect.center
+            : RotatedLayout.rotateOffsetAround(
+                sideRect.center, rect.center, rotation);
+        final Size stripSize = sideRect.size;
+        final Offset sideTopLeftWorld =
+            stripCenterWorld - stripSize.center(Offset.zero);
+
+        Widget stripWidget = SideHandleWidget(
+          key: ValueKey(handle),
+          handlePosition: handle,
+          handleTapSize: handleTap,
+          supportedDevices: widget.supportedResizeDevices,
+          enabled: enabled,
+          visible: visible,
+          onPanStart: (event) => onHandlePanStart(
+            event,
+            handle,
+            sideTopLeftWorld,
+            rotation: rotation,
+            rotationPivotWorld: stripCenterWorld,
+            widgetSize: stripSize,
+          ),
+          onPanUpdate: (event) =>
+              onHandlePanUpdate(event, handle, sideTopLeftWorld),
+          onPanEnd: (event) => onHandlePanEnd(event, handle),
+          onPanCancel: () => onHandlePanCancel(handle),
+          builder: widget.sideHandleBuilder,
+          cursorResolver: widget.cursorResolver,
+          debugPaintHandleBounds: widget.debugPaintHandleBounds,
+        );
+        if (rotation != 0.0) {
+          stripWidget = Transform.rotate(
+            angle: rotation,
+            alignment: Alignment.center,
+            child: stripWidget,
+          );
+        }
+        handleWidgets.add(Positioned(
+          left: sideTopLeftWorld.dx - origin.dx,
+          top: sideTopLeftWorld.dy - origin.dy,
+          width: stripSize.width,
+          height: stripSize.height,
+          child: stripWidget,
+        ));
+      }
+    }
+
+    // --- Debug overlays (kDebugMode only; in paintRect-local coords) -------
+    final List<Widget> overlays = <Widget>[];
+    if (kDebugMode && widget.debugShowUnrotatedRect) {
+      overlays.add(Positioned(
+        left: rect.left - origin.dx,
+        top: rect.top - origin.dy,
+        width: rect.width,
+        height: rect.height,
+        child: IgnorePointer(
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.green, width: 2),
+            ),
+          ),
+        ),
+      ));
+    }
+    if (kDebugMode && widget.debugShowBoundingRect) {
+      overlays.add(Positioned(
+        left: boundingRect.left - origin.dx,
+        top: boundingRect.top - origin.dy,
+        width: boundingRect.width,
+        height: boundingRect.height,
+        child: IgnorePointer(
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.red, width: 3),
+            ),
+          ),
+        ),
+      ));
+    }
+    if (kDebugMode &&
+        widget.debugShowRotationArrows &&
+        _rotationArrowPointer != null) {
+      overlays.add(Positioned.fill(
+        child: IgnorePointer(
+          child: CustomPaint(
+            painter: RenderRotationArrows(
+              // controller.initialLocalPosition is now in world (parent) frame.
+              initialPosition: controller.initialLocalPosition - origin,
+              currentPosition: _rotationArrowPointer! - origin,
+              rectCenter: rect.center - origin,
+            ),
+          ),
+        ),
+      ));
+    }
+
     return Positioned.fromRect(
-      rect: rect.inflate(widget.handleAlignment.offset(widget.handleTapSize)),
+      rect: paintRect,
       child: Stack(
         clipBehavior: Clip.none,
-        fit: StackFit.expand,
         children: [
-          Positioned(
-            left: widget.handleAlignment.offset(widget.handleTapSize),
-            top: widget.handleAlignment.offset(widget.handleTapSize),
-            width: rect.width,
-            height: rect.height,
-            child: content,
-          ),
-          if (widget.resizable)
-            for (final handle in HandlePosition.corners.where((handle) =>
-                widget.visibleHandles.contains(handle) ||
-                widget.enabledHandles.contains(handle)))
-              CornerHandleWidget(
-                key: ValueKey(handle),
-                handlePosition: handle,
-                handleTapSize: widget.handleTapSize,
-                supportedDevices: widget.supportedResizeDevices,
-                enabled: widget.enabledHandles.contains(handle),
-                visible: widget.visibleHandles.contains(handle),
-                onPanStart: (event) => onHandlePanStart(event, handle),
-                onPanUpdate: (event) => onHandlePanUpdate(event, handle),
-                onPanEnd: (event) => onHandlePanEnd(event, handle),
-                onPanCancel: () => onHandlePanCancel(handle),
-                builder: widget.cornerHandleBuilder,
-              ),
-          if (widget.resizable)
-            for (final handle in HandlePosition.sides.where((handle) =>
-                widget.visibleHandles.contains(handle) ||
-                widget.enabledHandles.contains(handle)))
-              SideHandleWidget(
-                key: ValueKey(handle),
-                handlePosition: handle,
-                handleTapSize: widget.handleTapSize,
-                supportedDevices: widget.supportedResizeDevices,
-                enabled: widget.enabledHandles.contains(handle),
-                visible: widget.visibleHandles.contains(handle),
-                onPanStart: (event) => onHandlePanStart(event, handle),
-                onPanUpdate: (event) => onHandlePanUpdate(event, handle),
-                onPanEnd: (event) => onHandlePanEnd(event, handle),
-                onPanCancel: () => onHandlePanCancel(handle),
-                builder: widget.sideHandleBuilder,
-              ),
+          contentLayer,
+          if (dragLayer != null) dragLayer,
+          ...handleWidgets,
+          ...overlays,
         ],
       ),
     );
   }
 }
 
-/// A default implementation of the corner [HandleBuilder] callback.
-Widget _defaultCornerHandleBuilder(
-  BuildContext context,
-  HandlePosition handle,
-) =>
-    DefaultCornerHandle(handle: handle);
+/// Debug painter that renders vectors from the box center to the initial
+/// rotation pointer position and the current rotation pointer position.
+/// Red = initial, blue = current.
+class RenderRotationArrows extends CustomPainter {
+  /// Pointer position when the rotation gesture started.
+  final Offset initialPosition;
 
-/// A default implementation of the side [HandleBuilder] callback.
-Widget _defaultSideHandleBuilder(
-  BuildContext context,
-  HandlePosition handle,
-) =>
-    DefaultSideHandle(handle: handle);
+  /// Current pointer position during the rotation gesture.
+  final Offset currentPosition;
+
+  /// Center of the rotated box (in the same coordinate space as the pointer
+  /// positions).
+  final Offset rectCenter;
+
+  /// Creates a [RenderRotationArrows] painter.
+  const RenderRotationArrows({
+    required this.initialPosition,
+    required this.currentPosition,
+    required this.rectCenter,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Paint paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+
+    // Initial (red).
+    paint.color = Colors.red;
+    canvas.drawLine(rectCenter, initialPosition, paint);
+    canvas.drawCircle(initialPosition, 6, paint);
+
+    // Current (blue).
+    paint.color = Colors.blue;
+    canvas.drawLine(rectCenter, currentPosition, paint);
+    canvas.drawCircle(currentPosition, 6, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant RenderRotationArrows oldDelegate) =>
+      oldDelegate.initialPosition != initialPosition ||
+      oldDelegate.currentPosition != currentPosition ||
+      oldDelegate.rectCenter != rectCenter;
+}

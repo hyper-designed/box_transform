@@ -15,7 +15,7 @@ final class FreeformResizer extends Resizer {
     required Flip flip,
   }) {
     final flippedHandle = handle.flip(flip);
-    Box effectiveInitialRect = flipRect(initialRect, flip, handle);
+    Box effectiveInitialRect = ClampHelpers.flipRect(initialRect, flip, handle);
 
     Box newRect = Box.fromLTRB(
       max(explodedRect.left, clampingRect.left),
@@ -38,7 +38,7 @@ final class FreeformResizer extends Resizer {
         constrainedHeight,
       );
 
-      isValid = isValidRect(newRect, constraints, clampingRect);
+      isValid = ClampHelpers.isValidRect(newRect, constraints, clampingRect);
       if (!isValid) {
         newRect = Box.fromHandle(
           handle.anchor(initialRect),
@@ -54,7 +54,7 @@ final class FreeformResizer extends Resizer {
     }
 
     // Not used but calculating it for returning correct largest box.
-    final Box area = getAvailableAreaForHandle(
+    final Box area = ClampHelpers.getAvailableAreaForHandle(
       rect: isValid ? effectiveInitialRect : initialRect,
       handle: isValid ? flippedHandle : handle,
       clampingRect: clampingRect,

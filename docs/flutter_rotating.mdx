@@ -1,0 +1,166 @@
+---
+title: Rotating
+---
+
+# Rotating
+
+`TransformableBox` supports rotation around the box's center. The same
+clamp + constraints + flip semantics that work on an unrotated box continue
+to work after rotation: drag, resize (freeform / scale / symmetric /
+symmetricScale), side handles, and force-flip all stay rotation-aware.
+
+```dart title="A rotated TransformableBox"
+  Stack(
+    children: [
+      TransformableBox(
+        rect: rect,
+        rotation: rotation, // radians, around the box's center
+        rotatable: true,    // enable per-corner rotation gestures
+        bindingStrategy: BindingStrategy.boundingBox,
+        onChanged: (event, _) {
+          setState(() => rect = event.rect);
+        },
+        onRotationUpdate: (event, _) {
+          setState(() => rotation = event.rotation);
+        },
+        contentBuilder: (context, rect, flip) => Image.asset(
+          'assets/images/landscape.jpg',
+          width: rect.width,
+          height: rect.height,
+          fit: BoxFit.fill,
+        ),
+      ),
+    ],
+  );
+```
+
+## Enabling rotation gestures
+
+When `rotatable: true`, an outer ring around each corner-handle captures
+rotation. Resize still happens inside the inner area; rotation kicks in
+when the pointer is on the outside ring. Size that ring with
+`rotationHandleGestureSize` (default `64` pixels).
+
+```dart title="Tuning the rotation gesture ring"
+  TransformableBox(
+    rect: rect,
+    rotation: rotation,
+    rotatable: true,
+    rotationHandleGestureSize: 96, // bigger capture area
+    onRotationUpdate: (event, _) => setState(() => rotation = event.rotation),
+    contentBuilder: (context, rect, flip) {...},
+  );
+```
+
+Listen to the full rotation lifecycle if you need more granular control:
+
+```dart title="Rotation callbacks"
+  TransformableBox(
+    rect: rect,
+    rotation: rotation,
+    rotatable: true,
+    onRotationStart: (handle, event) {...},
+    onRotationUpdate: (event, _) {
+      setState(() => rotation = event.rotation);
+    },
+    onRotationEnd: (handle, event) {...},
+    onRotationCancel: (handle, event) {...},
+    contentBuilder: (context, rect, flip) {...},
+  );
+```
+
+## Binding strategies
+
+A rotated box has two competing notions of "size":
+
+* The **unrotated logical rect**: the `Rect` you passed in.
+* The **rendered axis-aligned bounding box**: the on-screen footprint
+  the rotated rect actually occupies. This is always larger than the
+  unrotated rect when `rotation` is non-cardinal.
+
+`bindingStrategy` chooses which one the clamp + constraints apply to:
+
+* `BindingStrategy.originalBox`: clamp + constraints apply to the
+  unrotated logical rect. Rotated corners may extend outside the clamp.
+  Pick this when you care about logical dimensions
+  (*"my image is 100×100; keep the logical image inside the clamp"*).
+* `BindingStrategy.boundingBox`: clamp + constraints apply to the
+  rendered axis-aligned bounding box (and to the unrotated rect, so a
+  rotation that shrinks the AABB can't leak the unrotated bounds past
+  the clamp either). Pick this when you care about the visible
+  footprint (*"the rendered box must stay 100px wide regardless of
+  angle"*).
+
+At rotation `0` both strategies are equivalent.
+
+See the [Binding Strategies](/binding_strategies) page for a deeper
+treatment.
+
+## Slide-then-freeze
+
+When the requested angle would push the rect outside the clamp, the
+engine first tries to **slide** the rect into available clamp slack to
+honor the angle. If a translation can rescue the rotation, the box
+slides to a feasible position and the gesture continues. If no
+translation works, the rotation **freezes** at the last feasible angle.
+The rect doesn't snap back to gesture-start, it holds steady at the cap.
+Reversing the rotation gesture unfreezes naturally.
+
+```dart title="Detecting a frozen rotation"
+  TransformableBox(
+    rect: rect,
+    rotation: rotation,
+    rotatable: true,
+    onRotationUpdate: (event, _) {
+      // event.feasible == false means the engine could not honor the
+      // requested angle; the controller is holding the last feasible
+      // rotation. The visible box is already correct, you usually
+      // don't have to do anything special, but this hook lets you e.g.
+      // change the cursor or flash a UI hint.
+      if (!event.feasible) {
+        // optional UI feedback
+      }
+      setState(() => rotation = event.rotation);
+    },
+    contentBuilder: (context, rect, flip) {...},
+  );
+```
+
+## Force-flip on a rotated rect
+
+Resizing a rotated box across its anchor (force-flip) follows the same
+rules as the unrotated case, with one extra step: when the flipped state
+would not fit clamp + constraints, the engine **falls back** to the
+natural (un-flipped) direction so the rect can still track the cursor by
+clamp-pinning at the natural wall. Only when no direction fits does the
+engine signal `feasible: false` and freeze.
+
+This means a rotated resize gesture never snaps back to gesture-start
+mid-drag: it either flips, clamp-pins naturally, or holds at the last
+feasible state.
+
+## When you also use a controller
+
+If you pass a `TransformableBoxController`, move `rotation`,
+`rotatable`, and `bindingStrategy` to the controller's constructor and
+drop them from the `TransformableBox`. The controller gains
+`rotation`, `initialRotation`, `bindingStrategy`, and rotation lifecycle
+methods (`onRotateStart`, `onRotateUpdate`, `onRotateEnd`,
+`onRotateCancel`). The controller also wraps engine results so
+`result.rect` and `result.rotation` reflect the last feasible state on
+infeasible ticks: your `onChanged` / `onRotationUpdate` callbacks see
+the held rect, not the engine's gesture-start sentinel.
+
+```dart title="Rotation through a controller"
+  late final TransformableBoxController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = TransformableBoxController(
+      rect: rect,
+      rotation: 0.0,
+      bindingStrategy: BindingStrategy.boundingBox,
+    );
+  }
+```

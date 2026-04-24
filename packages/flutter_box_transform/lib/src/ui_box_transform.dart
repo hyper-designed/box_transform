@@ -22,9 +22,12 @@ class UIBoxTransform {
     ui.Rect clampingRect = ui.Rect.largest,
     widgets.BoxConstraints constraints = const widgets.BoxConstraints(),
     bool allowFlipping = true,
+    double rotation = 0.0,
+    transform.BindingStrategy bindingStrategy =
+        transform.BindingStrategy.boundingBox,
   }) =>
       transform.BoxTransformer.resize(
-        initialRect: initialRect.toBox(),
+        initialRect: initialRect.toBox(rotation: rotation),
         initialLocalPosition: initialLocalPosition.toVector2(),
         localPosition: localPosition.toVector2(),
         handle: handle,
@@ -33,6 +36,8 @@ class UIBoxTransform {
         clampingRect: clampingRect.toBox(),
         constraints: constraints.toConstraints(),
         allowFlipping: allowFlipping,
+        rotation: rotation,
+        bindingStrategy: bindingStrategy,
       ).toUI();
 
   /// The Flutter wrapper for [transform.BoxTransformer.move].
@@ -41,11 +46,35 @@ class UIBoxTransform {
     required ui.Offset initialLocalPosition,
     required ui.Offset localPosition,
     ui.Rect clampingRect = ui.Rect.largest,
+    double rotation = 0.0,
+    transform.BindingStrategy bindingStrategy =
+        transform.BindingStrategy.boundingBox,
   }) =>
       transform.BoxTransformer.move(
-        initialRect: initialRect.toBox(),
+        initialRect: initialRect.toBox(rotation: rotation),
         initialLocalPosition: initialLocalPosition.toVector2(),
         localPosition: localPosition.toVector2(),
         clampingRect: clampingRect.toBox(),
+        rotation: rotation,
+        bindingStrategy: bindingStrategy,
+      ).toUI();
+
+  /// The Flutter wrapper for [transform.BoxTransformer.rotate].
+  static UIRotateResult rotate({
+    required ui.Rect initialRect,
+    required ui.Offset initialLocalPosition,
+    required ui.Offset localPosition,
+    required double initialRotation,
+    ui.Rect clampingRect = ui.Rect.largest,
+    transform.BindingStrategy bindingStrategy =
+        transform.BindingStrategy.boundingBox,
+  }) =>
+      transform.BoxTransformer.rotate(
+        initialRect: initialRect.toBox(rotation: initialRotation),
+        initialLocalPosition: initialLocalPosition.toVector2(),
+        localPosition: localPosition.toVector2(),
+        initialRotation: initialRotation,
+        clampingRect: clampingRect.toBox(),
+        bindingStrategy: bindingStrategy,
       ).toUI();
 }

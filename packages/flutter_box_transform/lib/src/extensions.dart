@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:box_transform/box_transform.dart';
 import 'package:flutter/rendering.dart' as widgets;
-import 'package:vector_math/vector_math.dart';
+import 'package:vector_math/vector_math_64.dart';
 
 import 'ui_result.dart';
 
@@ -26,7 +26,6 @@ extension ResizeResultExt on RawResizeResult {
   /// Converts a `ResizeResult` from `rect_resizer` to a `UIResizeResult`
   UIResizeResult toUI() {
     return UIResizeResult(
-      /// Creates a new `UIResizeResult` instance with the converted data
       rect: rect.toRect(),
       oldRect: oldRect.toRect(),
       flip: flip,
@@ -39,6 +38,10 @@ extension ResizeResultExt on RawResizeResult {
       maxHeightReached: maxHeightReached,
       largestRect: largestRect.toRect(),
       handle: handle,
+      rotation: rotation,
+      boundingRect: boundingRect.toRect(),
+      oldBoundingRect: oldBoundingRect.toRect(),
+      feasible: feasible,
     );
   }
 }
@@ -48,12 +51,32 @@ extension MoveResultExt on RawMoveResult {
   /// Converts a `MoveResult` from `rect_resizer` to a `UIMoveResult`
   UIMoveResult toUI() {
     return UIMoveResult(
-      /// Creates a new `UIMoveResult` instance with the converted data
       rect: rect.toRect(),
       oldRect: oldRect.toRect(),
       delta: delta.toOffset(),
       rawSize: rawSize.toSize(),
       largestRect: largestRect.toRect(),
+      rotation: rotation,
+      boundingRect: boundingRect.toRect(),
+      oldBoundingRect: oldBoundingRect.toRect(),
+    );
+  }
+}
+
+/// Provides convenient methods for [RawRotateResult].
+extension RotateResultExt on RawRotateResult {
+  /// Converts a `RotateResult` from `box_transform` to a `UIRotateResult`.
+  UIRotateResult toUI() {
+    return UIRotateResult(
+      rect: rect.toRect(),
+      oldRect: oldRect.toRect(),
+      delta: delta.toOffset(),
+      rawSize: rawSize.toSize(),
+      largestRect: largestRect.toRect(),
+      rotation: rotation,
+      boundingRect: boundingRect.toRect(),
+      oldBoundingRect: oldBoundingRect.toRect(),
+      feasible: feasible,
     );
   }
 }
@@ -66,8 +89,10 @@ extension BoxExt on Box {
 
 /// Provides convenient methods for [Rect].
 extension RectExt on Rect {
-  /// Converts a `Rect` to a `Box` from `rect_resizer`
-  Box toBox() => Box.fromLTRB(left, top, right, bottom);
+  /// Converts a `Rect` to a `Box`. Optionally pass a [rotation] (radians)
+  /// to construct a rotated [Box].
+  Box toBox({double rotation = 0.0}) =>
+      Box.fromLTRB(left, top, right, bottom, rotation: rotation);
 }
 
 /// Provides convenient methods for [Vector2].

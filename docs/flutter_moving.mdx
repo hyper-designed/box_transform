@@ -53,3 +53,12 @@ Setting `TransformableBox.movable` to `false` will completely disable moving/dra
     ...
   );
 ```
+
+## Moving a rotated box
+
+When `TransformableBox.rotation` is non-zero, the move solver computes the joint feasible translation interval that
+keeps the rect inside the clamp under the active `bindingStrategy` (rotated AABB and unrotated rect for
+`boundingBox`; just the unrotated rect for `originalBox`). If the requested delta would push the box past the clamp,
+it slides as far as the clamp allows and stops — the gesture never produces a leaky position.
+
+See the [Rotating](/flutter_rotating) and [Binding Strategies](/binding_strategies) pages for the full picture.

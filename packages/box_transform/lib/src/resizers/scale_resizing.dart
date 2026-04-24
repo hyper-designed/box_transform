@@ -65,7 +65,8 @@ final class ScaleResizer extends Resizer {
     required Flip flip,
   }) {
     final flippedHandle = handle.flip(flip);
-    final effectiveInitialRect = flipRect(initialRect, flip, handle);
+    final effectiveInitialRect =
+        ClampHelpers.flipRect(initialRect, flip, handle);
 
     ({Box rect, Box largest, bool hasValidFlip}) result;
 
@@ -119,14 +120,14 @@ final class ScaleResizer extends Resizer {
     Constraints constraints,
     Flip flip,
   ) {
-    Box area = getAvailableAreaForHandle(
+    Box area = ClampHelpers.getAvailableAreaForHandle(
       rect: initialRect,
       clampingRect: clampingRect,
       handle: handle,
       constraints: constraints,
     );
 
-    area = constrainAvailableAreaForScaling(
+    area = ClampHelpers.constrainAvailableAreaForScaling(
       area: area,
       initialRect: initialRect,
       handle: handle,
@@ -146,13 +147,13 @@ final class ScaleResizer extends Resizer {
       rectHeight = rectWidth / initialAspectRatio;
     }
 
-    final maxRect = getClampingRectForHandle(
+    final maxRect = ClampHelpers.getClampingRectForHandle(
       initialRect: initialRect,
       availableArea: area,
       handle: handle,
     );
 
-    final minRect = getMinRectForScaling(
+    final minRect = ClampHelpers.getMinRectForScaling(
       initialRect: initialRect,
       handle: handle,
       constraints: constraints,
@@ -174,7 +175,7 @@ final class ScaleResizer extends Resizer {
       largest = maxRect;
     }
 
-    final isValid = isValidRect(rect, constraints, clampingRect);
+    final isValid = ClampHelpers.isValidRect(rect, constraints, clampingRect);
 
     return (rect: rect, largest: largest, hasValidFlip: isValid);
   }
@@ -190,14 +191,14 @@ final class ScaleResizer extends Resizer {
   ) {
     final initialAspectRatio = initialRect.safeAspectRatio;
 
-    Box area = getAvailableAreaForHandle(
+    Box area = ClampHelpers.getAvailableAreaForHandle(
       rect: initialRect,
       clampingRect: clampingRect,
       handle: handle,
       constraints: constraints,
     );
 
-    area = constrainAvailableAreaForScaling(
+    area = ClampHelpers.constrainAvailableAreaForScaling(
       area: area,
       initialRect: initialRect,
       handle: handle,
@@ -217,13 +218,13 @@ final class ScaleResizer extends Resizer {
       );
     }
 
-    final maxRect = getClampingRectForHandle(
+    final maxRect = ClampHelpers.getClampingRectForHandle(
       initialRect: initialRect,
       availableArea: area,
       handle: handle,
     );
 
-    final minRect = getMinRectForScaling(
+    final minRect = ClampHelpers.getMinRectForScaling(
       initialRect: initialRect,
       handle: handle,
       constraints: constraints,
@@ -250,7 +251,7 @@ final class ScaleResizer extends Resizer {
       largest = maxRect;
     }
 
-    final isValid = isValidRect(rect, constraints, clampingRect);
+    final isValid = ClampHelpers.isValidRect(rect, constraints, clampingRect);
 
     return (rect: rect, largest: largest, hasValidFlip: isValid);
   }
@@ -266,14 +267,14 @@ final class ScaleResizer extends Resizer {
   ) {
     final initialAspectRatio = initialRect.safeAspectRatio;
 
-    Box area = getAvailableAreaForHandle(
+    Box area = ClampHelpers.getAvailableAreaForHandle(
       rect: initialRect,
       clampingRect: clampingRect,
       handle: handle,
       constraints: constraints,
     );
 
-    area = constrainAvailableAreaForScaling(
+    area = ClampHelpers.constrainAvailableAreaForScaling(
       area: area,
       initialRect: initialRect,
       handle: handle,
@@ -293,13 +294,13 @@ final class ScaleResizer extends Resizer {
       );
     }
 
-    final maxRect = getClampingRectForHandle(
+    final maxRect = ClampHelpers.getClampingRectForHandle(
       initialRect: initialRect,
       availableArea: area,
       handle: handle,
     );
 
-    final minRect = getMinRectForScaling(
+    final minRect = ClampHelpers.getMinRectForScaling(
       initialRect: initialRect,
       handle: handle,
       constraints: constraints,
@@ -326,7 +327,7 @@ final class ScaleResizer extends Resizer {
       largest = maxRect;
     }
 
-    final isValid = isValidRect(rect, constraints, clampingRect);
+    final isValid = ClampHelpers.isValidRect(rect, constraints, clampingRect);
 
     return (rect: rect, largest: largest, hasValidFlip: isValid);
   }
@@ -342,14 +343,14 @@ final class ScaleResizer extends Resizer {
   ) {
     final initialAspectRatio = initialRect.safeAspectRatio;
 
-    Box area = getAvailableAreaForHandle(
+    Box area = ClampHelpers.getAvailableAreaForHandle(
       rect: initialRect,
       clampingRect: clampingRect,
       handle: handle,
       constraints: constraints,
     );
 
-    area = constrainAvailableAreaForScaling(
+    area = ClampHelpers.constrainAvailableAreaForScaling(
       area: area,
       initialRect: initialRect,
       handle: handle,
@@ -369,13 +370,13 @@ final class ScaleResizer extends Resizer {
       );
     }
 
-    final maxRect = getClampingRectForHandle(
+    final maxRect = ClampHelpers.getClampingRectForHandle(
       initialRect: initialRect,
       availableArea: area,
       handle: handle,
     );
 
-    final minRect = getMinRectForScaling(
+    final minRect = ClampHelpers.getMinRectForScaling(
       initialRect: initialRect,
       handle: handle,
       constraints: constraints,
@@ -402,7 +403,7 @@ final class ScaleResizer extends Resizer {
       largest = maxRect;
     }
 
-    final isValid = isValidRect(rect, constraints, clampingRect);
+    final isValid = ClampHelpers.isValidRect(rect, constraints, clampingRect);
 
     return (rect: rect, largest: largest, hasValidFlip: isValid);
   }
@@ -418,14 +419,14 @@ final class ScaleResizer extends Resizer {
   ) {
     final initialAspectRatio = initialRect.safeAspectRatio;
 
-    Box area = getAvailableAreaForHandle(
+    Box area = ClampHelpers.getAvailableAreaForHandle(
       rect: initialRect,
       clampingRect: clampingRect,
       handle: handle,
       constraints: constraints,
     );
 
-    area = constrainAvailableAreaForScaling(
+    area = ClampHelpers.constrainAvailableAreaForScaling(
       area: area,
       initialRect: initialRect,
       handle: handle,
@@ -445,13 +446,13 @@ final class ScaleResizer extends Resizer {
       );
     }
 
-    final maxRect = getClampingRectForHandle(
+    final maxRect = ClampHelpers.getClampingRectForHandle(
       initialRect: initialRect,
       availableArea: area,
       handle: handle,
     );
 
-    final minRect = getMinRectForScaling(
+    final minRect = ClampHelpers.getMinRectForScaling(
       initialRect: initialRect,
       handle: handle,
       constraints: constraints,
@@ -478,7 +479,7 @@ final class ScaleResizer extends Resizer {
       largest = maxRect;
     }
 
-    final isValid = isValidRect(rect, constraints, clampingRect);
+    final isValid = ClampHelpers.isValidRect(rect, constraints, clampingRect);
 
     return (rect: rect, largest: largest, hasValidFlip: isValid);
   }
@@ -493,14 +494,14 @@ final class ScaleResizer extends Resizer {
     Constraints constraints,
     Flip flip,
   ) {
-    Box area = getAvailableAreaForHandle(
+    Box area = ClampHelpers.getAvailableAreaForHandle(
       rect: initialRect,
       clampingRect: clampingRect,
       handle: handle,
       constraints: constraints,
     );
 
-    area = constrainAvailableAreaForScaling(
+    area = ClampHelpers.constrainAvailableAreaForScaling(
       area: area,
       initialRect: initialRect,
       handle: handle,
@@ -520,13 +521,13 @@ final class ScaleResizer extends Resizer {
       rectHeight = rectWidth / initialAspectRatio;
     }
 
-    final maxRect = getClampingRectForHandle(
+    final maxRect = ClampHelpers.getClampingRectForHandle(
       initialRect: initialRect,
       availableArea: area,
       handle: handle,
     );
 
-    final minRect = getMinRectForScaling(
+    final minRect = ClampHelpers.getMinRectForScaling(
       initialRect: initialRect,
       handle: handle,
       constraints: constraints,
@@ -548,7 +549,7 @@ final class ScaleResizer extends Resizer {
       largest = maxRect;
     }
 
-    final isValid = isValidRect(rect, constraints, clampingRect);
+    final isValid = ClampHelpers.isValidRect(rect, constraints, clampingRect);
 
     return (rect: rect, largest: largest, hasValidFlip: isValid);
   }
@@ -563,14 +564,14 @@ final class ScaleResizer extends Resizer {
     Constraints constraints,
     Flip flip,
   ) {
-    Box area = getAvailableAreaForHandle(
+    Box area = ClampHelpers.getAvailableAreaForHandle(
       rect: initialRect,
       clampingRect: clampingRect,
       handle: handle,
       constraints: constraints,
     );
 
-    area = constrainAvailableAreaForScaling(
+    area = ClampHelpers.constrainAvailableAreaForScaling(
       area: area,
       initialRect: initialRect,
       handle: handle,
@@ -590,13 +591,13 @@ final class ScaleResizer extends Resizer {
       rectHeight = rectWidth / initialAspectRatio;
     }
 
-    final maxRect = getClampingRectForHandle(
+    final maxRect = ClampHelpers.getClampingRectForHandle(
       initialRect: initialRect,
       availableArea: area,
       handle: handle,
     );
 
-    final minRect = getMinRectForScaling(
+    final minRect = ClampHelpers.getMinRectForScaling(
       initialRect: initialRect,
       handle: handle,
       constraints: constraints,
@@ -618,7 +619,7 @@ final class ScaleResizer extends Resizer {
       largest = maxRect;
     }
 
-    final isValid = isValidRect(rect, constraints, clampingRect);
+    final isValid = ClampHelpers.isValidRect(rect, constraints, clampingRect);
 
     return (rect: rect, largest: largest, hasValidFlip: isValid);
   }
@@ -633,14 +634,14 @@ final class ScaleResizer extends Resizer {
     Constraints constraints,
     Flip flip,
   ) {
-    Box area = getAvailableAreaForHandle(
+    Box area = ClampHelpers.getAvailableAreaForHandle(
       rect: initialRect,
       clampingRect: clampingRect,
       handle: handle,
       constraints: constraints,
     );
 
-    area = constrainAvailableAreaForScaling(
+    area = ClampHelpers.constrainAvailableAreaForScaling(
       area: area,
       initialRect: initialRect,
       handle: handle,
@@ -660,13 +661,13 @@ final class ScaleResizer extends Resizer {
       rectHeight = rectWidth / initialAspectRatio;
     }
 
-    final maxRect = getClampingRectForHandle(
+    final maxRect = ClampHelpers.getClampingRectForHandle(
       initialRect: initialRect,
       availableArea: area,
       handle: handle,
     );
 
-    final minRect = getMinRectForScaling(
+    final minRect = ClampHelpers.getMinRectForScaling(
       initialRect: initialRect,
       handle: handle,
       constraints: constraints,
@@ -688,7 +689,7 @@ final class ScaleResizer extends Resizer {
       largest = maxRect;
     }
 
-    final isValid = isValidRect(rect, constraints, clampingRect);
+    final isValid = ClampHelpers.isValidRect(rect, constraints, clampingRect);
 
     return (rect: rect, largest: largest, hasValidFlip: isValid);
   }

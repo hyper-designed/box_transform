@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:box_transform/box_transform.dart';
 import 'package:test/test.dart';
-import 'package:vector_math/vector_math.dart';
+import 'package:vector_math/vector_math_64.dart';
 
 void main() {
   group('HandlePosition tests', () {
@@ -439,6 +439,18 @@ void main() {
       expect(ResizeMode.symmetric.hasSymmetry, isTrue);
       expect(ResizeMode.scale.hasSymmetry, isFalse);
       expect(ResizeMode.symmetricScale.hasSymmetry, isTrue);
+    });
+  });
+
+  group('BindingStrategy tests', () {
+    test('has two values with correct names', () {
+      expect(BindingStrategy.values.length, 2);
+      expect(BindingStrategy.values, contains(BindingStrategy.originalBox));
+      expect(BindingStrategy.values, contains(BindingStrategy.boundingBox));
+    });
+
+    test('originalBox is the documented default (first value)', () {
+      expect(BindingStrategy.values.first, BindingStrategy.originalBox);
     });
   });
 }

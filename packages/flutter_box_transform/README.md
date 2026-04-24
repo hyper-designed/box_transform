@@ -2,7 +2,7 @@
 
 # Flutter Box Transform
 
-[![melos](https://img.shields.io/badge/maintained%20with-melos-f700ff.svg?style=flat-square)](https://github.com/invertase/melos) [![Build](https://github.com/hyper-designed/box_transform/actions/workflows/build.yml/badge.svg)](https://github.com/hyper-designed/box_transform/actions/workflows/build.yml) [![Pub Version](https://img.shields.io/pub/v/box_transform?label=Pub)](https://pub.dev/packages/box_transform)
+[![Build](https://github.com/hyper-designed/box_transform/actions/workflows/build.yml/badge.svg)](https://github.com/hyper-designed/box_transform/actions/workflows/build.yml) [![Pub Version](https://img.shields.io/pub/v/box_transform?label=Pub)](https://pub.dev/packages/box_transform)
 
 [Flutter Box Transform](https://github.com/hyper-designed/box_transform) is a [Flutter](https://flutter.dev) package
 that allows you to programmatically handle box resizing and dragging using Flutter widgets. It provides highly
@@ -20,6 +20,13 @@ This package uses [Box Transform](https://pub.dev/packages/box_transform) APIs i
   resized.
 * 📍 **Customizable Anchor Points:** Define resizing corner-handles to anchor different parts of the box when resizing.
 * 🎨 **Customizable Handles:** Use default resizing handles or define your own custom handles.
+* 🌀 **Rotation Support:** `TransformableBox.rotation` rotates the rendered box around its center. Set
+  `rotatable: true` to enable per-corner rotation gestures (an outer ring around each corner-handle captures
+  rotation; size with `rotationHandleGestureSize`). Wire `onRotationStart` / `onRotationUpdate` / `onRotationEnd`
+  callbacks to react. `bindingStrategy` (`BindingStrategy.originalBox` vs `BindingStrategy.boundingBox`) chooses
+  whether the unrotated logical rect or the rendered AABB stays in the clamp. The controller does slide-then-freeze
+  on rotation and natural-direction fallback on rotated force-flip, holding the last feasible state instead of
+  snapping back to gesture-start when a gesture exceeds what clamp + constraints permit.
 * 🚀 **Easy Integration:** Integrate Box Transform into your Flutter project with ease using widgets.
 
 ## Getting started

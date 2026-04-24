@@ -3,6 +3,32 @@ import 'package:flutter/widgets.dart';
 
 import 'ui_result.dart';
 
+/// Distinguishes the gesture zone a [MouseCursor] is being requested for.
+///
+/// Corner handles expose two zones when `rotatable` is true: an inner resize
+/// zone ([HandleCursorKind.resize]) and an outer rotation ring
+/// ([HandleCursorKind.rotation]). Side handles only expose a resize zone.
+enum HandleCursorKind {
+  /// Cursor for the resize gesture zone (inner zone on corner handles, the
+  /// full strip on side handles).
+  resize,
+
+  /// Cursor for the rotation gesture ring around a corner handle.
+  rotation,
+}
+
+/// Resolves the [MouseCursor] to display over a handle's gesture zone.
+///
+/// Return `null` to fall back to the package defaults:
+///   - resize handles use the appropriate `SystemMouseCursors.resize*`
+///   - rotation rings reuse the diagonal resize cursor (Flutter has no native
+///     rotation cursor; see [`custom_mouse_cursor`](https://pub.dev/packages/custom_mouse_cursor)
+///     if you want to ship a real rotate glyph)
+typedef HandleCursorResolver = MouseCursor? Function(
+  HandlePosition handle,
+  HandleCursorKind kind,
+);
+
 /// A callback that expects a [Widget] that represents any of the handles.
 /// The [handle] is the current position and size of the handle.
 typedef HandleBuilder = Widget Function(
@@ -87,4 +113,27 @@ typedef TerminalEvent = void Function(
   bool reachedMaxWidth,
   bool reachedMinHeight,
   bool reachedMaxHeight,
+);
+
+/// A callback that is called when a rotation gesture begins on a handle.
+typedef RectRotateStart = void Function(
+  HandlePosition handle,
+  DragStartDetails event,
+);
+
+/// A callback that is called during a rotation gesture.
+typedef RectRotateUpdateEvent = void Function(
+  UIRotateResult result,
+  DragUpdateDetails event,
+);
+
+/// A callback that is called when a rotation gesture ends.
+typedef RectRotateEnd = void Function(
+  HandlePosition handle,
+  DragEndDetails event,
+);
+
+/// A callback that is called when a rotation gesture is cancelled.
+typedef RectRotateCancel = void Function(
+  HandlePosition handle,
 );

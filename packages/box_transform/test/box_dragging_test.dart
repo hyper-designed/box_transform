@@ -1,6 +1,6 @@
 import 'package:box_transform/box_transform.dart';
 import 'package:test/test.dart';
-import 'package:vector_math/vector_math.dart';
+import 'package:vector_math/vector_math_64.dart';
 
 void main() {
   test('Drag a box', () {

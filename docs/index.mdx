@@ -22,11 +22,12 @@ project.
 * 🎨 **Flexible Resizing Modes:** Choose from four different resizing modes for more flexibility in how boxes are resized.
 * 📍 **Customizable Anchor Points:** Define resizing corner-handles to anchor different parts of the box when resizing.
 * 🎨 **Customizable Handles:** Use default resizing handles or define your own custom handles.
+* 🌀 **Rotation Support:** Rotate boxes around their center. Move, resize, scale, symmetric, side-handle, and force-flip stay rotation-aware. Pick `BindingStrategy.originalBox` (logical rect inside the clamp) or `BindingStrategy.boundingBox` (rendered AABB inside the clamp). Rotation gestures slide-then-freeze; force-flip falls back to the natural direction when the flipped state can't fit, so the rect never snaps back to gesture-start mid-drag.
 * 🚀 **Easy Integration:** Integrate Box Transform into your Dart or Flutter project with ease.
 
 | Moving/Dragging | Resizing | Rotation |
 |-----------------|----------|----------|
-| ✅               | ✅        | 🚧       |
+| ✅               | ✅        | ✅        |
 
 ## Getting Started
 

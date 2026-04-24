@@ -45,7 +45,7 @@ The `resizeModeResolver` is a callback that is called whenever a resize operatio
 given [Transformable Box][transformableBox]. This allows you to define the resize behavior at the time of the resize
 operation. This is useful when you want to change the resize behavior based on the state of the application.
 
-The most common use case for this is **keyboard shortcuts**. A `defaultResizeModeResolver` function is used by
+The most common use case for this is **keyboard shortcuts**. A `TransformableBoxController.defaultResizeModeResolver` static method is used by
 default when resizing, and it's job is to listen to keyboard meta keys to change the `ResizeMode`.
 
 ### Default Resize Mode:
@@ -111,6 +111,15 @@ This behavior can be disabled by setting `allowContentFlipping` to `false`.
 
 You can set both `flipRectWhileResizing` and `allowContentFlipping` to `false` to disable flipping completely.
 The result will be a box that stops shrinking once it reaches a size of zero, as if it hit a wall.
+
+### Force-flip on a rotated box
+
+When the box is rotated and the user drags a corner across its anchor with `flipRectWhileResizing: true`, the engine
+attempts a flip. If the flipped state would not satisfy the clamp + constraints, the engine falls back to the natural
+(un-flipped) direction and clamp-pins the rect at the natural wall instead of leaking the clamp or freezing. The
+gesture continues to track the cursor — only when no direction can produce a valid rect does the engine signal the
+gesture as infeasible (the controller then holds the last feasible state). See the [Rotating](/flutter_rotating) page
+for the full rotation story.
 
 ## Constraints
 
