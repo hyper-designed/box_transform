@@ -568,6 +568,9 @@ class Box {
   /// rectangle and this rectangle. The two rectangles must overlap
   /// for this to be meaningful. If the two rectangles do not overlap,
   /// then the resulting Box will have a negative width or height.
+  ///
+  /// Note: this is an axis-aligned intersection. The returned box has
+  /// `rotation == 0` regardless of either operand's rotation.
   Box intersect(Box other) => Box.fromLTRB(
       math.max(left, other.left),
       math.max(top, other.top),
@@ -576,6 +579,9 @@ class Box {
 
   /// Returns a new rectangle which is the bounding box containing this
   /// rectangle and the given rectangle.
+  ///
+  /// Note: this is an axis-aligned union. The returned box has
+  /// `rotation == 0` regardless of either operand's rotation.
   Box expandToInclude(Box other) => Box.fromLTRB(
         math.min(left, other.left),
         math.min(top, other.top),
@@ -674,6 +680,9 @@ class Box {
   /// is specified.
   ///
   /// [child] the child box to clamp inside this box.
+  ///
+  /// Note: this is an axis-aligned containment operation. The returned box
+  /// has `rotation == 0` regardless of either operand's rotation.
   Box containOther(Box child) {
     final double xSign = child.width.sign;
     final double ySign = child.height.sign;
@@ -698,20 +707,24 @@ class Box {
     );
   }
 
-  /// Returns a new box with all the values ceiling rounded.
+  /// Returns a new box with all the values ceiling rounded. Preserves
+  /// [rotation].
   Box ceil() => Box.fromLTRB(
         left.ceilToDouble(),
         top.ceilToDouble(),
         right.ceilToDouble(),
         bottom.ceilToDouble(),
+        rotation: rotation,
       );
 
-  /// Returns a new box with all the values floor rounded.
+  /// Returns a new box with all the values floor rounded. Preserves
+  /// [rotation].
   Box floor() => Box.fromLTRB(
         left.floorToDouble(),
         top.floorToDouble(),
         right.floorToDouble(),
         bottom.floorToDouble(),
+        rotation: rotation,
       );
 
   /// Linearly interpolate between two rectangles.
