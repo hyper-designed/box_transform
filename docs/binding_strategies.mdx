@@ -1,0 +1,102 @@
+---
+title: Binding Strategies
+---
+
+# Binding Strategies
+
+When `Box.rotation` is non-zero, "what does it mean for the box to be
+inside the clamp?" has two answers, and Box Transform exposes that
+choice as the `BindingStrategy` enum. The strategy applies to *both*
+clamping and constraints (`minWidth`/`minHeight`/`maxWidth`/`maxHeight`).
+
+```dart
+  enum BindingStrategy { originalBox, boundingBox }
+```
+
+At rotation `0` both strategies are equivalent. The distinction only
+matters under rotation.
+
+`BindingStrategy.boundingBox` is the default everywhere in the public
+API (`BoxTransformer.move/resize/rotate`, `TransformableBox`, and
+`TransformableBoxController`). Pass `BindingStrategy.originalBox`
+explicitly when you want the logical-rect semantic.
+
+## BindingStrategy.originalBox
+
+Constraints and clamping apply to the box's **unrotated logical**
+`width` and `height` and to its four unrotated (axis-aligned) corners.
+The rotated corners may extend beyond the clamping rect if rotation
+makes them do so.
+
+* **Use when:** you care about logical dimensions. *"My image is 100×100;
+  keep that logical 100×100 inside the clamp."*
+* **Visible result:** the unrotated rect stays in the clamp; the rotated
+  rendering may poke out at the corners.
+
+## BindingStrategy.boundingBox
+
+Constraints and clamping apply to the **rotated rect's four rendered
+corners** (and therefore to the rendered axis-aligned bounding box,
+which is the smallest AABB enclosing those corners). The unrotated
+stored rect (`rect.left`/`top`/`right`/`bottom`) is invisible storage
+and is not additionally constrained.
+
+* **Use when:** you care about the visible footprint. *"The rendered box
+  must fit inside this 200×200 region no matter what angle."*
+* **Visible result:** as you rotate toward `π/4`, the rect must shrink
+  (or the angle must cap, via slide-then-freeze) so the rendered AABB
+  stays contained.
+
+> Why doesn't `boundingBox` also constrain the unrotated stored rect?
+> Because the stored rect is just storage for `(width, height)` plus a
+> rotation; nothing about it is rendered. For stretched rotated rects
+> (`W ≫ H` at θ near π/4), the unrotated rect can extend further on
+> one axis than the rendered AABB does (`W·|cos θ| + H·|sin θ| < W`
+> when `H < W·(1 − cos θ) / sin θ`). Constraining both would make the
+> unrotated rect the binding constraint and steal slack the rendered
+> footprint genuinely has, which contradicts the strategy's intent.
+
+## Comparison at a glance
+
+| Aspect                          | `originalBox`                          | `boundingBox`                                                  |
+|---------------------------------|----------------------------------------|----------------------------------------------------------------|
+| What stays in the clamp         | Unrotated logical rect                 | Rotated rendered polygon (and therefore its AABB)              |
+| Effect of rotation on max size  | None                                   | Smaller available room as angle moves away from cardinal       |
+| Effect on `minWidth`/`minHeight`| Applies to unrotated dimensions        | Applies to unrotated dimensions; AABB may force a smaller cap  |
+| Use case                        | "Keep my logical image on-screen"      | "Keep my rendered footprint on-screen"                         |
+
+## Choosing per use case
+
+* **Image cropper / canvas:** `boundingBox` is usually right; users
+  expect the visible box not to leak past the canvas.
+* **Logical layout container:** `originalBox` keeps dimensions
+  predictable for downstream layout, even if rendered corners poke out.
+
+## Switching strategies at runtime
+
+When you change a controller's `bindingStrategy` (Flutter side), the
+controller **reconciles** the current rect against the new strategy. If
+the current rect is feasible under the new strategy, nothing happens.
+If it isn't (e.g. switching from `originalBox` to a tighter
+`boundingBox`), the controller translates the rect into clamp slack so
+the new constraint is satisfied. There's no resize on switch, only a
+translation.
+
+## What gets enforced internally
+
+| Builder (LP inequality set)   | `originalBox` enforces       | `boundingBox` enforces       |
+|-------------------------------|------------------------------|------------------------------|
+| Corner-anchored               | Unrotated rect's 4 corners   | Rotated rect's 4 corners     |
+| Side-anchored                 | Unrotated rect's 4 corners   | Rotated rect's 4 corners     |
+| Center-anchored (symmetric)   | Unrotated rect's 4 corners   | Rotated rect's 4 corners     |
+
+The two strategies enforce **different** corner sets at `θ ≠ 0`. They
+are not subsets of each other: for a stretched rotated rect (e.g.
+W=100, H=500 at θ=π/4), the unrotated rect's half-extent on the long
+axis is `H/2 = 250`, while the rotated AABB's half-extent on that axis
+is `(W·|cos θ| + H·|sin θ|) / 2 ≈ 212`. On that axis `boundingBox` is
+the looser constraint and `originalBox` is the tighter one. On the
+short axis the relationship reverses: the unrotated half-extent is
+`W/2 = 50`, the rotated AABB's is the same `≈ 212`, so `boundingBox`
+is the tighter constraint and `originalBox` is the looser one. At
+`θ = 0` both collapse to the same axis-aligned constraints.

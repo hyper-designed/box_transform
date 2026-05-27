@@ -38,6 +38,8 @@ class TestRecorder with ChangeNotifier {
     required HandlePosition handle,
     required Offset cursorPosition,
     required bool flipRect,
+    required double rotation,
+    required BindingStrategy bindingStrategy,
     Rect? clampingRect,
     BoxConstraints? constraints,
   }) {
@@ -50,21 +52,35 @@ class TestRecorder with ChangeNotifier {
       clampingBox: clampingRect,
       constraints: constraints,
       flipRect: flipRect,
+      rotation: rotation,
+      bindingStrategy: bindingStrategy,
     );
     current.add(TestRecord(action: action));
     return action;
   }
 
-  void onResult({
+  // Append a single onResizeUpdate tick to the matching record. The recorder
+  // captures every tick of a gesture so the exported test can replay the
+  // same micro-delta sequence — the bug we chase often only manifests
+  // tick-by-tick, not on a single direct jump from start to end.
+  void onUpdate({
     required TestAction action,
     required Offset localPosition,
     required UITransformResult result,
   }) {
     final record = current.firstWhere((item) => item.action.id == action.id);
-    record.result = result;
-    record.localPosition = localPosition;
-    notifyListeners();
+    record.ticks.add(TestTick(localPosition: localPosition, result: result));
   }
+
+  // Legacy: kept for callers that only push a final result. Implemented as
+  // a tick append so old call-sites still produce a valid (single-tick)
+  // recording.
+  void onResult({
+    required TestAction action,
+    required Offset localPosition,
+    required UITransformResult result,
+  }) =>
+      onUpdate(action: action, localPosition: localPosition, result: result);
 
   void stopRecording({String? saveAs}) {
     if (current.isNotEmpty) {
@@ -81,14 +97,16 @@ class TestRecorder with ChangeNotifier {
 
 class TestRecord {
   final TestAction action;
-  UITransformResult? result;
-  Offset? localPosition;
+  final List<TestTick> ticks = [];
 
-  TestRecord({
-    required this.action,
-    this.result,
-    this.localPosition,
-  });
+  TestRecord({required this.action});
+}
+
+class TestTick {
+  final Offset localPosition;
+  final UITransformResult result;
+
+  TestTick({required this.localPosition, required this.result});
 }
 
 class TestAction with EquatableMixin {
@@ -101,6 +119,8 @@ class TestAction with EquatableMixin {
   final Rect? clampingBox;
   final BoxConstraints? constraints;
   final bool flipRect;
+  final double rotation;
+  final BindingStrategy bindingStrategy;
 
   TestAction({
     required this.resizeMode,
@@ -111,6 +131,8 @@ class TestAction with EquatableMixin {
     this.clampingBox,
     this.constraints,
     this.flipRect = false,
+    this.rotation = 0.0,
+    this.bindingStrategy = BindingStrategy.boundingBox,
   }) : id = DateTime.now().millisecondsSinceEpoch;
 
   @override
@@ -124,6 +146,8 @@ class TestAction with EquatableMixin {
         clampingBox,
         constraints,
         flipRect,
+        rotation,
+        bindingStrategy,
       ];
 }
 
@@ -289,10 +313,11 @@ class _TestRecorderUIState extends State<TestRecorderUI> {
 
       if (settings == null) return;
 
-      final path = await FilePicker.platform.saveFile(
+      final path = await FilePicker.saveFile(
         dialogTitle: 'Export tests',
         fileName: 'resizing_test.dart',
         allowedExtensions: ['.dart'],
+        type: FileType.custom,
       );
       if (path == null) return;
 
@@ -301,6 +326,7 @@ class _TestRecorderUIState extends State<TestRecorderUI> {
         roundValues: settings['roundValues'] == true,
         withTolerance: settings['withTolerance'] == true,
       );
+      log('Exporting tests to $path with settings: $settings');
     } catch (error, stacktrace) {
       log(error.toString());
       log(stacktrace.toString());
@@ -317,7 +343,10 @@ class _TestRecorderUIState extends State<TestRecorderUI> {
       final List<String> tests = [];
       for (final record in recorder.tests.entries) {
         final name = record.key;
-        final records = record.value;
+        // Skip records that captured no ticks (recorder paused mid-gesture
+        // before any onResizeUpdate fired).
+        final records = record.value.where((r) => r.ticks.isNotEmpty).toList();
+        if (records.isEmpty) continue;
         final contents = <String>[];
         for (var index = 0; index < records.length; index++) {
           final record = records[index];
@@ -340,7 +369,7 @@ class _TestRecorderUIState extends State<TestRecorderUI> {
 
       final testFile = '''
       import 'package:test/test.dart';
-      import 'package:vector_math/vector_math.dart';
+      import 'package:vector_math/vector_math_64.dart';
       import 'package:box_transform/box_transform.dart';
       ${withTolerance ? "import 'utils.dart';" : ''}
       
@@ -349,7 +378,9 @@ class _TestRecorderUIState extends State<TestRecorderUI> {
       }
     ''';
 
-      final formatted = DartFormatter().format(testFile);
+      final formatted = DartFormatter(
+        languageVersion: DartFormatter.latestLanguageVersion,
+      ).format(testFile);
       final dir = Directory('tests');
 
       if (!await dir.exists()) await dir.create();
@@ -397,13 +428,6 @@ class _TestRecorderUIState extends State<TestRecorderUI> {
     final String width = formattedValue(record.action.box.width);
     final String height = formattedValue(record.action.box.height);
 
-    String matcher =
-        'Box.fromLTWH(${formattedValue(record.result!.rect.left)}, ${formattedValue(record.result!.rect.top)}, ${formattedValue(record.result!.rect.width)}, ${formattedValue(record.result!.rect.height)})';
-
-    if (withTolerance) {
-      matcher = 'withTolerance($matcher)';
-    }
-
     String? clampingRect;
     String? constraints;
 
@@ -417,24 +441,54 @@ class _TestRecorderUIState extends State<TestRecorderUI> {
           'Constraints(minWidth: ${formattedValue(record.action.constraints!.minWidth)}, minHeight: ${formattedValue(record.action.constraints!.minHeight)}, maxWidth: ${formattedValue(record.action.constraints!.maxWidth)}, maxHeight: ${formattedValue(record.action.constraints!.maxHeight)})';
     }
 
+    // Emit the tick cursor sequence. The replay loop calls
+    // `BoxTransformer.resize` once per tick — the engine is stateless so
+    // every tick uses the SAME initialRect/initialLocalPosition (gesture
+    // start), with only `localPosition` varying. This is exactly how
+    // TransformableBoxController calls the engine during a real gesture.
+    final tickList = record.ticks
+        .map((t) =>
+            'Vector2(${formattedValue(t.localPosition.dx)}, ${formattedValue(t.localPosition.dy)})')
+        .join(',\n        ');
+
+    final hasClamp = clampingRect != null;
+
     buffer.writeln('''
-    
-      ${index == 0 ? 'var ' : ''}result = BoxTransformer.resize(
-        resizeMode: ${record.action.resizeMode},
-        initialFlip: ${record.action.flip},
-        initialBox: Box.fromLTWH($left, $top, $width, $height),
-        handle: ${record.action.handle},
-        initialLocalPosition: Vector2(${formattedValue(record.action.position.dx)}, ${formattedValue(record.action.position.dy)}),
-        flipRect: ${record.action.flipRect},
-        localPosition: Vector2(${formattedValue(record.localPosition!.dx)}, ${formattedValue(record.localPosition!.dy)}),
-        ${clampingRect != null ? 'clampingRect: $clampingRect,' : ''}
-        ${constraints != null ? 'constraints: $constraints,' : ''}
-      );
-      
-      expect(result.flip, ${record.result!.flip});
-      expect(result.rect${roundValues ? '.floor()' : ''}, $matcher);
-      expect(result.resizeMode, ${record.result!.resizeMode});
-      
+
+      ${index == 0 ? 'final ' : ''}initialRect = Box.fromLTWH($left, $top, $width, $height);
+      ${index == 0 ? 'final ' : ''}initialCursor = Vector2(${formattedValue(record.action.position.dx)}, ${formattedValue(record.action.position.dy)});
+      ${index == 0 ? 'final ' : ''}cursors = <Vector2>[
+        $tickList,
+      ];
+      ${index == 0 ? 'late RawResizeResult ' : ''}result;
+      for (var i = 0; i < cursors.length; i++) {
+        result = BoxTransformer.resize(
+          resizeMode: ${record.action.resizeMode},
+          initialFlip: ${record.action.flip},
+          initialRect: initialRect,
+          handle: ${record.action.handle},
+          initialLocalPosition: initialCursor,
+          allowFlipping: ${record.action.flipRect},
+          rotation: ${record.action.rotation},
+          bindingStrategy: ${record.action.bindingStrategy},
+          localPosition: cursors[i],
+          ${hasClamp ? 'clampingRect: $clampingRect,' : ''}
+          ${constraints != null ? 'constraints: $constraints,' : ''}
+        );
+        ${hasClamp ? '''
+        // Invariant: rect must stay inside clamp at every tick.
+        final clamp = $clampingRect;
+        expect(result.rect.left, greaterThanOrEqualTo(clamp.left - 1e-3),
+            reason: 'tick \$i: rect.left=\${result.rect.left} leaked clamp.left=\${clamp.left}');
+        expect(result.rect.top, greaterThanOrEqualTo(clamp.top - 1e-3),
+            reason: 'tick \$i: rect.top=\${result.rect.top} leaked clamp.top=\${clamp.top}');
+        expect(result.rect.right, lessThanOrEqualTo(clamp.right + 1e-3),
+            reason: 'tick \$i: rect.right=\${result.rect.right} leaked clamp.right=\${clamp.right}');
+        expect(result.rect.bottom, lessThanOrEqualTo(clamp.bottom + 1e-3),
+            reason: 'tick \$i: rect.bottom=\${result.rect.bottom} leaked clamp.bottom=\${clamp.bottom}');
+        ''' : ''}
+      }
+
     ''');
 
     return buffer.toString();

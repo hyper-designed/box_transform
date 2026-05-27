@@ -2,7 +2,6 @@ class Images {
   Images._();
 
   static const String image1 = 'assets/images/image1.jpg';
-  static const String image10 = 'assets/images/image10.jpg';
   static const String image2 = 'assets/images/image2.jpg';
   static const String image3 = 'assets/images/image3.jpg';
   static const String image4 = 'assets/images/image4.jpg';
@@ -14,7 +13,6 @@ class Images {
 
   static const List<String> values = [
     image1,
-    image10,
     image2,
     image3,
     image4,
@@ -22,6 +20,6 @@ class Images {
     image6,
     image7,
     image8,
-    image9
+    image9,
   ];
 }

@@ -1,0 +1,136 @@
+---
+title: Rotating
+---
+
+# Rotating
+
+`Box` carries a `rotation` field (radians, around the box's center). Every
+existing `BoxTransformer` operation is rotation-aware: `move`, `resize`,
+and the new `rotate` entry point all honor `Box.rotation` and either of
+the two binding strategies.
+
+## Storing rotation on a Box
+
+```dart title="A rotated Box"
+  final Box rect = Box.fromLTWH(50, 50, 100, 100, rotation: 0.4);
+```
+
+The unrotated `left`/`top`/`right`/`bottom` are the box's logical bounds
+in the rect's own coordinate frame; rotation is applied around the box's
+center when the rect is rendered or clamped.
+
+## BoxTransformer.rotate
+
+Use `BoxTransformer.rotate(...)` to compute a rotation result from a
+gesture:
+
+```dart title="Rotating a box"
+  final Box rect = Box.fromLTWH(0, 0, 100, 100);
+  final RotateResult result = BoxTransformer.rotate(
+    initialRect: rect,
+    initialLocalPosition: Vector2(100, 50), // pointer at gesture start
+    localPosition: Vector2(50, 100),        // pointer now
+    initialRotation: 0.0,
+    clampingRect: Box.fromLTWH(0, 0, 200, 200),
+    bindingStrategy: BindingStrategy.boundingBox,
+  );
+
+  result.rotation; // new rotation (radians)
+  result.rect;     // rect, possibly translated to honor the angle
+  result.feasible; // false when the rotation could not be honored
+```
+
+The angle delta is the signed angle between the vectors from the box's
+center to `initialLocalPosition` and `localPosition`. The result is
+applied **additively** on top of `initialRotation`.
+
+## Slide-then-freeze
+
+When the requested angle would push the box outside the clamp, the
+engine first tries to **translate** the rect into available clamp slack
+so the angle can be honored. If translating fits, `result.rect` reflects
+the slid position and `result.feasible == true`. If no translation
+works, the engine **freezes**: it returns the gesture-start rect and
+rotation, with `result.feasible == false` so the caller can hold the
+last feasible state instead of writing this one.
+
+```dart title="Holding last-feasible state on freeze"
+  Box rect = startRect;
+  double rotation = startRotation;
+
+  // ...inside a gesture loop:
+  final result = BoxTransformer.rotate(
+    initialRect: startRect,
+    initialLocalPosition: startCursor,
+    localPosition: currentCursor,
+    initialRotation: startRotation,
+    clampingRect: clamp,
+    bindingStrategy: BindingStrategy.boundingBox,
+  );
+  if (result.feasible) {
+    rect = result.rect;
+    rotation = result.rotation;
+  }
+  // If !feasible, rect/rotation keep their last feasible values, the
+  // gesture just doesn't advance this tick. Reversing the cursor will
+  // unfreeze naturally because the engine recomputes from the gesture
+  // start every tick.
+```
+
+## Resizing a rotated box
+
+`BoxTransformer.resize(...)` accepts `rotation` and `bindingStrategy`
+parameters and dispatches to dedicated rotated paths internally:
+freeform, scale, symmetric, symmetricScale, side-handle, and force-flip
+all stay correct under arbitrary rotation:
+
+```dart title="Resizing under rotation"
+  final ResizeResult result = BoxTransformer.resize(
+    handle: HandlePosition.bottomRight,
+    initialRect: Box.fromLTWH(50, 50, 100, 100, rotation: 0.4),
+    initialLocalPosition: gestureStartCursor,
+    localPosition: currentCursor,
+    resizeMode: ResizeMode.freeform,
+    initialFlip: Flip.none,
+    rotation: 0.4,
+    bindingStrategy: BindingStrategy.boundingBox,
+    clampingRect: clamp,
+    constraints: constraints,
+    allowFlipping: true,
+  );
+```
+
+`ResizeResult.feasible` mirrors `RotateResult.feasible`: it's `false`
+when the engine could not satisfy the requested target, indicating the
+caller should hold the last feasible state.
+
+### Force-flip fallback
+
+When the cursor crosses the rect's anchor (force-flip) but the flipped
+state can't fit clamp + constraints, the engine retries the LP with
+natural-direction signs. The rect tracks the cursor by clamp-pinning at
+the natural wall instead of leaking the clamp or freezing. Only when
+neither force-flip *nor* natural direction works does the engine signal
+`feasible: false` (a degenerate state in practice).
+
+## Moving a rotated box
+
+`BoxTransformer.move(...)` honors rotation transparently:
+
+```dart title="Moving a rotated box"
+  final MoveResult result = BoxTransformer.move(
+    initialRect: Box.fromLTWH(50, 50, 100, 100, rotation: 0.4),
+    initialLocalPosition: startCursor,
+    localPosition: currentCursor,
+    rotation: 0.4,
+    bindingStrategy: BindingStrategy.boundingBox,
+    clampingRect: clamp,
+  );
+```
+
+Under `boundingBox`, the rotated AABB *and* the unrotated rect are both
+kept inside the clamp; the `move()` solver computes the joint feasible
+translation interval and slides into it.
+
+See [Binding Strategies](/binding_strategies) for how the strategy
+choice shapes both move and resize semantics.

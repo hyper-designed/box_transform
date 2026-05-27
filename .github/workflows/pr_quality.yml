@@ -20,13 +20,11 @@ jobs:
         with:
           channel: stable
           cache: true
-      - name: Install Melos
-        run: flutter pub global activate melos
-      - name: Bootstrap
-        run: melos bootstrap
+      - name: Install dependencies
+        run: flutter pub get
       - name: Check formatting
-        run: melos check-format
+        run: dart format --output none --set-exit-if-changed .
       - name: Analyze
-        run: melos analyze
+        run: dart analyze . --fatal-infos --fatal-warnings
       - name: Run tests
-        run: melos test
+        run: flutter test

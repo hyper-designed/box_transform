@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 import 'dart:math' hide log;
 
@@ -8,14 +9,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_box_transform/flutter_box_transform.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
-import 'package:vector_math/vector_math.dart' hide Colors;
+import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 import 'resources/asset_icons.dart';
 import 'resources/images.dart';
 import 'test_recorder.dart';
 
-bool showTestRecorder =
-    const bool.fromEnvironment('test_recorder', defaultValue: false);
+bool showTestRecorder = const bool.fromEnvironment(
+  'test_recorder',
+  defaultValue: true,
+);
 
 void main() {
   runApp(const MyApp());
@@ -38,11 +41,11 @@ class MyApp extends StatelessWidget {
           colorSchemeSeed: Colors.blue,
           inputDecorationTheme: InputDecorationTheme(
             isDense: true,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 12,
             ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
           ),
         ),
         dark: ThemeData(
@@ -51,11 +54,11 @@ class MyApp extends StatelessWidget {
           colorSchemeSeed: Colors.blue,
           inputDecorationTheme: InputDecorationTheme(
             isDense: true,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 12,
             ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
           ),
         ),
         initial: AdaptiveThemeMode.system,
@@ -84,20 +87,27 @@ class PlaygroundModel with ChangeNotifier {
 
   int selectedBoxIndex = -1;
 
+  // Debug visualization toggles — all default off for clean UX.
+  bool debugShowBoundingRect = false;
+  bool debugShowUnrotatedRect = false;
+  bool debugShowRotationArrows = false;
+  bool debugPaintHandleBounds = false;
+
   BoxData? get selectedBox =>
       selectedBoxIndex != -1 ? boxes[selectedBoxIndex] : null;
 
-  void reset(BuildContext context) {
+  Future<void> reset(BuildContext context) async {
     final Size size = MediaQuery.of(context).size;
     final double width = size.width - kSidePanelWidth - kBoxesPanelWidth;
     final double height = size.height;
 
-    clampingRect = Rect.fromLTWH(
-      0,
-      0,
-      width,
-      size.height,
-    );
+    clampingRect = Rect.fromLTWH(0, 0, width, size.height);
+
+    final Size imageSize = await _resolveImageSize(Images.image1);
+    final double scale =
+        kInitialMaxSide / max(imageSize.width, imageSize.height);
+    final double boxWidth = imageSize.width * scale;
+    final double boxHeight = imageSize.height * scale;
 
     boxes.clear();
     boxes.add(
@@ -105,10 +115,10 @@ class PlaygroundModel with ChangeNotifier {
         name: 'Box 1',
         imageAsset: Images.image1,
         rect: Rect.fromLTWH(
-          (width - kInitialWidth) / 2,
-          (height - kInitialHeight) / 2,
-          kInitialWidth,
-          kInitialHeight,
+          (width - boxWidth) / 2,
+          (height - boxHeight) / 2,
+          boxWidth,
+          boxHeight,
         ),
         flip: Flip.none,
         constraintsEnabled: true,
@@ -171,16 +181,23 @@ class PlaygroundModel with ChangeNotifier {
     if (notify) notifyListeners();
   }
 
-  void addNewBox() {
+  Future<void> addNewBox() async {
+    final String asset = Images.values[boxes.length % Images.values.length];
+    final Size imageSize = await _resolveImageSize(asset);
+    final double scale =
+        kInitialMaxSide / max(imageSize.width, imageSize.height);
+    final double width = imageSize.width * scale;
+    final double height = imageSize.height * scale;
+
     boxes.add(
       BoxData(
         name: 'Box ${boxes.length + 1}',
-        imageAsset: Images.values[boxes.length % Images.values.length],
+        imageAsset: asset,
         rect: Rect.fromLTWH(
-          playgroundArea!.center.dx - kInitialWidth / 2,
-          playgroundArea!.center.dy - kInitialHeight / 2,
-          kInitialWidth,
-          kInitialHeight,
+          playgroundArea!.center.dx - width / 2,
+          playgroundArea!.center.dy - height / 2,
+          width,
+          height,
         ),
         flip: Flip.none,
       ),
@@ -232,6 +249,48 @@ class PlaygroundModel with ChangeNotifier {
 
   void toggleClamping(bool enabled) {
     clampingEnabled = enabled;
+    notifyListeners();
+  }
+
+  // --- Rotation controls ---------------------------------------------------
+
+  void setRotation(double radians) {
+    if (selectedBoxIndex == -1) return;
+    selectedBox!.rotation = radians;
+    notifyListeners();
+  }
+
+  void toggleRotatable(bool enabled) {
+    if (selectedBoxIndex == -1) return;
+    selectedBox!.rotatable = enabled;
+    notifyListeners();
+  }
+
+  void setBindingStrategy(BindingStrategy strategy) {
+    if (selectedBoxIndex == -1) return;
+    selectedBox!.bindingStrategy = strategy;
+    notifyListeners();
+  }
+
+  // --- Debug toggles -------------------------------------------------------
+
+  void toggleDebugShowBoundingRect(bool v) {
+    debugShowBoundingRect = v;
+    notifyListeners();
+  }
+
+  void toggleDebugShowUnrotatedRect(bool v) {
+    debugShowUnrotatedRect = v;
+    notifyListeners();
+  }
+
+  void toggleDebugShowRotationArrows(bool v) {
+    debugShowRotationArrows = v;
+    notifyListeners();
+  }
+
+  void toggleDebugPaintHandleBounds(bool v) {
+    debugPaintHandleBounds = v;
     notifyListeners();
   }
 
@@ -367,8 +426,9 @@ class PlaygroundModel with ChangeNotifier {
     final BoxData box = boxes.removeAt(oldIndex);
     boxes.insert(newIndex, box);
     if (selectedBox != null) {
-      selectedBoxIndex =
-          boxes.indexWhere((box) => box.name == selectedBox.name);
+      selectedBoxIndex = boxes.indexWhere(
+        (box) => box.name == selectedBox.name,
+      );
     }
 
     notifyListeners();
@@ -386,8 +446,35 @@ const double kSidePanelWidth = 280;
 const double kBoxesPanelWidth = 250;
 const double kInitialWidth = 400;
 const double kInitialHeight = 300;
+const double kInitialMaxSide = 400;
 const double kStrokeWidth = 1.5;
 const Color kGridColor = Color.fromARGB(126, 27, 181, 228);
+
+Future<Size> _resolveImageSize(String asset) {
+  final completer = Completer<Size>();
+  final ImageStream stream = AssetImage(
+    asset,
+  ).resolve(ImageConfiguration.empty);
+  late final ImageStreamListener listener;
+  listener = ImageStreamListener(
+    (ImageInfo info, bool _) {
+      if (!completer.isCompleted) {
+        completer.complete(
+          Size(info.image.width.toDouble(), info.image.height.toDouble()),
+        );
+      }
+      stream.removeListener(listener);
+    },
+    onError: (Object error, StackTrace? _) {
+      if (!completer.isCompleted) {
+        completer.complete(const Size(kInitialWidth, kInitialHeight));
+      }
+      stream.removeListener(listener);
+    },
+  );
+  stream.addListener(listener);
+  return completer.future;
+}
 
 class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
   Set<LogicalKeyboardKey> pressedKeys = {};
@@ -438,8 +525,10 @@ class _PlaygroundState extends State<Playground> with WidgetsBindingObserver {
       0,
       0,
       max(size.width - kSidePanelWidth - kBoxesPanelWidth, 100),
-      max(size.height,
-          100), // safe size for when window is resized extremely small.
+      max(
+        size.height,
+        100,
+      ), // safe size for when window is resized extremely small.
     );
 
     final Rect playgroundArea = model.playgroundArea!;
@@ -562,16 +651,20 @@ class _ImageBoxState extends State<ImageBox> {
   UITransformResult? lastResult;
 
   bool get isShiftPressed =>
-      WidgetsBinding.instance.keyboard.logicalKeysPressed
-          .contains(LogicalKeyboardKey.shiftLeft) ||
-      WidgetsBinding.instance.keyboard.logicalKeysPressed
-          .contains(LogicalKeyboardKey.shiftRight);
+      WidgetsBinding.instance.keyboard.logicalKeysPressed.contains(
+        LogicalKeyboardKey.shiftLeft,
+      ) ||
+      WidgetsBinding.instance.keyboard.logicalKeysPressed.contains(
+        LogicalKeyboardKey.shiftRight,
+      );
 
   bool get isAltPressed =>
-      WidgetsBinding.instance.keyboard.logicalKeysPressed
-          .contains(LogicalKeyboardKey.altLeft) ||
-      WidgetsBinding.instance.keyboard.logicalKeysPressed
-          .contains(LogicalKeyboardKey.altRight);
+      WidgetsBinding.instance.keyboard.logicalKeysPressed.contains(
+        LogicalKeyboardKey.altLeft,
+      ) ||
+      WidgetsBinding.instance.keyboard.logicalKeysPressed.contains(
+        LogicalKeyboardKey.altRight,
+      );
 
   ResizeMode get currentResizeMode {
     if (isShiftPressed && isAltPressed) {
@@ -587,20 +680,43 @@ class _ImageBoxState extends State<ImageBox> {
 
   @override
   Widget build(BuildContext context) {
-    final PlaygroundModel model = context.read<PlaygroundModel>();
+    final PlaygroundModel model = context.watch<PlaygroundModel>();
     final Color handleColor = Theme.of(context).colorScheme.primary;
     return TransformableBox(
       key: ValueKey('image-box-${box.name}'),
       rect: box.rect,
       flip: box.flip,
+      rotation: box.rotation,
+      rotatable: widget.selected && box.rotatable,
+      bindingStrategy: box.bindingStrategy,
       clampingRect: model.clampingEnabled ? model.clampingRect : null,
       constraints: box.constraintsEnabled ? box.constraints : null,
+      debugShowBoundingRect: model.debugShowBoundingRect,
+      debugShowUnrotatedRect: model.debugShowUnrotatedRect,
+      debugShowRotationArrows: model.debugShowRotationArrows,
+      debugPaintHandleBounds: model.debugPaintHandleBounds,
       onChanged: (result, event) {
         widget.onChanged?.call(result);
         largestClampingBox = result.largestRect;
         setState(() {});
         lastResult = result;
         model.onRectChanged(result);
+      },
+      onResizeUpdate: (result, event) {
+        if (!showTestRecorder ||
+            currentAction == null ||
+            !recorder.isRecording) {
+          return;
+        }
+        recorder.onUpdate(
+          action: currentAction!,
+          localPosition: event.localPosition,
+          result: result,
+        );
+      },
+      onRotationUpdate: (result, event) {
+        box.rotation = result.rotation;
+        setState(() {});
       },
       resizable: widget.selected && box.resizable,
       visibleHandles:
@@ -623,21 +739,18 @@ class _ImageBoxState extends State<ImageBox> {
           clampingRect: model.clampingEnabled ? model.clampingRect : null,
           constraints: box.constraintsEnabled ? box.constraints : null,
           flipRect: box.flipRectWhileResizing,
+          rotation: box.rotation,
+          bindingStrategy: box.bindingStrategy,
         );
       },
       onResizeEnd: (handle, event) {
         if (!showTestRecorder ||
             currentAction == null ||
-            !recorder.isRecording ||
-            lastResult == null) {
+            !recorder.isRecording) {
           return;
         }
-        log('Recording resize action result');
-        // recorder.onResult(
-        //   action: currentAction!,
-        //   result: lastResult!,
-        //   localPosition: event.localPosition,
-        // );
+        log('Resize gesture ended (${currentAction!.id})');
+        currentAction = null;
       },
       onTerminalSizeReached: (
         bool reachedMinWidth,
@@ -763,10 +876,27 @@ class _ClampingRectState extends State<ClampingRect> {
       label = 'Clamping Box';
     }
 
-    final minWidth = model.boxes.fold(0.0,
-        (previousValue, element) => max(previousValue, element.rect.width));
-    final minHeight = model.boxes.fold(0.0,
-        (previousValue, element) => max(previousValue, element.rect.height));
+    // Size the clamping minimum per each box's strategy:
+    //   boundingBox: at least the rotated bounding rect (rendered footprint).
+    //   originalBox: at least the unrotated rect (rotated corners may poke
+    //     out of the clamp and that's OK under originalBox semantics).
+    // Fold over boxes taking the max so the clamp fits every box at once.
+    final minWidth = model.boxes.fold(0.0, (previousValue, element) {
+      final ecr = RotatedLayout.computeEffectiveContainmentRect(
+        rect: element.rect,
+        rotation: element.rotation,
+        bindingStrategy: element.bindingStrategy,
+      );
+      return max(previousValue, ecr.width);
+    });
+    final minHeight = model.boxes.fold(0.0, (previousValue, element) {
+      final ecr = RotatedLayout.computeEffectiveContainmentRect(
+        rect: element.rect,
+        rotation: element.rotation,
+        bindingStrategy: element.bindingStrategy,
+      );
+      return max(previousValue, ecr.height);
+    });
 
     return TransformableBox(
       key: const ValueKey('clamping-box'),
@@ -797,36 +927,25 @@ class _ClampingRectState extends State<ClampingRect> {
         });
       },
       handleAlignment: HandleAlignment.inside,
-      cornerHandleBuilder: (context, handle) => AngularHandle(
-        handle: handle,
-        color: mainColor,
-        hasShadow: false,
-      ),
-      sideHandleBuilder: (context, handle) => AngularHandle(
-        handle: handle,
-        color: mainColor,
-        hasShadow: false,
-      ),
+      cornerHandleBuilder: (context, handle) =>
+          AngularHandle(handle: handle, color: mainColor, hasShadow: false),
+      sideHandleBuilder: (context, handle) =>
+          AngularHandle(handle: handle, color: mainColor, hasShadow: false),
       contentBuilder: (context, _, flip) => Container(
         width: model.clampingRect.width,
         height: model.clampingRect.height,
         alignment: Alignment.bottomRight,
         decoration: BoxDecoration(
           border: Border.symmetric(
-            horizontal: BorderSide(
-              color: horizontalEdgeColor,
-              width: 1.5,
-            ),
-            vertical: BorderSide(
-              color: verticalEdgeColor,
-              width: 1.5,
-            ),
+            horizontal: BorderSide(color: horizontalEdgeColor, width: 1.5),
+            vertical: BorderSide(color: verticalEdgeColor, width: 1.5),
           ),
         ),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color:
-                (anyTerminalSize ? Colors.orange : mainColor).withValues(alpha: 0.1),
+            color: (anyTerminalSize ? Colors.orange : mainColor).withValues(
+              alpha: 0.1,
+            ),
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(6),
             ),
@@ -878,7 +997,8 @@ class ControlPanel extends StatelessWidget {
                   IconButton(
                     tooltip: 'Open on GitHub',
                     onPressed: () => launchUrlString(
-                        'https://github.com/birjuvachhani/rect_resizer'),
+                      'https://github.com/birjuvachhani/rect_resizer',
+                    ),
                     icon: const Icon(Icons.open_in_new_rounded),
                   ),
                   const SizedBox(width: 8),
@@ -941,6 +1061,10 @@ class ControlPanel extends StatelessWidget {
               const Divider(height: 1),
               const ConstraintsControls(),
               const Divider(height: 1),
+              const RotationControls(),
+              const Divider(height: 1),
+              const DebugControls(),
+              const Divider(height: 1),
             ] else ...[
               const SizedBox(height: 44),
               Text(
@@ -996,10 +1120,7 @@ class BoxesPanel extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 0, 4, 0),
             child: Row(
               children: [
-                const SectionHeader(
-                  'Boxes',
-                  padding: EdgeInsets.zero,
-                ),
+                const SectionHeader('Boxes', padding: EdgeInsets.zero),
                 Text(
                   ' • ${model.boxes.length}',
                   style: TextStyle(
@@ -1055,7 +1176,9 @@ class BoxesPanel extends StatelessWidget {
                   key: ValueKey(box.name),
                   child: Container(
                     color: box.name == model.selectedBox?.name
-                        ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)
+                        ? Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.2)
                         : null,
                     child: ListTile(
                       title: Text(box.name),
@@ -1109,13 +1232,9 @@ class PositionControls extends StatelessWidget {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Expanded(
-                    child: ValueText(box.rect.left.floor().toString()),
-                  ),
+                  Expanded(child: ValueText(box.rect.left.floor().toString())),
                   const SizedBox(width: 16),
-                  Expanded(
-                    child: ValueText(box.rect.top.floor().toString()),
-                  ),
+                  Expanded(child: ValueText(box.rect.top.floor().toString())),
                 ],
               ),
               const SizedBox(height: 16),
@@ -1129,9 +1248,7 @@ class PositionControls extends StatelessWidget {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Expanded(
-                    child: ValueText(box.rect.right.floor().toString()),
-                  ),
+                  Expanded(child: ValueText(box.rect.right.floor().toString())),
                   const SizedBox(width: 16),
                   Expanded(
                     child: ValueText(box.rect.bottom.floor().toString()),
@@ -1149,9 +1266,7 @@ class PositionControls extends StatelessWidget {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Expanded(
-                    child: ValueText(box.rect.width.toStringAsFixed(0)),
-                  ),
+                  Expanded(child: ValueText(box.rect.width.toStringAsFixed(0))),
                   const SizedBox(width: 16),
                   Expanded(
                     child: ValueText(box.rect.height.toStringAsFixed(0)),
@@ -1259,10 +1374,9 @@ class _HandleControlsState extends State<HandleControls> {
                         Expanded(
                           child: Text(
                             'Enabled Handles',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleSmall!
-                                .copyWith(
+                            style: Theme.of(
+                              context,
+                            ).textTheme.titleSmall!.copyWith(
                                   color:
                                       Theme.of(context).colorScheme.secondary,
                                 ),
@@ -1328,19 +1442,21 @@ class _HandleControlsState extends State<HandleControls> {
                               },
                               child: Padding(
                                 padding: const EdgeInsets.only(
-                                    left: 36, top: 4, bottom: 4),
+                                  left: 36,
+                                  top: 4,
+                                  bottom: 4,
+                                ),
                                 child: Row(
                                   children: [
                                     Expanded(
                                       child: Text(
                                         handle.prettify,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .labelMedium
-                                            ?.copyWith(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .secondary,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.labelMedium?.copyWith(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.secondary,
                                             ),
                                       ),
                                     ),
@@ -1349,8 +1465,9 @@ class _HandleControlsState extends State<HandleControls> {
                                       child: Transform.scale(
                                         scale: 0.5,
                                         child: Switch(
-                                          value: box.enabledHandles
-                                              .contains(handle),
+                                          value: box.enabledHandles.contains(
+                                            handle,
+                                          ),
                                           onChanged: (bool? value) {
                                             if (value == null) return;
                                             if (value) {
@@ -1380,10 +1497,9 @@ class _HandleControlsState extends State<HandleControls> {
                         Expanded(
                           child: Text(
                             'Visible Handles',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleSmall!
-                                .copyWith(
+                            style: Theme.of(
+                              context,
+                            ).textTheme.titleSmall!.copyWith(
                                   color:
                                       Theme.of(context).colorScheme.secondary,
                                 ),
@@ -1449,19 +1565,21 @@ class _HandleControlsState extends State<HandleControls> {
                               },
                               child: Padding(
                                 padding: const EdgeInsets.only(
-                                    left: 36, top: 4, bottom: 4),
+                                  left: 36,
+                                  top: 4,
+                                  bottom: 4,
+                                ),
                                 child: Row(
                                   children: [
                                     Expanded(
                                       child: Text(
                                         handle.prettify,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .labelMedium
-                                            ?.copyWith(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .secondary,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.labelMedium?.copyWith(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.secondary,
                                             ),
                                       ),
                                     ),
@@ -1470,8 +1588,9 @@ class _HandleControlsState extends State<HandleControls> {
                                       child: Transform.scale(
                                         scale: 0.5,
                                         child: Switch(
-                                          value: box.visibleHandles
-                                              .contains(handle),
+                                          value: box.visibleHandles.contains(
+                                            handle,
+                                          ),
                                           onChanged: (bool? value) {
                                             if (value == null) return;
                                             if (value) {
@@ -1544,10 +1663,9 @@ class FlipControls extends StatelessWidget {
                         widthFactor: 0.9,
                         child: Text(
                           'Allows to flip the rect while resizing. The actual contents of the rect won\'t be flipped.',
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall!
-                              .copyWith(
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodySmall!.copyWith(
                                 color: Theme.of(context).colorScheme.secondary,
                               ),
                         ),
@@ -1594,10 +1712,9 @@ class FlipControls extends StatelessWidget {
                         widthFactor: 0.9,
                         child: Text(
                           'Flip the contents of the rect when it is flipped.',
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall!
-                              .copyWith(
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodySmall!.copyWith(
                                 color: Theme.of(context).colorScheme.secondary,
                               ),
                         ),
@@ -1631,10 +1748,7 @@ class FlipControls extends StatelessWidget {
                         model.flipVertically();
                       }
                     },
-                    isSelected: [
-                      box.flip.isHorizontal,
-                      box.flip.isVertical,
-                    ],
+                    isSelected: [box.flip.isHorizontal, box.flip.isVertical],
                     selectedColor: Theme.of(context).colorScheme.primary,
                     constraints: const BoxConstraints.tightFor(height: 32),
                     children: const [
@@ -1714,14 +1828,18 @@ class _ClampingControlsState extends State<ClampingControls> {
   @override
   void initState() {
     super.initState();
-    leftController =
-        TextEditingController(text: model.clampingRect.left.toStringAsFixed(0));
-    topController =
-        TextEditingController(text: model.clampingRect.top.toStringAsFixed(0));
+    leftController = TextEditingController(
+      text: model.clampingRect.left.toStringAsFixed(0),
+    );
+    topController = TextEditingController(
+      text: model.clampingRect.top.toStringAsFixed(0),
+    );
     bottomController = TextEditingController(
-        text: model.clampingRect.bottom.toStringAsFixed(0));
+      text: model.clampingRect.bottom.toStringAsFixed(0),
+    );
     rightController = TextEditingController(
-        text: model.clampingRect.right.toStringAsFixed(0));
+      text: model.clampingRect.right.toStringAsFixed(0),
+    );
 
     model.addListener(onModelChanged);
   }
@@ -1775,10 +1893,9 @@ class _ClampingControlsState extends State<ClampingControls> {
                         Expanded(
                           child: Text(
                             'CLAMPING',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleSmall!
-                                .copyWith(
+                            style: Theme.of(
+                              context,
+                            ).textTheme.titleSmall!.copyWith(
                                   color:
                                       Theme.of(context).colorScheme.secondary,
                                 ),
@@ -1954,14 +2071,18 @@ class _ConstraintsControlsState extends State<ConstraintsControls> {
   @override
   void initState() {
     super.initState();
-    minWidthController =
-        TextEditingController(text: formatted(box.constraints.minWidth));
-    minHeightController =
-        TextEditingController(text: formatted(box.constraints.minHeight));
-    maxHeightController =
-        TextEditingController(text: formatted(box.constraints.maxHeight));
-    maxWidthController =
-        TextEditingController(text: formatted(box.constraints.maxWidth));
+    minWidthController = TextEditingController(
+      text: formatted(box.constraints.minWidth),
+    );
+    minHeightController = TextEditingController(
+      text: formatted(box.constraints.minHeight),
+    );
+    maxHeightController = TextEditingController(
+      text: formatted(box.constraints.maxHeight),
+    );
+    maxWidthController = TextEditingController(
+      text: formatted(box.constraints.maxWidth),
+    );
 
     model.addListener(onModelChanged);
   }
@@ -2025,10 +2146,9 @@ class _ConstraintsControlsState extends State<ConstraintsControls> {
                         Expanded(
                           child: Text(
                             'CONSTRAINTS',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleSmall!
-                                .copyWith(
+                            style: Theme.of(
+                              context,
+                            ).textTheme.titleSmall!.copyWith(
                                   color:
                                       Theme.of(context).colorScheme.secondary,
                                 ),
@@ -2169,10 +2289,12 @@ class _ConstraintsControlsState extends State<ConstraintsControls> {
                           const SizedBox(height: 16),
                           FilledButton.tonalIcon(
                             onPressed: () {
-                              model.setConstraints(const BoxConstraints(
-                                minWidth: double.infinity,
-                                minHeight: double.infinity,
-                              ));
+                              model.setConstraints(
+                                const BoxConstraints(
+                                  minWidth: double.infinity,
+                                  minHeight: double.infinity,
+                                ),
+                              );
                             },
                             icon: const Icon(Icons.refresh),
                             label: const Text('Reset'),
@@ -2224,8 +2346,9 @@ class KeyboardListenerIndicator extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color:
-                      Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.2),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onPrimary.withValues(alpha: 0.2),
                   blurRadius: 1,
                   offset: const Offset(1, 3),
                 ),
@@ -2244,10 +2367,7 @@ class KeyboardListenerIndicator extends StatelessWidget {
             onPressed: onClear,
             splashRadius: 16,
             iconSize: 18,
-            icon: Icon(
-              Icons.clear,
-              color: Colors.grey.shade400,
-            ),
+            icon: Icon(Icons.clear, color: Colors.grey.shade400),
           ),
       ],
     );
@@ -2291,10 +2411,7 @@ class ValueText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      value,
-      style: Theme.of(context).textTheme.titleMedium,
-    );
+    return Text(value, style: Theme.of(context).textTheme.titleMedium);
   }
 }
 
@@ -2303,12 +2420,7 @@ class SectionHeader extends StatelessWidget {
   final EdgeInsets? padding;
   final double? height;
 
-  const SectionHeader(
-    this.title, {
-    super.key,
-    this.padding,
-    this.height,
-  });
+  const SectionHeader(this.title, {super.key, this.padding, this.height});
 
   @override
   Widget build(BuildContext context) {
@@ -2321,6 +2433,163 @@ class SectionHeader extends StatelessWidget {
         style: Theme.of(context).textTheme.titleSmall!.copyWith(
               color: Theme.of(context).colorScheme.secondary,
             ),
+      ),
+    );
+  }
+}
+
+class RotationControls extends StatelessWidget {
+  const RotationControls({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final model = context.watch<PlaygroundModel>();
+    final box = model.selectedBox;
+    if (box == null) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Rotation',
+            style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                  color: Theme.of(context).colorScheme.secondary,
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Text('Rotatable'),
+              const Spacer(),
+              SizedBox(
+                height: 20,
+                child: Transform.scale(
+                  scale: 0.7,
+                  child: Switch(
+                    value: box.rotatable,
+                    onChanged: (v) => model.toggleRotatable(v),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              const Text('Angle'),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Slider(
+                  min: -pi,
+                  max: pi,
+                  value: box.rotation.clamp(-pi, pi).toDouble(),
+                  onChanged: (v) => model.setRotation(v),
+                ),
+              ),
+              SizedBox(
+                width: 48,
+                child: Text(
+                  '${(box.rotation * 180 / pi).toStringAsFixed(0)}\u00B0',
+                  textAlign: TextAlign.right,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              const Text('Binding'),
+              const SizedBox(width: 8),
+              Expanded(
+                child: DropdownButton<BindingStrategy>(
+                  value: box.bindingStrategy,
+                  isDense: true,
+                  isExpanded: true,
+                  items: const [
+                    DropdownMenuItem(
+                      value: BindingStrategy.originalBox,
+                      child: Text('Original Box'),
+                    ),
+                    DropdownMenuItem(
+                      value: BindingStrategy.boundingBox,
+                      child: Text('Bounding Box'),
+                    ),
+                  ],
+                  onChanged: (v) {
+                    if (v != null) model.setBindingStrategy(v);
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class DebugControls extends StatelessWidget {
+  const DebugControls({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final model = context.watch<PlaygroundModel>();
+
+    Widget toggleRow(String label, bool value, ValueChanged<bool> onChanged) {
+      return Row(
+        children: [
+          Expanded(
+            child: Text(label, style: Theme.of(context).textTheme.bodySmall),
+          ),
+          SizedBox(
+            height: 20,
+            child: Transform.scale(
+              scale: 0.7,
+              child: Switch(value: value, onChanged: onChanged),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Debug Visualizations',
+            style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                  color: Theme.of(context).colorScheme.secondary,
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          const SizedBox(height: 8),
+          toggleRow(
+            'Bounding rect (red)',
+            model.debugShowBoundingRect,
+            model.toggleDebugShowBoundingRect,
+          ),
+          toggleRow(
+            'Unrotated rect (green)',
+            model.debugShowUnrotatedRect,
+            model.toggleDebugShowUnrotatedRect,
+          ),
+          toggleRow(
+            'Rotation arrows',
+            model.debugShowRotationArrows,
+            model.toggleDebugShowRotationArrows,
+          ),
+          toggleRow(
+            'Handle gesture regions',
+            model.debugPaintHandleBounds,
+            model.toggleDebugPaintHandleBounds,
+          ),
+        ],
       ),
     );
   }
@@ -2339,6 +2608,9 @@ class BoxData {
   bool constraintsEnabled = false;
   bool resizable = true;
   bool draggable = true;
+  bool rotatable = false;
+  double rotation = 0.0;
+  BindingStrategy bindingStrategy = BindingStrategy.boundingBox;
   Set<HandlePosition> enabledHandles;
   Set<HandlePosition> visibleHandles;
 
@@ -2357,6 +2629,9 @@ class BoxData {
     this.constraintsEnabled = false,
     this.draggable = true,
     this.resizable = true,
+    this.rotatable = false,
+    this.rotation = 0.0,
+    this.bindingStrategy = BindingStrategy.boundingBox,
     Set<HandlePosition>? enabledHandles,
     Set<HandlePosition>? visibleHandles,
   })  : enabledHandles = enabledHandles ?? {...HandlePosition.values}
@@ -2367,7 +2642,15 @@ class BoxData {
 
 List<Vector2>? extendLineToRect(Rect rect, Vector2 p1, Vector2 p2) {
   final result = extendLinePointsToRectPoints(
-      rect.left, rect.top, rect.right, rect.bottom, p1.x, p1.y, p2.x, p2.y);
+    rect.left,
+    rect.top,
+    rect.right,
+    rect.bottom,
+    p1.x,
+    p1.y,
+    p2.x,
+    p2.y,
+  );
 
   if (result == null) return null;
 

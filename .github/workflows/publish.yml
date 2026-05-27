@@ -25,15 +25,15 @@ jobs:
         with:
           channel: stable
       - run: flutter --version
-      - name: Install Melos
-        run: flutter pub global activate melos
-      - name: Bootstrap
-        run: melos bootstrap
       - name: Install dependencies
-        run: melos deps
+        run: flutter pub get
       - name: Check code formatting
-        run: melos check-format
+        run: dart format --output none --set-exit-if-changed .
       - name: Analyze code
-        run: melos analyze
-      - name: Publish
-        run: melos publish --yes --no-dry-run
+        run: dart analyze . --fatal-infos --fatal-warnings
+      - name: Publish box_transform
+        working-directory: packages/box_transform
+        run: dart pub publish --force
+      - name: Publish flutter_box_transform
+        working-directory: packages/flutter_box_transform
+        run: flutter pub publish --force
