@@ -516,7 +516,14 @@ class BoxTransformer {
     );
     final fromVec = initialLocalPosition - center;
     final toVec = localPosition - center;
-    final deltaAngle = atan2(toVec.y, toVec.x) - atan2(fromVec.y, fromVec.x);
+    // Signed angle in (-π, π] via atan2(cross, dot). Computing as the raw
+    // atan2 difference yields (-2π, 2π) and jumps by ±2π whenever the
+    // pointer-vs-center bearing crosses the negative-x ray — a common
+    // event for corner-anchored gestures spanning ~180°.
+    final deltaAngle = atan2(
+      fromVec.x * toVec.y - fromVec.y * toVec.x,
+      fromVec.x * toVec.x + fromVec.y * toVec.y,
+    );
     final newRotation = initialRotation + deltaAngle;
 
     // Slide-then-freeze: compute the feasible (tx, ty) interval that keeps
@@ -1178,6 +1185,17 @@ class BoxTransformer {
     final effMinH =
         constraints.minHeight.isFinite ? constraints.minHeight : 0.0;
 
+    // Side handles lock the perpendicular dimension at initialRect's value;
+    // pin min=max for that axis so the LP can't trade it away to satisfy
+    // coupled corner inequalities near a tight clamp. Mirrors the freeform
+    // path's locking above.
+    final double lpMinW = verticalSide ? initialRect.width : effMinW;
+    final double lpMaxW =
+        verticalSide ? initialRect.width : constraints.maxWidth;
+    final double lpMinH = horizontalSide ? initialRect.height : effMinH;
+    final double lpMaxH =
+        horizontalSide ? initialRect.height : constraints.maxHeight;
+
     final ineqs = _ineqScratch;
     RotatedClampingSolver.buildCenterIneqsInto(
       ineqs,
@@ -1192,10 +1210,10 @@ class BoxTransformer {
       out: projection,
       targetW: desiredW,
       targetH: desiredH,
-      minW: effMinW,
-      maxW: constraints.maxWidth,
-      minH: effMinH,
-      maxH: constraints.maxHeight,
+      minW: lpMinW,
+      maxW: lpMaxW,
+      minH: lpMinH,
+      maxH: lpMaxH,
     );
     if (!projection.feasible) {
       return ResizeResult<Box, Vector2, Dimension>(

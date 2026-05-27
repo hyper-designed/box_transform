@@ -171,7 +171,10 @@ class TransformResult<B extends Object, V extends Object, D extends Object>
       'minHeightReached: $minHeightReached, '
       'maxHeightReached: $maxHeightReached, '
       'largestBox: $largestRect, '
-      'handle: $handle'
+      'handle: $handle, '
+      'rotation: $rotation, '
+      'boundingRect: $boundingRect, '
+      'oldBoundingRect: $oldBoundingRect'
       ')';
 }
 
@@ -242,6 +245,13 @@ class ResizeResult<B extends Object, V extends Object, D extends Object>
   });
 
   @override
+  bool operator ==(Object other) =>
+      super == other && other is ResizeResult && other.feasible == feasible;
+
+  @override
+  int get hashCode => Object.hash(super.hashCode, feasible);
+
+  @override
   String toString() => 'ResizeResult('
       'rect: $rect, '
       'oldBox: $oldRect, '
@@ -291,6 +301,13 @@ class RotateResult<B extends Object, V extends Object, D extends Object>
           maxHeightReached: false,
           handle: HandlePosition.none,
         );
+
+  @override
+  bool operator ==(Object other) =>
+      super == other && other is RotateResult && other.feasible == feasible;
+
+  @override
+  int get hashCode => Object.hash(super.hashCode, feasible);
 
   @override
   String toString() =>

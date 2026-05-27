@@ -345,8 +345,7 @@ class _TestRecorderUIState extends State<TestRecorderUI> {
         final name = record.key;
         // Skip records that captured no ticks (recorder paused mid-gesture
         // before any onResizeUpdate fired).
-        final records =
-            record.value.where((r) => r.ticks.isNotEmpty).toList();
+        final records = record.value.where((r) => r.ticks.isNotEmpty).toList();
         if (records.isEmpty) continue;
         final contents = <String>[];
         for (var index = 0; index < records.length; index++) {
