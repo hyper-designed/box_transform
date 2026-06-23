@@ -418,7 +418,7 @@ class PlaygroundModel with ChangeNotifier {
     notifyListeners();
   }
 
-  void onReorder(int oldIndex, int newIndex) {
+  void onReorderItem(int oldIndex, int newIndex) {
     if (oldIndex < newIndex) {
       newIndex -= 1;
     }
@@ -1164,7 +1164,7 @@ class BoxesPanel extends StatelessWidget {
           if (model.boxes.isNotEmpty)
             ReorderableListView.builder(
               itemCount: model.boxes.length,
-              onReorder: model.onReorder,
+              onReorderItem: model.onReorderItem,
               reverse: true,
               shrinkWrap: true,
               buildDefaultDragHandles: false,
