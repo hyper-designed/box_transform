@@ -95,6 +95,34 @@ abstract final class RotatedLayout {
     return cornerWorld - anchor;
   }
 
+  /// Returns the visual world-space center of the top rotation handle.
+  ///
+  /// [offsetFromTopEdge] is measured from the unrotated top edge to the handle
+  /// center, then rotated with the box around [rect.center].
+  static Offset topRotationHandleCenterInWorld({
+    required Rect rect,
+    required double rotation,
+    required double offsetFromTopEdge,
+  }) {
+    final unrotatedCenter = rect.topCenter.translate(0, -offsetFromTopEdge);
+    return rotateOffsetAround(unrotatedCenter, rect.center, rotation);
+  }
+
+  /// Returns the top-left position for a square top rotation handle.
+  static Offset topRotationHandleTopLeftInWorld({
+    required Rect rect,
+    required double rotation,
+    required double offsetFromTopEdge,
+    required double handleSize,
+  }) {
+    final center = topRotationHandleCenterInWorld(
+      rect: rect,
+      rotation: rotation,
+      offsetFromTopEdge: offsetFromTopEdge,
+    );
+    return center - Offset(handleSize / 2, handleSize / 2);
+  }
+
   /// Returns the parent-frame rect occupied by a side handle at the un-rotated
   /// [rect]. Only valid for side handles (top/bottom/left/right); rotation is
   /// not supported for side handles in v1.

@@ -37,6 +37,11 @@ class TransformableBox extends StatefulWidget {
   /// Note that this will build for all four sides of the rectangle.
   final HandleBuilder sideHandleBuilder;
 
+  /// A builder function that is used to build the visible top rotation handle.
+  /// Only used when [rotatable] is true and [rotationHandleMode] includes
+  /// [RotationHandleMode.topHandle].
+  final RotationHandleBuilder rotationHandleBuilder;
+
   /// Optional override for the [MouseCursor] shown over each handle's gesture
   /// zone. Receives the [HandlePosition] and a [HandleCursorKind] indicating
   /// the resize zone vs. the rotation ring (the latter only on corners when
@@ -76,6 +81,19 @@ class TransformableBox extends StatefulWidget {
   /// ring around the resize zone. Default false.
   final bool rotatable;
 
+  /// Controls where rotation gestures are exposed when [rotatable] is true.
+  final RotationHandleMode rotationHandleMode;
+
+  /// Distance from the box's visual top edge to the center of the top rotation
+  /// handle. Only used when [rotationHandleMode] includes
+  /// [RotationHandleMode.topHandle]. Default 40 pixels.
+  final double rotationHandleOffset;
+
+  /// Whether to paint a connector line between the top edge and the top
+  /// rotation handle. Only used when [rotationHandleMode] includes
+  /// [RotationHandleMode.topHandle]. Default true.
+  final bool showRotationHandleLine;
+
   /// The current rotation angle (radians) of the box around its center.
   /// Ignored if a [controller] is provided.
   final double rotation;
@@ -113,6 +131,11 @@ class TransformableBox extends StatefulWidget {
   ///
   /// By default, events from all device types will be recognized for resize events.
   final Set<PointerDeviceKind> supportedResizeDevices;
+
+  /// The kind of devices that are allowed to be recognized for rotation events.
+  ///
+  /// Defaults to [supportedResizeDevices].
+  final Set<PointerDeviceKind> supportedRotationDevices;
 
   /// The initial box that will be used to position set the initial size of
   /// the [TransformableBox] widget.
@@ -300,15 +323,20 @@ class TransformableBox extends StatefulWidget {
     this.controller,
     this.cornerHandleBuilder = HandleBuilders.defaultCorner,
     this.sideHandleBuilder = HandleBuilders.defaultSide,
+    this.rotationHandleBuilder = HandleBuilders.defaultRotation,
     this.cursorResolver,
     this.handleTapSize = 24,
     this.rotationHandleGestureSize = 64,
+    this.rotationHandleMode = RotationHandleMode.cornerRing,
+    this.rotationHandleOffset = 40,
+    this.showRotationHandleLine = true,
     this.allowContentFlipping = true,
     this.handleAlignment = HandleAlignment.center,
     this.enabledHandles = const {...HandlePosition.values},
     this.visibleHandles = const {...HandlePosition.values},
     this.supportedDragDevices = const {...PointerDeviceKind.values},
     this.supportedResizeDevices = const {...PointerDeviceKind.values},
+    Set<PointerDeviceKind>? supportedRotationDevices,
 
     // Raw values.
     Rect? rect,
@@ -371,6 +399,12 @@ class TransformableBox extends StatefulWidget {
                   (rotation == null)),
           'If a controller is provided, the raw values should not be provided.',
         ),
+        assert(rotationHandleGestureSize >= handleTapSize,
+            'rotationHandleGestureSize must be >= handleTapSize.'),
+        assert(rotationHandleOffset >= 0,
+            'rotationHandleOffset must be non-negative.'),
+        supportedRotationDevices =
+            supportedRotationDevices ?? supportedResizeDevices,
         rect = rect ?? Rect.zero,
         flip = flip ?? Flip.none,
         clampingRect = clampingRect ?? Rect.largest,
@@ -860,24 +894,64 @@ class _TransformableBoxState extends State<TransformableBox> {
     final Rect boundingRect = controller.boundingRect;
 
     final double handleTap = widget.handleTapSize;
+    final bool useCornerRotationRing =
+        widget.rotatable && widget.rotationHandleMode.usesCornerRing;
+    final bool useTopRotationHandle =
+        widget.rotatable && widget.rotationHandleMode.usesTopHandle;
     final double outerHandleSize =
-        widget.rotatable ? widget.rotationHandleGestureSize : handleTap;
+        useCornerRotationRing ? widget.rotationHandleGestureSize : handleTap;
+    final double rotationHandleSize = widget.rotationHandleGestureSize;
+
+    final Offset? topRotationHandleCenterWorld = useTopRotationHandle
+        ? RotatedLayout.topRotationHandleCenterInWorld(
+            rect: rect,
+            rotation: rotation,
+            offsetFromTopEdge: widget.rotationHandleOffset,
+          )
+        : null;
+    final Offset? topRotationHandleTopLeftWorld = useTopRotationHandle
+        ? topRotationHandleCenterWorld! -
+            Offset(rotationHandleSize / 2, rotationHandleSize / 2)
+        : null;
+    final Rect? topRotationHandleRect = topRotationHandleTopLeftWorld == null
+        ? null
+        : Rect.fromLTWH(
+            topRotationHandleTopLeftWorld.dx,
+            topRotationHandleTopLeftWorld.dy,
+            rotationHandleSize,
+            rotationHandleSize,
+          );
+    final Offset? topRotationLineAnchorWorld = useTopRotationHandle
+        ? RotatedLayout.rotateOffsetAround(
+            rect.topCenter, rect.center, rotation)
+        : null;
 
     // --- Outer Positioned bounds ---------------------------------------------
     // Must contain the visually rotated box AND all handle hit regions.
     // We take the union of boundingRect (rotated AABB) and rect (unrotated,
     // since side handles at theta=0 hang off rect's edges), then inflate to
     // accommodate handle gesture zones.
-    final Rect paintRect = Rect.fromLTRB(
-      (boundingRect.left < rect.left ? boundingRect.left : rect.left) -
-          outerHandleSize,
-      (boundingRect.top < rect.top ? boundingRect.top : rect.top) -
-          outerHandleSize,
-      (boundingRect.right > rect.right ? boundingRect.right : rect.right) +
-          outerHandleSize,
-      (boundingRect.bottom > rect.bottom ? boundingRect.bottom : rect.bottom) +
-          outerHandleSize,
-    );
+    double paintLeft =
+        (boundingRect.left < rect.left ? boundingRect.left : rect.left) -
+            outerHandleSize;
+    double paintTop =
+        (boundingRect.top < rect.top ? boundingRect.top : rect.top) -
+            outerHandleSize;
+    double paintRight =
+        (boundingRect.right > rect.right ? boundingRect.right : rect.right) +
+            outerHandleSize;
+    double paintBottom = (boundingRect.bottom > rect.bottom
+            ? boundingRect.bottom
+            : rect.bottom) +
+        outerHandleSize;
+    if (topRotationHandleRect != null) {
+      paintLeft = math.min(paintLeft, topRotationHandleRect.left);
+      paintTop = math.min(paintTop, topRotationHandleRect.top);
+      paintRight = math.max(paintRight, topRotationHandleRect.right);
+      paintBottom = math.max(paintBottom, topRotationHandleRect.bottom);
+    }
+    final Rect paintRect =
+        Rect.fromLTRB(paintLeft, paintTop, paintRight, paintBottom);
     final Offset origin = paintRect.topLeft;
 
     // --- Visual content (rotated + flipped, never receives gestures) --------
@@ -931,23 +1005,8 @@ class _TransformableBoxState extends State<TransformableBox> {
 
     // --- Corner handles (at visually-rotated corners, axis-aligned) --------
     final List<Widget> handleWidgets = [];
-    // When rotatable, CornerHandleWidget wraps its resize GestureDetector in
-    // a Padding(EdgeInsets.all(gestureGap)), so its event.localPosition is
-    // reported relative to the inner resize zone, not the outer widget.
-    // The rotation GestureDetector is NOT inside that Padding — it fills the
-    // whole outer zone — so its event.localPosition is relative to the outer.
-    // NOTE: the current CornerHandleWidget Padding is symmetric (centered),
-    // which only matches the anchor math when `handleAlignment == center`.
-    // `rotatable: true` currently requires center alignment; non-center
-    // alignments would put the inner resize zone off the box corner.
-    assert(
-      !widget.rotatable || widget.handleAlignment == HandleAlignment.center,
-      'rotatable: true currently requires handleAlignment == center. '
-      'Non-center alignments under rotation are not yet implemented '
-      '(CornerHandleWidget pads the inner resize zone symmetrically).',
-    );
-    final double gestureGap =
-        widget.rotatable ? (outerHandleSize - handleTap) / 2 : 0.0;
+    // Corner ring mode uses a larger outer square for rotation and positions
+    // the inner resize square by matching both zones' alignment anchors.
     if (widget.resizable) {
       for (final handle in HandlePosition.corners) {
         final bool visible = widget.visibleHandles.contains(handle);
@@ -960,10 +1019,15 @@ class _TransformableBoxState extends State<TransformableBox> {
           handleSize: outerHandleSize,
           alignment: widget.handleAlignment,
         );
-        // Inner resize zone's top-left in world. For rotatable=false,
-        // gestureGap == 0 and innerTopLeftWorld == outerTopLeftWorld.
-        final Offset innerTopLeftWorld =
-            outerTopLeftWorld + Offset(gestureGap, gestureGap);
+        // Inner resize zone's world top-left. It may not be concentric with
+        // the outer zone when handleAlignment is inside/outside.
+        final Offset innerTopLeftWorld = RotatedLayout.handleTopLeftInWorld(
+          rect: rect,
+          handle: handle,
+          rotation: rotation,
+          handleSize: handleTap,
+          alignment: widget.handleAlignment,
+        );
         handleWidgets.add(Positioned(
           left: outerTopLeftWorld.dx - origin.dx,
           top: outerTopLeftWorld.dy - origin.dy,
@@ -974,11 +1038,13 @@ class _TransformableBoxState extends State<TransformableBox> {
             handlePosition: handle,
             handleTapSize: handleTap,
             rotationHandleGestureSize: outerHandleSize,
-            rotatable: widget.rotatable,
+            rotatable: useCornerRotationRing,
             rotation: rotation,
             supportedDevices: widget.supportedResizeDevices,
+            supportedRotationDevices: widget.supportedRotationDevices,
             enabled: enabled,
             visible: visible,
+            handleAlignment: widget.handleAlignment,
             // Resize callbacks: use inner top-left (event.localPosition is
             // local to the inner padded resize zone).
             onPanStart: (event) =>
@@ -989,19 +1055,20 @@ class _TransformableBoxState extends State<TransformableBox> {
             onPanCancel: () => onHandlePanCancel(handle),
             // Rotation callbacks: use outer top-left (event.localPosition is
             // local to the full 64x64 outer zone).
-            onRotationStart: widget.rotatable
+            onRotationStart: useCornerRotationRing
                 ? (event) =>
                     onHandleRotateStart(event, handle, outerTopLeftWorld)
                 : null,
-            onRotationUpdate: widget.rotatable
+            onRotationUpdate: useCornerRotationRing
                 ? (event) =>
                     onHandleRotateUpdate(event, handle, outerTopLeftWorld)
                 : null,
-            onRotationEnd: widget.rotatable
+            onRotationEnd: useCornerRotationRing
                 ? (event) => onHandleRotateEnd(event, handle)
                 : null,
-            onRotationCancel:
-                widget.rotatable ? () => onHandleRotateCancel(handle) : null,
+            onRotationCancel: useCornerRotationRing
+                ? () => onHandleRotateCancel(handle)
+                : null,
             builder: widget.cornerHandleBuilder,
             cursorResolver: widget.cursorResolver,
             debugPaintHandleBounds: widget.debugPaintHandleBounds,
@@ -1074,6 +1141,56 @@ class _TransformableBoxState extends State<TransformableBox> {
       }
     }
 
+    if (useTopRotationHandle &&
+        topRotationHandleTopLeftWorld != null &&
+        topRotationHandleCenterWorld != null) {
+      if (widget.showRotationHandleLine &&
+          topRotationLineAnchorWorld != null &&
+          widget.rotationHandleOffset > 0) {
+        handleWidgets.add(Positioned.fill(
+          child: IgnorePointer(
+            child: CustomPaint(
+              painter: RenderRotationHandleLine(
+                start: topRotationLineAnchorWorld - origin,
+                end: topRotationHandleCenterWorld - origin,
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.45),
+              ),
+            ),
+          ),
+        ));
+      }
+
+      handleWidgets.add(Positioned(
+        left: topRotationHandleTopLeftWorld.dx - origin.dx,
+        top: topRotationHandleTopLeftWorld.dy - origin.dy,
+        width: rotationHandleSize,
+        height: rotationHandleSize,
+        child: RotationHandleWidget(
+          key: const ValueKey('box_transform_top_rotation_handle'),
+          handleTapSize: rotationHandleSize,
+          supportedDevices: widget.supportedRotationDevices,
+          onPanStart: (event) => onHandleRotateStart(
+            event,
+            HandlePosition.top,
+            topRotationHandleTopLeftWorld,
+          ),
+          onPanUpdate: (event) => onHandleRotateUpdate(
+            event,
+            HandlePosition.top,
+            topRotationHandleTopLeftWorld,
+          ),
+          onPanEnd: (event) => onHandleRotateEnd(event, HandlePosition.top),
+          onPanCancel: () => onHandleRotateCancel(HandlePosition.top),
+          builder: widget.rotationHandleBuilder,
+          cursorResolver: widget.cursorResolver,
+          debugPaintHandleBounds: widget.debugPaintHandleBounds,
+        ),
+      ));
+    }
+
     // --- Debug overlays (kDebugMode only; in paintRect-local coords) -------
     final List<Widget> overlays = <Widget>[];
     if (kDebugMode && widget.debugShowUnrotatedRect) {
@@ -1136,6 +1253,42 @@ class _TransformableBoxState extends State<TransformableBox> {
       ),
     );
   }
+}
+
+/// Paints the connector line from the rotated top edge to the top rotation
+/// handle.
+class RenderRotationHandleLine extends CustomPainter {
+  /// Start point on the rotated top edge.
+  final Offset start;
+
+  /// End point at the rotation handle center.
+  final Offset end;
+
+  /// Line color.
+  final Color color;
+
+  /// Creates a [RenderRotationHandleLine] painter.
+  const RenderRotationHandleLine({
+    required this.start,
+    required this.end,
+    required this.color,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Paint paint = Paint()
+      ..color = color
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(start, end, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant RenderRotationHandleLine oldDelegate) =>
+      oldDelegate.start != start ||
+      oldDelegate.end != end ||
+      oldDelegate.color != color;
 }
 
 /// Debug painter that renders vectors from the box center to the initial

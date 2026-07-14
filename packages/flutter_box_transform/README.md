@@ -21,8 +21,10 @@ This package uses [Box Transform](https://pub.dev/packages/box_transform) APIs i
 * 📍 **Customizable Anchor Points:** Define resizing corner-handles to anchor different parts of the box when resizing.
 * 🎨 **Customizable Handles:** Use default resizing handles or define your own custom handles.
 * 🌀 **Rotation Support:** `TransformableBox.rotation` rotates the rendered box around its center. Set
-  `rotatable: true` to enable per-corner rotation gestures (an outer ring around each corner-handle captures
-  rotation; size with `rotationHandleGestureSize`). Wire `onRotationStart` / `onRotationUpdate` / `onRotationEnd`
+  `rotatable: true` to enable rotation gestures. Use `RotationHandleMode.cornerRing` for the default outside-corner
+  rings, `RotationHandleMode.topHandle` for a visible top rotate handle, or `RotationHandleMode.both` for both.
+  Tune the hit target with `rotationHandleGestureSize`, offset the top handle with `rotationHandleOffset`, and
+  customize it with `rotationHandleBuilder`. Wire `onRotationStart` / `onRotationUpdate` / `onRotationEnd`
   callbacks to react. `bindingStrategy` (`BindingStrategy.originalBox` vs `BindingStrategy.boundingBox`) chooses
   whether the unrotated logical rect or the rendered AABB stays in the clamp. The controller does slide-then-freeze
   on rotation and natural-direction fallback on rotated force-flip, holding the last feasible state instead of

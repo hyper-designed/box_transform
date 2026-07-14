@@ -36,6 +36,9 @@ typedef HandleBuilder = Widget Function(
   HandlePosition handle,
 );
 
+/// A callback that builds the visible top rotation handle.
+typedef RotationHandleBuilder = Widget Function(BuildContext context);
+
 /// A callback that expects a [Widget] that represents the content of the box.
 /// The [rect] is the current position and size of the box.
 /// The [flip] is the current flip state of the box.

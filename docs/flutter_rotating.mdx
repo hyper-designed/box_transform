@@ -36,10 +36,10 @@ symmetricScale), side handles, and force-flip all stay rotation-aware.
 
 ## Enabling rotation gestures
 
-When `rotatable: true`, an outer ring around each corner-handle captures
-rotation. Resize still happens inside the inner area; rotation kicks in
-when the pointer is on the outside ring. Size that ring with
-`rotationHandleGestureSize` (default `64` pixels).
+When `rotatable: true`, rotation gestures default to an outer ring around
+each corner-handle (`RotationHandleMode.cornerRing`). Resize still happens
+inside the inner area; rotation kicks in when the pointer is on the outside
+ring. Size that ring with `rotationHandleGestureSize` (default `64` pixels).
 
 ```dart title="Tuning the rotation gesture ring"
   TransformableBox(
@@ -51,6 +51,30 @@ when the pointer is on the outside ring. Size that ring with
     contentBuilder: (context, rect, flip) {...},
   );
 ```
+
+Use `rotationHandleMode` to switch to a visible top rotation handle, or to
+enable both affordances. The top handle uses `rotationHandleGestureSize` as
+its invisible hit target, `rotationHandleOffset` as the distance from the
+visual top edge to the handle center, and `rotationHandleBuilder` for the
+visible widget.
+
+```dart title="Using a visible top rotation handle"
+  TransformableBox(
+    rect: rect,
+    rotation: rotation,
+    rotatable: true,
+    rotationHandleMode: RotationHandleMode.topHandle,
+    rotationHandleOffset: 44,
+    showRotationHandleLine: true,
+    rotationHandleBuilder: (context) => const DefaultRotationHandle(),
+    onRotationUpdate: (event, _) => setState(() => rotation = event.rotation),
+    contentBuilder: (context, rect, flip) {...},
+  );
+```
+
+For desktop or stylus-heavy apps, `supportedRotationDevices` can be set
+independently from drag and resize devices. If omitted, it defaults to
+`supportedResizeDevices`.
 
 Listen to the full rotation lifecycle if you need more granular control:
 
