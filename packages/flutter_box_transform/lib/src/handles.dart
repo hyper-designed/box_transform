@@ -8,6 +8,25 @@ import 'transformable_box.dart';
 /// Default width of the border of the handles.
 const kDefaultHandleBorderWidth = 1.5;
 
+/// Controls where rotation gestures are exposed when
+/// [TransformableBox.rotatable] is true.
+enum RotationHandleMode {
+  /// Exposes the existing outer ring around each corner resize handle.
+  cornerRing,
+
+  /// Exposes a single visible rotation handle above the top edge.
+  topHandle,
+
+  /// Exposes both the corner rings and the top rotation handle.
+  both;
+
+  /// Whether corner handles should include an outer rotation ring.
+  bool get usesCornerRing => this != RotationHandleMode.topHandle;
+
+  /// Whether the top rotation handle should be shown.
+  bool get usesTopHandle => this != RotationHandleMode.cornerRing;
+}
+
 /// Alignment of the handle.
 enum HandleAlignment {
   /// The handle is completely inside the box corner/side.
@@ -148,6 +167,64 @@ class DefaultSideHandle extends StatelessWidget {
           width: kDefaultHandleBorderWidth,
         ),
       ),
+    );
+  }
+}
+
+/// The default visible handle used for top-handle rotation mode.
+class DefaultRotationHandle extends StatelessWidget {
+  /// Decoration of the visible rotation handle.
+  final Decoration? decoration;
+
+  /// The size of the visible rotation handle UI. This is smaller than the
+  /// gesture response area controlled by
+  /// [TransformableBox.rotationHandleGestureSize].
+  final double size;
+
+  /// The icon color. Defaults to [Theme.colorScheme.primary].
+  final Color? iconColor;
+
+  /// Creates a new default rotation handle.
+  const DefaultRotationHandle({
+    super.key,
+    this.decoration,
+    this.size = 24,
+    this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = iconColor ?? Theme.of(context).colorScheme.primary;
+    return Center(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: decoration ?? defaultDecoration(context),
+        child: Icon(
+          Icons.rotate_right,
+          color: color,
+          size: size * 0.62,
+        ),
+      ),
+    );
+  }
+
+  /// Default decoration of the handle.
+  static Decoration defaultDecoration(BuildContext context) {
+    return BoxDecoration(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      shape: BoxShape.circle,
+      border: Border.all(
+        color: Theme.of(context).colorScheme.primary,
+        width: kDefaultHandleBorderWidth,
+      ),
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x22000000),
+          blurRadius: 2,
+          offset: Offset(0, 1),
+        ),
+      ],
     );
   }
 }

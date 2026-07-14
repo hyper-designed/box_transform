@@ -38,6 +38,7 @@ class _MyHomePageState extends State<MyHomePage> {
     width: 400,
     height: 300,
   );
+  double rotation = 0.0;
 
   @override
   Widget build(BuildContext context) {
@@ -47,10 +48,19 @@ class _MyHomePageState extends State<MyHomePage> {
         children: [
           TransformableBox(
             rect: rect,
+            rotation: rotation,
+            rotatable: true,
+            rotationHandleMode: RotationHandleMode.both,
             clampingRect: Offset.zero & MediaQuery.sizeOf(context),
             onChanged: (result, event) {
               setState(() {
                 rect = result.rect;
+              });
+            },
+            onRotationUpdate: (result, event) {
+              setState(() {
+                rect = result.rect;
+                rotation = result.rotation;
               });
             },
             contentBuilder: (context, rect, flip) {

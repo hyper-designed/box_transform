@@ -128,7 +128,10 @@ to build the handles.
   TransformableBox(
     rect: rect,
     flip: flip,
-    handleBuilder: (context, handle) {
+    cornerHandleBuilder: (context, handle) {
+      return MyCustomHandleWidget(handle: handle);
+    },
+    sideHandleBuilder: (context, handle) {
       return MyCustomHandleWidget(handle: handle);
     },
     onChanged: (event) {...},
@@ -149,15 +152,13 @@ You can use `AngularHandle` to build angular handles that look like corner brack
     flip: flip,
     handleAlignment: HandleAlignment.inside,
     cornerHandleBuilder: (context, handle) {
-      return AngularCornerHandle(
+      return AngularHandle(
         handle: handle,
-        handleAlign: HandleAlign.inside,
       );
     },
     sideHandleBuilder: (context, handle) {
-      return AngularSideHandle(
+      return AngularHandle(
         handle: handle,
-        handleAlignment: HandleAlignment.inside,
       );
     },
     onChanged: (event) {...},

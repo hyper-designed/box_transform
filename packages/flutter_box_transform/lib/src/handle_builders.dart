@@ -28,6 +28,10 @@ abstract final class HandleBuilders {
     HandlePosition handle,
   ) =>
       DefaultSideHandle(handle: handle);
+
+  /// A default implementation of the top rotation handle builder.
+  static Widget defaultRotation(BuildContext context) =>
+      const DefaultRotationHandle();
 }
 
 /// Creates a new corner handle widget, with its appropriate gesture splash
@@ -63,6 +67,9 @@ class CornerHandleWidget extends StatelessWidget {
   /// The kind of devices that are allowed to be recognized.
   final Set<PointerDeviceKind> supportedDevices;
 
+  /// The kind of devices that are allowed to be recognized for rotation.
+  final Set<PointerDeviceKind>? supportedRotationDevices;
+
   /// Called when the handle resize dragging starts.
   final GestureDragStartCallback? onPanStart;
 
@@ -93,6 +100,9 @@ class CornerHandleWidget extends StatelessWidget {
   /// Whether the handle is visible.
   final bool visible;
 
+  /// How the inner resize zone is aligned relative to the corner.
+  final HandleAlignment handleAlignment;
+
   /// Optional override for the [MouseCursor] shown over this handle's gesture
   /// zones. Receives the [HandlePosition] and a [HandleCursorKind] indicating
   /// whether the resize zone or the rotation ring is being queried. Return
@@ -109,6 +119,7 @@ class CornerHandleWidget extends StatelessWidget {
     required this.handleTapSize,
     required this.supportedDevices,
     required this.builder,
+    this.supportedRotationDevices,
     this.rotationHandleGestureSize = 64.0,
     this.rotatable = false,
     this.rotation = 0.0,
@@ -122,6 +133,7 @@ class CornerHandleWidget extends StatelessWidget {
     this.onRotationCancel,
     this.enabled = true,
     this.visible = true,
+    this.handleAlignment = HandleAlignment.center,
     this.cursorResolver,
     this.debugPaintHandleBounds = false,
   })  : assert(handlePosition.isDiagonal, 'A corner handle must be diagonal.'),
@@ -135,11 +147,12 @@ class CornerHandleWidget extends StatelessWidget {
 
     final double outerSize =
         rotatable ? rotationHandleGestureSize : handleTapSize;
-    final double gestureGap = (outerSize - handleTapSize) / 2;
+    final Offset resizeOffset =
+        _anchorInHandle(handlePosition, outerSize, handleAlignment) -
+            _anchorInHandle(handlePosition, handleTapSize, handleAlignment);
 
-    // Resize zone: concentric inner square of size [handleTapSize], centered
-    // on the box corner (which coincides with the centre of the outer zone
-    // when handleAlignment == center).
+    // Resize zone: square of size [handleTapSize] whose own alignment anchor
+    // lands on the same box corner as the outer rotation zone anchor.
     Widget resizeInner = enabled
         ? GestureDetector(
             behavior: HitTestBehavior.opaque,
@@ -162,10 +175,11 @@ class CornerHandleWidget extends StatelessWidget {
       );
     }
 
-    // Centered resize zone (EdgeInsets.all so the visible handle icon lands
-    // exactly on the box corner).
-    Widget resizeZone = Padding(
-      padding: EdgeInsets.all(gestureGap),
+    Widget resizeZone = Positioned(
+      left: resizeOffset.dx,
+      top: resizeOffset.dy,
+      width: handleTapSize,
+      height: handleTapSize,
       child: resizeInner,
     );
 
@@ -176,7 +190,7 @@ class CornerHandleWidget extends StatelessWidget {
     if (rotatable && enabled) {
       Widget rotationGesture = GestureDetector(
         behavior: HitTestBehavior.opaque,
-        supportedDevices: supportedDevices,
+        supportedDevices: supportedRotationDevices ?? supportedDevices,
         onPanStart: onRotationStart,
         onPanUpdate: onRotationUpdate,
         onPanEnd: onRotationEnd,
@@ -187,6 +201,8 @@ class CornerHandleWidget extends StatelessWidget {
             painter: _RotationIndicatorPainter(
               handle: handlePosition,
               rotation: rotation,
+              color: Theme.of(context).colorScheme.primary,
+              haloColor: Theme.of(context).scaffoldBackgroundColor,
             ),
             child: const SizedBox.expand(),
           ),
@@ -202,13 +218,30 @@ class CornerHandleWidget extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           rotationGesture, // bottom: catches everything
-          resizeZone, // top: wins only in the center
+          resizeZone, // top: wins in the resize zone
         ],
+      );
+    } else {
+      outer = Stack(
+        fit: StackFit.expand,
+        children: [resizeZone],
       );
     }
 
     // Return a fixed-size box; positioning is the caller's responsibility.
     return SizedBox(width: outerSize, height: outerSize, child: outer);
+  }
+
+  Offset _anchorInHandle(
+    HandlePosition handle,
+    double handleSize,
+    HandleAlignment alignment,
+  ) {
+    final p = alignment.offset(handleSize);
+    return Offset(
+      handle.influencesLeft ? p : handleSize - p,
+      handle.influencesTop ? p : handleSize - p,
+    );
   }
 
   /// Returns the resize cursor for the given handle position.
@@ -256,6 +289,84 @@ class CornerHandleWidget extends StatelessWidget {
   /// with any callers that use the legacy name.
   MouseCursor getCursorForHandle(HandlePosition handle) =>
       getResizeCursorForHandle(handle);
+}
+
+/// Creates a visible top rotation handle with a large gesture response area.
+@protected
+class RotationHandleWidget extends StatelessWidget {
+  /// The builder that is used to build the visible handle widget.
+  final RotationHandleBuilder builder;
+
+  /// The size of the rotation gesture response area.
+  final double handleTapSize;
+
+  /// The kind of devices that are allowed to be recognized.
+  final Set<PointerDeviceKind> supportedDevices;
+
+  /// Called when a rotation gesture starts.
+  final GestureDragStartCallback? onPanStart;
+
+  /// Called when a rotation gesture is updated.
+  final GestureDragUpdateCallback? onPanUpdate;
+
+  /// Called when a rotation gesture ends.
+  final GestureDragEndCallback? onPanEnd;
+
+  /// Called when a rotation gesture is canceled.
+  final GestureDragCancelCallback? onPanCancel;
+
+  /// Optional override for the cursor shown over the rotation handle.
+  final HandleCursorResolver? cursorResolver;
+
+  /// Whether to paint the handle's bounds for debugging purposes.
+  final bool debugPaintHandleBounds;
+
+  /// Creates a new top rotation handle widget.
+  const RotationHandleWidget({
+    super.key,
+    required this.builder,
+    required this.handleTapSize,
+    required this.supportedDevices,
+    this.onPanStart,
+    this.onPanUpdate,
+    this.onPanEnd,
+    this.onPanCancel,
+    this.cursorResolver,
+    this.debugPaintHandleBounds = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    Widget child = GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      supportedDevices: supportedDevices,
+      onPanStart: onPanStart,
+      onPanUpdate: onPanUpdate,
+      onPanEnd: onPanEnd,
+      onPanCancel: onPanCancel,
+      child: MouseRegion(
+        cursor: getRotationCursor(),
+        child: builder(context),
+      ),
+    );
+
+    if (kDebugMode && debugPaintHandleBounds) {
+      child = ColoredBox(
+        color: Colors.blue.withValues(alpha: 0.35),
+        child: child,
+      );
+    }
+
+    return SizedBox.square(dimension: handleTapSize, child: child);
+  }
+
+  /// Returns the cursor shown over the top rotation handle.
+  MouseCursor getRotationCursor() {
+    final MouseCursor? overridden =
+        cursorResolver?.call(HandlePosition.top, HandleCursorKind.rotation);
+    if (overridden != null) return overridden;
+    return SystemMouseCursors.resizeUpDown;
+  }
 }
 
 /// Creates a new cardinal handle widget, with its appropriate gesture splash
@@ -379,10 +490,14 @@ class SideHandleWidget extends StatelessWidget {
 class _RotationIndicatorPainter extends CustomPainter {
   final HandlePosition handle;
   final double rotation;
+  final Color color;
+  final Color haloColor;
 
   const _RotationIndicatorPainter({
     required this.handle,
     this.rotation = 0.0,
+    required this.color,
+    required this.haloColor,
   });
 
   @override
@@ -410,21 +525,95 @@ class _RotationIndicatorPainter extends CustomPainter {
     // at the visually-rotated corner of the box, add [rotation] so the arc
     // still points outward relative to the box's current orientation.
     final double startAngle = baseStartAngle + rotation;
-    final paint = Paint()
-      ..color = const Color(0x554B9EF4)
+    const double sweepAngle = math.pi / 2;
+    final Rect arcRect = Rect.fromCircle(center: centre, radius: radius);
+    final Paint haloPaint = Paint()
+      ..color = haloColor.withValues(alpha: 0.9)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2
+      ..strokeWidth = 5.5
       ..strokeCap = StrokeCap.round;
-    canvas.drawArc(
-      Rect.fromCircle(center: centre, radius: radius),
-      startAngle,
-      math.pi / 2,
-      false,
-      paint,
+    final Paint paint = Paint()
+      ..color = color.withValues(alpha: 0.95)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5
+      ..strokeCap = StrokeCap.round;
+    canvas
+      ..drawArc(arcRect, startAngle, sweepAngle, false, haloPaint)
+      ..drawArc(arcRect, startAngle, sweepAngle, false, paint);
+
+    final double endAngle = startAngle + sweepAngle;
+    final Offset startPoint = _pointOnCircle(centre, radius, startAngle);
+    final Offset endPoint = _pointOnCircle(centre, radius, endAngle);
+    final Paint arrowHaloPaint = Paint()
+      ..color = haloColor.withValues(alpha: 0.9)
+      ..style = PaintingStyle.fill;
+    final Paint arrowPaint = Paint()
+      ..color = color.withValues(alpha: 0.95)
+      ..style = PaintingStyle.fill;
+
+    _drawArrowHead(
+      canvas,
+      startPoint,
+      startAngle - math.pi / 2,
+      arrowHaloPaint,
+      size: 8,
     );
+    _drawArrowHead(
+      canvas,
+      endPoint,
+      endAngle + math.pi / 2,
+      arrowHaloPaint,
+      size: 8,
+    );
+    _drawArrowHead(
+      canvas,
+      startPoint,
+      startAngle - math.pi / 2,
+      arrowPaint,
+    );
+    _drawArrowHead(
+      canvas,
+      endPoint,
+      endAngle + math.pi / 2,
+      arrowPaint,
+    );
+  }
+
+  Offset _pointOnCircle(Offset centre, double radius, double angle) {
+    return Offset(
+      centre.dx + math.cos(angle) * radius,
+      centre.dy + math.sin(angle) * radius,
+    );
+  }
+
+  void _drawArrowHead(
+    Canvas canvas,
+    Offset tip,
+    double direction,
+    Paint paint, {
+    double size = 6,
+  }) {
+    final Offset back = Offset(
+      tip.dx - math.cos(direction) * size,
+      tip.dy - math.sin(direction) * size,
+    );
+    final double wingAngle = direction + math.pi / 2;
+    final Offset wing = Offset(
+      math.cos(wingAngle) * size * 0.45,
+      math.sin(wingAngle) * size * 0.45,
+    );
+    final Path path = Path()
+      ..moveTo(tip.dx, tip.dy)
+      ..lineTo(back.dx + wing.dx, back.dy + wing.dy)
+      ..lineTo(back.dx - wing.dx, back.dy - wing.dy)
+      ..close();
+    canvas.drawPath(path, paint);
   }
 
   @override
   bool shouldRepaint(covariant _RotationIndicatorPainter oldDelegate) =>
-      oldDelegate.handle != handle || oldDelegate.rotation != rotation;
+      oldDelegate.handle != handle ||
+      oldDelegate.rotation != rotation ||
+      oldDelegate.color != color ||
+      oldDelegate.haloColor != haloColor;
 }
