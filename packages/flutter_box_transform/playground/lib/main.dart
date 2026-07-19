@@ -688,6 +688,7 @@ class _ImageBoxState extends State<ImageBox> {
       flip: box.flip,
       rotation: box.rotation,
       rotatable: widget.selected && box.rotatable,
+      rotationHandleMode: RotationHandleMode.topHandle,
       bindingStrategy: box.bindingStrategy,
       clampingRect: model.clampingEnabled ? model.clampingRect : null,
       constraints: box.constraintsEnabled ? box.constraints : null,
@@ -715,8 +716,21 @@ class _ImageBoxState extends State<ImageBox> {
         );
       },
       onRotationUpdate: (result, event) {
-        box.rotation = result.rotation;
-        setState(() {});
+        // Hold Shift to snap to 15° detents. Mirrors the package's modifier
+        // idiom (WidgetsBinding.instance.keyboard.logicalKeysPressed) used by
+        // defaultResizeModeResolver, rather than HardwareKeyboard.instance.
+        final pressedKeys = WidgetsBinding.instance.keyboard.logicalKeysPressed;
+        final isShiftPressed =
+            pressedKeys.contains(LogicalKeyboardKey.shiftLeft) ||
+                pressedKeys.contains(LogicalKeyboardKey.shiftRight);
+        const snapStep = pi / 12; // 15°
+        final rotation = isShiftPressed
+            ? (result.rotation / snapStep).round() * snapStep
+            : result.rotation;
+        // Route rotation through the model so listeners (e.g. the rotation
+        // slider/value in the side panel) rebuild live during the gesture.
+        // ImageBox also rebuilds via context.watch, so no local setState needed.
+        model.setRotation(rotation);
       },
       resizable: widget.selected && box.resizable,
       visibleHandles:
@@ -1174,25 +1188,19 @@ class BoxesPanel extends StatelessWidget {
                 return ReorderableDragStartListener(
                   index: index,
                   key: ValueKey(box.name),
-                  child: Container(
-                    color: box.name == model.selectedBox?.name
-                        ? Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.2)
-                        : null,
-                    child: ListTile(
-                      title: Text(box.name),
-                      selected: box.name == model.selectedBox?.name,
-                      onTap: () => model.onBoxSelected(index),
-                      leading: const Icon(
-                        Icons.border_style_outlined,
-                        size: 18,
-                      ),
-                      minLeadingWidth: 20,
-                      dense: true,
-                      // selectedTileColor:
-                      //     Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                  child: ListTile(
+                    title: Text(box.name),
+                    selected: box.name == model.selectedBox?.name,
+                    selectedTileColor: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.2),
+                    onTap: () => model.onBoxSelected(index),
+                    leading: const Icon(
+                      Icons.border_style_outlined,
+                      size: 18,
                     ),
+                    minLeadingWidth: 20,
+                    dense: true,
                   ),
                 );
               },
@@ -2438,14 +2446,53 @@ class SectionHeader extends StatelessWidget {
   }
 }
 
-class RotationControls extends StatelessWidget {
+class RotationControls extends StatefulWidget {
   const RotationControls({super.key});
+
+  @override
+  State<RotationControls> createState() => _RotationControlsState();
+}
+
+class _RotationControlsState extends State<RotationControls> {
+  final TextEditingController _angleController = TextEditingController();
+  final FocusNode _angleFocus = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _angleFocus.addListener(() {
+      // Commit whatever the user typed when the field loses focus.
+      if (!_angleFocus.hasFocus && mounted) {
+        _commit(context.read<PlaygroundModel>());
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _angleController.dispose();
+    _angleFocus.dispose();
+    super.dispose();
+  }
+
+  void _commit(PlaygroundModel model) {
+    final parsed = double.tryParse(_angleController.text.trim());
+    if (parsed == null || model.selectedBox == null) return;
+    final degrees = parsed.clamp(-180.0, 180.0);
+    model.setRotation(degrees * pi / 180);
+  }
 
   @override
   Widget build(BuildContext context) {
     final model = context.watch<PlaygroundModel>();
     final box = model.selectedBox;
     if (box == null) return const SizedBox.shrink();
+
+    // Keep the field in sync with external changes (slider drag / rotation
+    // gesture) without clobbering what the user is actively typing.
+    if (!_angleFocus.hasFocus) {
+      _angleController.text = (box.rotation * 180 / pi).toStringAsFixed(0);
+    }
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
@@ -2490,11 +2537,26 @@ class RotationControls extends StatelessWidget {
                 ),
               ),
               SizedBox(
-                width: 48,
-                child: Text(
-                  '${(box.rotation * 180 / pi).toStringAsFixed(0)}\u00B0',
+                width: 64,
+                child: TextField(
+                  controller: _angleController,
+                  focusNode: _angleFocus,
                   textAlign: TextAlign.right,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    signed: true,
+                    decimal: true,
+                  ),
                   style: Theme.of(context).textTheme.bodySmall,
+                  decoration: const InputDecoration(
+                    isDense: true,
+                    suffixText: '\u00B0',
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 10,
+                    ),
+                  ),
+                  onSubmitted: (_) => _commit(model),
                 ),
               ),
             ],
@@ -2608,7 +2670,7 @@ class BoxData {
   bool constraintsEnabled = false;
   bool resizable = true;
   bool draggable = true;
-  bool rotatable = false;
+  bool rotatable = true;
   double rotation = 0.0;
   BindingStrategy bindingStrategy = BindingStrategy.boundingBox;
   Set<HandlePosition> enabledHandles;
@@ -2629,7 +2691,7 @@ class BoxData {
     this.constraintsEnabled = false,
     this.draggable = true,
     this.resizable = true,
-    this.rotatable = false,
+    this.rotatable = true,
     this.rotation = 0.0,
     this.bindingStrategy = BindingStrategy.boundingBox,
     Set<HandlePosition>? enabledHandles,

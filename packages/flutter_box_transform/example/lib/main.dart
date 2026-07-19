@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_box_transform/flutter_box_transform.dart';
 
 void main() {
@@ -58,9 +61,19 @@ class _MyHomePageState extends State<MyHomePage> {
               });
             },
             onRotationUpdate: (result, event) {
+              // Hold Shift to snap rotation to 15° detents. Uses the package's
+              // modifier idiom (WidgetsBinding.instance.keyboard).
+              final pressedKeys =
+                  WidgetsBinding.instance.keyboard.logicalKeysPressed;
+              final isShiftPressed =
+                  pressedKeys.contains(LogicalKeyboardKey.shiftLeft) ||
+                      pressedKeys.contains(LogicalKeyboardKey.shiftRight);
+              const snapStep = pi / 12; // 15°
               setState(() {
                 rect = result.rect;
-                rotation = result.rotation;
+                rotation = isShiftPressed
+                    ? (result.rotation / snapStep).round() * snapStep
+                    : result.rotation;
               });
             },
             contentBuilder: (context, rect, flip) {
