@@ -2731,7 +2731,7 @@ class BoxData {
     this.resizable = true,
     this.rotatable = true,
     this.rotation = 0.0,
-    this.rotationHandleMode = RotationHandleMode.topHandle,
+    this.rotationHandleMode = RotationHandleMode.cornerRing,
     this.bindingStrategy = BindingStrategy.boundingBox,
     Set<HandlePosition>? enabledHandles,
     Set<HandlePosition>? visibleHandles,

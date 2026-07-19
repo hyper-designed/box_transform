@@ -53,7 +53,7 @@ class _MyHomePageState extends State<MyHomePage> {
             rect: rect,
             rotation: rotation,
             rotatable: true,
-            rotationHandleMode: RotationHandleMode.both,
+            rotationHandleMode: RotationHandleMode.cornerRing,
             clampingRect: Offset.zero & MediaQuery.sizeOf(context),
             onChanged: (result, event) {
               setState(() {

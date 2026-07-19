@@ -440,12 +440,177 @@ enum _PrimaryGestureOperation {
   bool get isRotating => this == _PrimaryGestureOperation.rotate;
 }
 
+/// Immutable, memoizable geometry for a [TransformableBox]: the paint-rect
+/// origin, per-handle world anchors, and the optional top-rotation-handle
+/// positions. A pure function of its [compute] inputs — it reads no widget or
+/// controller state, which is what lets the key in `build()` fully describe it.
+@immutable
+class _TransformableBoxLayout {
+  final Offset origin;
+  final Rect paintRect;
+  final double outerHandleSize;
+  final double rotationHandleSize;
+  final Map<HandlePosition, ({Offset outer, Offset inner})> corners;
+  final Map<HandlePosition,
+          ({Rect sideRect, Offset stripCenter, Size stripSize, Offset topLeft})>
+      sides;
+  final Offset? topCenter;
+  final Offset? topTopLeft;
+  final Rect? topRect;
+  final Offset? topLineAnchor;
+
+  const _TransformableBoxLayout({
+    required this.origin,
+    required this.paintRect,
+    required this.outerHandleSize,
+    required this.rotationHandleSize,
+    required this.corners,
+    required this.sides,
+    required this.topCenter,
+    required this.topTopLeft,
+    required this.topRect,
+    required this.topLineAnchor,
+  });
+
+  static _TransformableBoxLayout compute({
+    required Rect rect,
+    required double rotation,
+    required Rect boundingRect,
+    required double handleTapSize,
+    required double rotationHandleGestureSize,
+    required bool rotatable,
+    required RotationHandleMode rotationHandleMode,
+    required double rotationHandleOffset,
+    required HandleAlignment handleAlignment,
+  }) {
+    final bool useCornerRotationRing =
+        rotatable && rotationHandleMode.usesCornerRing;
+    final bool useTopRotationHandle =
+        rotatable && rotationHandleMode.usesTopHandle;
+    final double outerHandleSize =
+        useCornerRotationRing ? rotationHandleGestureSize : handleTapSize;
+    final double rotationHandleSize = rotationHandleGestureSize;
+
+    final Offset? topCenter = useTopRotationHandle
+        ? RotatedLayout.topRotationHandleCenterInWorld(
+            rect: rect,
+            rotation: rotation,
+            offsetFromTopEdge: rotationHandleOffset,
+          )
+        : null;
+    final Offset? topTopLeft = useTopRotationHandle
+        ? topCenter! - Offset(rotationHandleSize / 2, rotationHandleSize / 2)
+        : null;
+    final Rect? topRect = topTopLeft == null
+        ? null
+        : Rect.fromLTWH(
+            topTopLeft.dx,
+            topTopLeft.dy,
+            rotationHandleSize,
+            rotationHandleSize,
+          );
+    final Offset? topLineAnchor = useTopRotationHandle
+        ? RotatedLayout.rotateOffsetAround(
+            rect.topCenter, rect.center, rotation)
+        : null;
+
+    double paintLeft =
+        (boundingRect.left < rect.left ? boundingRect.left : rect.left) -
+            outerHandleSize;
+    double paintTop =
+        (boundingRect.top < rect.top ? boundingRect.top : rect.top) -
+            outerHandleSize;
+    double paintRight =
+        (boundingRect.right > rect.right ? boundingRect.right : rect.right) +
+            outerHandleSize;
+    double paintBottom = (boundingRect.bottom > rect.bottom
+            ? boundingRect.bottom
+            : rect.bottom) +
+        outerHandleSize;
+    if (topRect != null) {
+      paintLeft = math.min(paintLeft, topRect.left);
+      paintTop = math.min(paintTop, topRect.top);
+      paintRight = math.max(paintRight, topRect.right);
+      paintBottom = math.max(paintBottom, topRect.bottom);
+    }
+    final Rect paintRect =
+        Rect.fromLTRB(paintLeft, paintTop, paintRight, paintBottom);
+    final Offset origin = paintRect.topLeft;
+
+    final Map<HandlePosition, ({Offset outer, Offset inner})> corners = {};
+    for (final handle in HandlePosition.corners) {
+      final Offset outer = RotatedLayout.handleTopLeftInWorld(
+        rect: rect,
+        handle: handle,
+        rotation: rotation,
+        handleSize: outerHandleSize,
+        alignment: handleAlignment,
+      );
+      final Offset inner = RotatedLayout.handleTopLeftInWorld(
+        rect: rect,
+        handle: handle,
+        rotation: rotation,
+        handleSize: handleTapSize,
+        alignment: handleAlignment,
+      );
+      corners[handle] = (outer: outer, inner: inner);
+    }
+
+    final Map<
+        HandlePosition,
+        ({
+          Rect sideRect,
+          Offset stripCenter,
+          Size stripSize,
+          Offset topLeft
+        })> sides = {};
+    for (final handle in HandlePosition.sides) {
+      final Rect sideRect = RotatedLayout.sideHandleRectInWorld(
+        rect,
+        handle,
+        handleTapSize: handleTapSize,
+        alignment: handleAlignment,
+      );
+      final Offset stripCenter = rotation == 0.0
+          ? sideRect.center
+          : RotatedLayout.rotateOffsetAround(
+              sideRect.center, rect.center, rotation);
+      final Size stripSize = sideRect.size;
+      final Offset topLeft = stripCenter - stripSize.center(Offset.zero);
+      sides[handle] = (
+        sideRect: sideRect,
+        stripCenter: stripCenter,
+        stripSize: stripSize,
+        topLeft: topLeft,
+      );
+    }
+
+    return _TransformableBoxLayout(
+      origin: origin,
+      paintRect: paintRect,
+      outerHandleSize: outerHandleSize,
+      rotationHandleSize: rotationHandleSize,
+      corners: corners,
+      sides: sides,
+      topCenter: topCenter,
+      topTopLeft: topTopLeft,
+      topRect: topRect,
+      topLineAnchor: topLineAnchor,
+    );
+  }
+}
+
 class _TransformableBoxState extends State<TransformableBox> {
   late TransformableBoxController controller;
 
   _PrimaryGestureOperation? primaryGestureOperation;
 
   HandlePosition? lastHandle;
+
+  /// Memoized geometry and the input key it was computed from. `build()`
+  /// recomputes only when the key changes; see [_TransformableBoxLayout].
+  Object? _lastLayoutKey;
+  _TransformableBoxLayout? _cachedLayout;
 
   /// Current pointer position during a rotation gesture, in this widget's
   /// local coordinate space. Used by the rotation-arrows debug overlay.
@@ -897,61 +1062,45 @@ class _TransformableBoxState extends State<TransformableBox> {
         widget.rotatable && widget.rotationHandleMode.usesCornerRing;
     final bool useTopRotationHandle =
         widget.rotatable && widget.rotationHandleMode.usesTopHandle;
-    final double outerHandleSize =
-        useCornerRotationRing ? widget.rotationHandleGestureSize : handleTap;
-    final double rotationHandleSize = widget.rotationHandleGestureSize;
 
-    final Offset? topRotationHandleCenterWorld = useTopRotationHandle
-        ? RotatedLayout.topRotationHandleCenterInWorld(
-            rect: rect,
-            rotation: rotation,
-            offsetFromTopEdge: widget.rotationHandleOffset,
-          )
-        : null;
-    final Offset? topRotationHandleTopLeftWorld = useTopRotationHandle
-        ? topRotationHandleCenterWorld! -
-            Offset(rotationHandleSize / 2, rotationHandleSize / 2)
-        : null;
-    final Rect? topRotationHandleRect = topRotationHandleTopLeftWorld == null
-        ? null
-        : Rect.fromLTWH(
-            topRotationHandleTopLeftWorld.dx,
-            topRotationHandleTopLeftWorld.dy,
-            rotationHandleSize,
-            rotationHandleSize,
-          );
-    final Offset? topRotationLineAnchorWorld = useTopRotationHandle
-        ? RotatedLayout.rotateOffsetAround(
-            rect.topCenter, rect.center, rotation)
-        : null;
-
-    // --- Outer Positioned bounds ---------------------------------------------
-    // Must contain the visually rotated box AND all handle hit regions.
-    // We take the union of boundingRect (rotated AABB) and rect (unrotated,
-    // since side handles at theta=0 hang off rect's edges), then inflate to
-    // accommodate handle gesture zones.
-    double paintLeft =
-        (boundingRect.left < rect.left ? boundingRect.left : rect.left) -
-            outerHandleSize;
-    double paintTop =
-        (boundingRect.top < rect.top ? boundingRect.top : rect.top) -
-            outerHandleSize;
-    double paintRight =
-        (boundingRect.right > rect.right ? boundingRect.right : rect.right) +
-            outerHandleSize;
-    double paintBottom = (boundingRect.bottom > rect.bottom
-            ? boundingRect.bottom
-            : rect.bottom) +
-        outerHandleSize;
-    if (topRotationHandleRect != null) {
-      paintLeft = math.min(paintLeft, topRotationHandleRect.left);
-      paintTop = math.min(paintTop, topRotationHandleRect.top);
-      paintRight = math.max(paintRight, topRotationHandleRect.right);
-      paintBottom = math.max(paintBottom, topRotationHandleRect.bottom);
+    // Geometry is a pure function of these inputs (see [_TransformableBoxLayout]).
+    // Recompute only when the key changes; unrelated ancestor rebuilds reuse
+    // the cached layout. `flip` is deliberately absent — it never moves
+    // geometry (only the content's Transform.scale), so a flip-only change
+    // reuses the cache. The record's field order mirrors compute()'s params.
+    final Object layoutKey = (
+      rect,
+      rotation,
+      boundingRect,
+      widget.handleTapSize,
+      widget.rotationHandleGestureSize,
+      widget.rotatable,
+      widget.rotationHandleMode,
+      widget.rotationHandleOffset,
+      widget.handleAlignment,
+    );
+    if (layoutKey != _lastLayoutKey || _cachedLayout == null) {
+      _lastLayoutKey = layoutKey;
+      _cachedLayout = _TransformableBoxLayout.compute(
+        rect: rect,
+        rotation: rotation,
+        boundingRect: boundingRect,
+        handleTapSize: widget.handleTapSize,
+        rotationHandleGestureSize: widget.rotationHandleGestureSize,
+        rotatable: widget.rotatable,
+        rotationHandleMode: widget.rotationHandleMode,
+        rotationHandleOffset: widget.rotationHandleOffset,
+        handleAlignment: widget.handleAlignment,
+      );
     }
-    final Rect paintRect =
-        Rect.fromLTRB(paintLeft, paintTop, paintRight, paintBottom);
-    final Offset origin = paintRect.topLeft;
+    final _TransformableBoxLayout layout = _cachedLayout!;
+    final double outerHandleSize = layout.outerHandleSize;
+    final double rotationHandleSize = layout.rotationHandleSize;
+    final Offset origin = layout.origin;
+    final Rect paintRect = layout.paintRect;
+    final Offset? topRotationHandleCenterWorld = layout.topCenter;
+    final Offset? topRotationHandleTopLeftWorld = layout.topTopLeft;
+    final Offset? topRotationLineAnchorWorld = layout.topLineAnchor;
 
     // --- Visual content (rotated + flipped, never receives gestures) --------
     Widget visualContent = Transform.rotate(
@@ -1011,22 +1160,12 @@ class _TransformableBoxState extends State<TransformableBox> {
         final bool visible = widget.visibleHandles.contains(handle);
         final bool enabled = widget.enabledHandles.contains(handle);
         if (!visible && !enabled) continue;
-        final Offset outerTopLeftWorld = RotatedLayout.handleTopLeftInWorld(
-          rect: rect,
-          handle: handle,
-          rotation: rotation,
-          handleSize: outerHandleSize,
-          alignment: widget.handleAlignment,
-        );
-        // Inner resize zone's world top-left. It may not be concentric with
-        // the outer zone when handleAlignment is inside/outside.
-        final Offset innerTopLeftWorld = RotatedLayout.handleTopLeftInWorld(
-          rect: rect,
-          handle: handle,
-          rotation: rotation,
-          handleSize: handleTap,
-          alignment: widget.handleAlignment,
-        );
+        // Inner resize zone's world top-left may not be concentric with the
+        // outer zone when handleAlignment is inside/outside.
+        final ({Offset outer, Offset inner}) cornerAnchors =
+            layout.corners[handle]!;
+        final Offset outerTopLeftWorld = cornerAnchors.outer;
+        final Offset innerTopLeftWorld = cornerAnchors.inner;
         handleWidgets.add(Positioned(
           left: outerTopLeftWorld.dx - origin.dx,
           top: outerTopLeftWorld.dy - origin.dy,
@@ -1081,24 +1220,19 @@ class _TransformableBoxState extends State<TransformableBox> {
         final bool visible = widget.visibleHandles.contains(handle);
         final bool enabled = widget.enabledHandles.contains(handle);
         if (!visible && !enabled) continue;
-        // Strip's natural (unrotated) AABB along the rect's edge.
-        final Rect sideRect = RotatedLayout.sideHandleRectInWorld(
-          rect,
-          handle,
-          handleTapSize: handleTap,
-          alignment: widget.handleAlignment,
-        );
-        // Place the strip's rotation pivot at its rotated edge midpoint in
-        // world space. The strip widget itself is laid out axis-aligned at
+        // The strip's rotation pivot is its rotated edge midpoint in world
+        // space. The strip widget itself is laid out axis-aligned at
         // (pivot − size/2, pivot + size/2), then a Transform.rotate around
         // its local center realigns it with the rotated edge.
-        final Offset stripCenterWorld = rotation == 0.0
-            ? sideRect.center
-            : RotatedLayout.rotateOffsetAround(
-                sideRect.center, rect.center, rotation);
-        final Size stripSize = sideRect.size;
-        final Offset sideTopLeftWorld =
-            stripCenterWorld - stripSize.center(Offset.zero);
+        final ({
+          Rect sideRect,
+          Offset stripCenter,
+          Size stripSize,
+          Offset topLeft
+        }) side = layout.sides[handle]!;
+        final Offset stripCenterWorld = side.stripCenter;
+        final Size stripSize = side.stripSize;
+        final Offset sideTopLeftWorld = side.topLeft;
 
         Widget stripWidget = SideHandleWidget(
           key: ValueKey(handle),
