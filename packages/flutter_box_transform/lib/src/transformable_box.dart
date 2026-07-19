@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -1191,9 +1190,8 @@ class _TransformableBoxState extends State<TransformableBox> {
       ));
     }
 
-    // --- Debug overlays (kDebugMode only; in paintRect-local coords) -------
     final List<Widget> overlays = <Widget>[];
-    if (kDebugMode && widget.debugShowUnrotatedRect) {
+    if (widget.debugShowUnrotatedRect) {
       overlays.add(Positioned(
         left: rect.left - origin.dx,
         top: rect.top - origin.dy,
@@ -1208,7 +1206,7 @@ class _TransformableBoxState extends State<TransformableBox> {
         ),
       ));
     }
-    if (kDebugMode && widget.debugShowBoundingRect) {
+    if (widget.debugShowBoundingRect) {
       overlays.add(Positioned(
         left: boundingRect.left - origin.dx,
         top: boundingRect.top - origin.dy,
@@ -1223,9 +1221,7 @@ class _TransformableBoxState extends State<TransformableBox> {
         ),
       ));
     }
-    if (kDebugMode &&
-        widget.debugShowRotationArrows &&
-        _rotationArrowPointer != null) {
+    if (widget.debugShowRotationArrows && _rotationArrowPointer != null) {
       overlays.add(Positioned.fill(
         child: IgnorePointer(
           child: CustomPaint(

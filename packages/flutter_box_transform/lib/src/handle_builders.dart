@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:box_transform/box_transform.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'handles.dart';
@@ -168,7 +167,7 @@ class CornerHandleWidget extends StatelessWidget {
           )
         : visual;
 
-    if (kDebugMode && debugPaintHandleBounds) {
+    if (debugPaintHandleBounds) {
       resizeInner = ColoredBox(
         color: Colors.orange.withValues(alpha: 0.5),
         child: resizeInner,
@@ -208,7 +207,7 @@ class CornerHandleWidget extends StatelessWidget {
           ),
         ),
       );
-      if (kDebugMode && debugPaintHandleBounds) {
+      if (debugPaintHandleBounds) {
         rotationGesture = ColoredBox(
           color: Colors.blue.withValues(alpha: 0.35),
           child: rotationGesture,
@@ -350,7 +349,7 @@ class RotationHandleWidget extends StatelessWidget {
       ),
     );
 
-    if (kDebugMode && debugPaintHandleBounds) {
+    if (debugPaintHandleBounds) {
       child = ColoredBox(
         color: Colors.blue.withValues(alpha: 0.35),
         child: child,
@@ -449,7 +448,7 @@ class SideHandleWidget extends StatelessWidget {
       );
     }
 
-    if (kDebugMode && debugPaintHandleBounds) {
+    if (debugPaintHandleBounds) {
       child = ColoredBox(
         color: Colors.yellow.withValues(alpha: 0.5),
         child: child,
@@ -506,6 +505,7 @@ class _RotationIndicatorPainter extends CustomPainter {
     // so the arc's geometric centre is just (size.width/2, size.height/2).
     final Offset centre = Offset(size.width / 2, size.height / 2);
     final double radius = math.min(size.width, size.height) * 0.4;
+
     // Base start angle selects the quadrant that would be outward when
     // rotation == 0 (the "outside-the-box" direction from the corner).
     final double baseStartAngle;
@@ -521,6 +521,7 @@ class _RotationIndicatorPainter extends CustomPainter {
       default:
         return;
     }
+
     // Since this handle widget is now axis-aligned in world frame but placed
     // at the visually-rotated corner of the box, add [rotation] so the arc
     // still points outward relative to the box's current orientation.
@@ -540,74 +541,6 @@ class _RotationIndicatorPainter extends CustomPainter {
     canvas
       ..drawArc(arcRect, startAngle, sweepAngle, false, haloPaint)
       ..drawArc(arcRect, startAngle, sweepAngle, false, paint);
-
-    final double endAngle = startAngle + sweepAngle;
-    final Offset startPoint = _pointOnCircle(centre, radius, startAngle);
-    final Offset endPoint = _pointOnCircle(centre, radius, endAngle);
-    final Paint arrowHaloPaint = Paint()
-      ..color = haloColor.withValues(alpha: 0.9)
-      ..style = PaintingStyle.fill;
-    final Paint arrowPaint = Paint()
-      ..color = color.withValues(alpha: 0.95)
-      ..style = PaintingStyle.fill;
-
-    _drawArrowHead(
-      canvas,
-      startPoint,
-      startAngle - math.pi / 2,
-      arrowHaloPaint,
-      size: 8,
-    );
-    _drawArrowHead(
-      canvas,
-      endPoint,
-      endAngle + math.pi / 2,
-      arrowHaloPaint,
-      size: 8,
-    );
-    _drawArrowHead(
-      canvas,
-      startPoint,
-      startAngle - math.pi / 2,
-      arrowPaint,
-    );
-    _drawArrowHead(
-      canvas,
-      endPoint,
-      endAngle + math.pi / 2,
-      arrowPaint,
-    );
-  }
-
-  Offset _pointOnCircle(Offset centre, double radius, double angle) {
-    return Offset(
-      centre.dx + math.cos(angle) * radius,
-      centre.dy + math.sin(angle) * radius,
-    );
-  }
-
-  void _drawArrowHead(
-    Canvas canvas,
-    Offset tip,
-    double direction,
-    Paint paint, {
-    double size = 6,
-  }) {
-    final Offset back = Offset(
-      tip.dx - math.cos(direction) * size,
-      tip.dy - math.sin(direction) * size,
-    );
-    final double wingAngle = direction + math.pi / 2;
-    final Offset wing = Offset(
-      math.cos(wingAngle) * size * 0.45,
-      math.sin(wingAngle) * size * 0.45,
-    );
-    final Path path = Path()
-      ..moveTo(tip.dx, tip.dy)
-      ..lineTo(back.dx + wing.dx, back.dy + wing.dy)
-      ..lineTo(back.dx - wing.dx, back.dy - wing.dy)
-      ..close();
-    canvas.drawPath(path, paint);
   }
 
   @override

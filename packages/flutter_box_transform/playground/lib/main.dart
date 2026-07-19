@@ -272,6 +272,12 @@ class PlaygroundModel with ChangeNotifier {
     notifyListeners();
   }
 
+  void setRotationHandleMode(RotationHandleMode mode) {
+    if (selectedBoxIndex == -1) return;
+    selectedBox!.rotationHandleMode = mode;
+    notifyListeners();
+  }
+
   // --- Debug toggles -------------------------------------------------------
 
   void toggleDebugShowBoundingRect(bool v) {
@@ -688,7 +694,7 @@ class _ImageBoxState extends State<ImageBox> {
       flip: box.flip,
       rotation: box.rotation,
       rotatable: widget.selected && box.rotatable,
-      rotationHandleMode: RotationHandleMode.topHandle,
+      rotationHandleMode: box.rotationHandleMode,
       bindingStrategy: box.bindingStrategy,
       clampingRect: model.clampingEnabled ? model.clampingRect : null,
       constraints: box.constraintsEnabled ? box.constraints : null,
@@ -2588,6 +2594,37 @@ class _RotationControlsState extends State<RotationControls> {
               ),
             ],
           ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              const Text('Handle'),
+              const SizedBox(width: 8),
+              Expanded(
+                child: DropdownButton<RotationHandleMode>(
+                  value: box.rotationHandleMode,
+                  isDense: true,
+                  isExpanded: true,
+                  items: const [
+                    DropdownMenuItem(
+                      value: RotationHandleMode.topHandle,
+                      child: Text('Top Handle'),
+                    ),
+                    DropdownMenuItem(
+                      value: RotationHandleMode.cornerRing,
+                      child: Text('Corner Ring'),
+                    ),
+                    DropdownMenuItem(
+                      value: RotationHandleMode.both,
+                      child: Text('Both'),
+                    ),
+                  ],
+                  onChanged: (v) {
+                    if (v != null) model.setRotationHandleMode(v);
+                  },
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -2672,6 +2709,7 @@ class BoxData {
   bool draggable = true;
   bool rotatable = true;
   double rotation = 0.0;
+  RotationHandleMode rotationHandleMode = RotationHandleMode.cornerRing;
   BindingStrategy bindingStrategy = BindingStrategy.boundingBox;
   Set<HandlePosition> enabledHandles;
   Set<HandlePosition> visibleHandles;
@@ -2693,6 +2731,7 @@ class BoxData {
     this.resizable = true,
     this.rotatable = true,
     this.rotation = 0.0,
+    this.rotationHandleMode = RotationHandleMode.topHandle,
     this.bindingStrategy = BindingStrategy.boundingBox,
     Set<HandlePosition>? enabledHandles,
     Set<HandlePosition>? visibleHandles,
