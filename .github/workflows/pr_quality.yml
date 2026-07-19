@@ -26,5 +26,9 @@ jobs:
         run: dart format --output none --set-exit-if-changed .
       - name: Analyze
         run: dart analyze . --fatal-infos --fatal-warnings
-      - name: Run tests
+      - name: Run box_transform tests
+        working-directory: packages/box_transform
+        run: flutter test
+      - name: Run flutter_box_transform tests
+        working-directory: packages/flutter_box_transform
         run: flutter test

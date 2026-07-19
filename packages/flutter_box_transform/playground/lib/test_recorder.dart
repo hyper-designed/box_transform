@@ -109,7 +109,7 @@ class TestTick {
   TestTick({required this.localPosition, required this.result});
 }
 
-class TestAction with Equatable {
+class TestAction extends Equatable {
   final int id;
   final ResizeMode resizeMode;
   final Flip flip;
